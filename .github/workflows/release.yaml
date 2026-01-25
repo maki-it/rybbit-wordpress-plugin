@@ -1,0 +1,30 @@
+name: Release Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Prepare plugin folder
+        run: |
+          mv src/* rybbit-analytics/
+          cp README.md LICENSE rybbit-analytics/
+
+      - name: Create plugin zip
+        run: |
+          zip -r rybbit-analytics.zip rybbit-analytics
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: rybbit-analytics.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
