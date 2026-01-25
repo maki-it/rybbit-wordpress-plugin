@@ -8,17 +8,23 @@ class Rybbit_Analytics_Public {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('wp_head', array($this, 'add_tracking_script'));
 
-        // Also inject on wp-admin pages.
-        add_action('admin_head', array($this, 'add_tracking_script_in_admin'));
+        // Optional: also track wp-admin pages
+        add_action('admin_head', array($this, 'maybe_add_tracking_script_admin'));
 
         // Clear Rybbit user id on WP logout screens
         add_action('login_head', array($this, 'maybe_clear_user_on_logout_screen'));
     }
 
     /**
-     * Inject tracking into wp-admin (excluding AJAX requests).
+     * Inject tracking into wp-admin when enabled.
      */
-    public function add_tracking_script_in_admin() {
+    public function maybe_add_tracking_script_admin() {
+        $track_admin = get_option('rybbit_track_wp_admin', '0');
+        if ($track_admin !== '1') {
+            return;
+        }
+
+        // Avoid running on AJAX/REST/admin-ajax contexts.
         if (defined('DOING_AJAX') && DOING_AJAX) {
             return;
         }
