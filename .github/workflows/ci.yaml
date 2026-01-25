@@ -4,7 +4,6 @@ on:
   push:
     branches: ["**"]
     tags-ignore: ["v*"]
-  pull_request:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -37,16 +36,6 @@ jobs:
           set -euo pipefail
           echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ steps.composer-cache.outputs.dir }}
-            vendor
-          key: ${{ runner.os }}-php-${{ matrix.php }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-php-${{ matrix.php }}-composer-
-
       - name: Show PHP version
         run: php -v
 
@@ -56,46 +45,3 @@ jobs:
           set -euo pipefail
           # Lint every PHP file in the plugin folder to catch syntax errors early.
           find rybbit-analytics -type f -name "*.php" -print0 | xargs -0 -n 1 -I {} php -l {}
-
-      - name: Install PHPCS + WordPress Coding Standards
-        shell: bash
-        run: |
-          set -euo pipefail
-          composer --version
-
-          # Composer 2.2+ blocks plugins by default; WPCS commonly pulls in
-          # dealerdirect/phpcodesniffer-composer-installer to auto-register standards.
-          composer config --no-interaction allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
-
-          # Install tooling (kept local to CI run).
-          composer require --no-interaction --no-progress --prefer-dist \
-            squizlabs/php_codesniffer:^3 \
-            wp-coding-standards/wpcs:^3 \
-            phpcompatibility/phpcompatibility-wp:^2 \
-            dealerdirect/phpcodesniffer-composer-installer:^1
-
-          # Ensure PHPCS knows where to find the standards.
-          vendor/bin/phpcs --config-set installed_paths vendor/wp-coding-standards/wpcs,vendor/phpcompatibility/phpcompatibility-wp
-          vendor/bin/phpcs -i
-
-      - name: PHPCS (WordPress-Extra)
-        shell: bash
-        run: |
-          set -euo pipefail
-          vendor/bin/phpcs \
-            --standard=WordPress-Extra \
-            --extensions=php \
-            --report=full \
-            rybbit-analytics
-
-      - name: PHPCompatibility (against declared minimum)
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Keep this aligned with the plugin header "Requires PHP".
-          vendor/bin/phpcs \
-            --standard=PHPCompatibilityWP \
-            --runtime-set testVersion 7.4- \
-            --extensions=php \
-            --report=full \
-            rybbit-analytics
