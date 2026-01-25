@@ -308,7 +308,8 @@ class Rybbit_Analytics_Admin {
         $debounce = get_option('rybbit_debounce', '500');
         $identify_mode = get_option('rybbit_identify_mode', 'disabled');
         $delete_data_on_uninstall = get_option('rybbit_delete_data_on_uninstall', '1');
-        $excluded_roles_opt = get_option('rybbit_excluded_roles', array());
+        // On fresh installs, the option may not exist yet; fall back to the intended default.
+        $excluded_roles_opt = get_option('rybbit_excluded_roles', array('administrator'));
         $excluded_roles = $this->sanitize_roles_array($excluded_roles_opt);
         $identify_userid_strategy = get_option('rybbit_identify_userid_strategy', 'wp_scoped');
         $identify_userid_meta_key = get_option('rybbit_identify_userid_meta_key', '');
