@@ -51,6 +51,11 @@ register_activation_hook(__FILE__, function () {
         add_option('rybbit_do_not_track_admins', '1');
     }
 
+    // Default: do not track administrators.
+    if (get_option('rybbit_excluded_roles', null) === null) {
+        add_option('rybbit_excluded_roles', array('administrator'));
+    }
+
     if (get_option('rybbit_identify_mode', null) === null) {
         add_option('rybbit_identify_mode', 'disabled');
     }
