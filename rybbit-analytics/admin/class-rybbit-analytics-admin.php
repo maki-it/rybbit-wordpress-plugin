@@ -264,6 +264,8 @@ class Rybbit_Analytics_Admin {
     }
 
     public function settings_page() {
+        // Note: update checks are triggered client-side when the About tab is opened.
+
         $site_id = get_option('rybbit_site_id', '');
         $script_url = get_option('rybbit_script_url', 'https://app.rybbit.io/api/script.js');
         $skip_patterns = get_option('rybbit_skip_patterns', '');
@@ -561,33 +563,21 @@ class Rybbit_Analytics_Admin {
                         <?php
                         $data = get_file_data(plugin_dir_path(__DIR__) . 'rybbit-analytics.php', array('Version' => 'Version'), 'plugin');
                         $version = isset($data['Version']) ? (string) $data['Version'] : '';
-
-                        $latest_version = class_exists('Rybbit_Analytics_Updates') ? Rybbit_Analytics_Updates::get_latest_version() : null;
-                        $update_available = class_exists('Rybbit_Analytics_Updates') ? Rybbit_Analytics_Updates::is_update_available() : null;
                         ?>
                         <table class="form-table" role="presentation">
                             <tr>
                                 <th scope="row">Installed plugin version</th>
                                 <td>
-                                    <code><?php echo esc_html($version !== '' ? $version : 'unknown'); ?></code>
+                                    <code class="rybbit-installed-version"><?php echo esc_html($version !== '' ? $version : 'unknown'); ?></code>
                                 </td>
                             </tr>
                             <tr>
                                 <th scope="row">Latest plugin version</th>
                                 <td>
-                                    <?php if (is_string($latest_version) && $latest_version !== '') : ?>
-                                        <code><?php echo esc_html($latest_version); ?></code>
-                                        <?php if ($update_available === true) : ?>
-                                            <p class="description" style="margin-top: 6px;">
-                                                <strong>Update available.</strong> Get the latest release from
-                                                <a href="https://github.com/maki-it/rybbit-wordpress-plugin/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a>.
-                                            </p>
-                                        <?php elseif ($update_available === false) : ?>
-                                            <p class="description" style="margin-top: 6px;">You’re up to date.</p>
-                                        <?php endif; ?>
-                                    <?php else : ?>
-                                        <p class="description">Could not check for updates right now.</p>
-                                    <?php endif; ?>
+                                    <span class="rybbit-latest-version-wrap">
+                                        <code class="rybbit-latest-version">Checking…</code>
+                                    </span>
+                                    <div class="rybbit-update-status" style="margin-top: 6px;"></div>
                                 </td>
                             </tr>
 

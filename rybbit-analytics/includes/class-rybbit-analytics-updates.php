@@ -7,6 +7,11 @@ class Rybbit_Analytics_Updates {
     const TRANSIENT_TTL = 6 * HOUR_IN_SECONDS;
 
     /**
+     * Minimal interval between forced checks to avoid slow admin loads / API rate limits.
+     */
+    const FORCE_CHECK_MIN_INTERVAL = 5 * MINUTE_IN_SECONDS;
+
+    /**
      * Returns the plugin version from the main plugin file header.
      */
     public static function get_installed_version() {
@@ -27,8 +32,24 @@ class Rybbit_Analytics_Updates {
     /**
      * Fetch latest GitHub release tag (strips leading "v").
      * Uses caching to avoid slowing down admin.
+     *
+     * @param bool $force When true, bypass cache (bounded by FORCE_CHECK_MIN_INTERVAL).
      */
-    public static function get_latest_version() {
+    public static function get_latest_version($force = false) {
+        $force = (bool) $force;
+
+        if ($force) {
+            // Rate-limit forced checks so opening the About tab repeatedly doesn't spam GitHub.
+            $last_forced = get_transient(self::TRANSIENT_KEY . '_last_forced');
+            if (!is_int($last_forced)) {
+                $last_forced = is_numeric($last_forced) ? (int) $last_forced : 0;
+            }
+            if ($last_forced <= 0 || (time() - $last_forced) >= self::FORCE_CHECK_MIN_INTERVAL) {
+                delete_transient(self::TRANSIENT_KEY);
+                set_transient(self::TRANSIENT_KEY . '_last_forced', time(), self::FORCE_CHECK_MIN_INTERVAL);
+            }
+        }
+
         $cached = get_transient(self::TRANSIENT_KEY);
         if (is_string($cached) && $cached !== '') {
             return $cached;
