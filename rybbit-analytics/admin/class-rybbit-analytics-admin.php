@@ -8,6 +8,11 @@ class Rybbit_Analytics_Admin {
         add_action('admin_menu', array($this, 'add_menu'));
         add_action('admin_init', array($this, 'register_settings'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
+
+        // Add links on the Plugins page
+        if (defined('RYBBIT_ANALYTICS_PLUGIN_BASENAME')) {
+            add_filter('plugin_action_links_' . RYBBIT_ANALYTICS_PLUGIN_BASENAME, array($this, 'action_links'));
+        }
     }
     public function add_menu() {
         // Add admin menu
@@ -79,6 +84,27 @@ class Rybbit_Analytics_Admin {
             'type' => 'string',
             'sanitize_callback' => array($this, 'sanitize_roles_json_array'),
             'default' => wp_json_encode(array('administrator')),
+        ));
+
+        // Choose which value is used as the Rybbit userId.
+        register_setting('rybbit_analytics_settings', 'rybbit_identify_userid_strategy', array(
+            'type' => 'string',
+            'sanitize_callback' => function ($value) {
+                $allowed = array('wp_scoped', 'wp_user_id', 'user_login', 'email', 'user_meta');
+                $value = is_string($value) ? $value : '';
+                return in_array($value, $allowed, true) ? $value : 'wp_scoped';
+            },
+            'default' => 'wp_scoped',
+        ));
+
+        // Only used when strategy=user_meta
+        register_setting('rybbit_analytics_settings', 'rybbit_identify_userid_meta_key', array(
+            'type' => 'string',
+            'sanitize_callback' => function ($value) {
+                $value = sanitize_key((string) $value);
+                return $value;
+            },
+            'default' => '',
         ));
     }
 
@@ -215,6 +241,21 @@ class Rybbit_Analytics_Admin {
             array(),
             '1.0.0'
         );
+
+        wp_enqueue_style(
+            'rybbit-analytics-admin-tabs',
+            plugin_dir_url(__FILE__) . 'css/tabs.css',
+            array('rybbit-analytics-admin-settings'),
+            '1.0.0'
+        );
+
+        wp_enqueue_script(
+            'rybbit-analytics-admin-settings',
+            plugin_dir_url(__FILE__) . 'js/settings.js',
+            array(),
+            '1.0.0',
+            true
+        );
     }
 
     public function settings_page() {
@@ -230,6 +271,8 @@ class Rybbit_Analytics_Admin {
         if (!is_array($excluded_roles)) {
             $excluded_roles = array();
         }
+        $identify_userid_strategy = get_option('rybbit_identify_userid_strategy', 'wp_scoped');
+        $identify_userid_meta_key = get_option('rybbit_identify_userid_meta_key', '');
 
         // Build available roles list.
         global $wp_roles;
@@ -239,32 +282,49 @@ class Rybbit_Analytics_Admin {
         $roles_list = is_object($wp_roles) ? (array) $wp_roles->roles : array();
         ?>
         <div class="wrap">
-            <h1>Rybbit Analytics Settings</h1>
+            <div class="rybbit-header">
+                <div class="rybbit-icon" aria-hidden="true">
+                    <span class="dashicons dashicons-chart-area"></span>
+                </div>
+                <div>
+                    <h1>Rybbit Analytics</h1>
+                    <p class="rybbit-subtitle">Configure tracking and privacy settings for your WordPress site.</p>
+                </div>
+            </div>
 
-            <div class="rybbit-settings-grid">
-                <div class="rybbit-settings-card">
-                    <form method="post" action="options.php">
-                        <?php settings_fields('rybbit_analytics_settings'); ?>
-                        <?php do_settings_sections('rybbit_analytics_settings'); ?>
-                        <?php settings_errors(); ?>
-                        <table class="form-table">
-                            <tr valign="top">
+            <h2 class="nav-tab-wrapper" role="tablist" aria-label="Rybbit Analytics settings">
+                <a href="#tracking" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="true" data-tab="tracking">Tracking</a>
+                <a href="#privacy" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="privacy">Privacy</a>
+                <a href="#script" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="script">Script attributes</a>
+                <a href="#maintenance" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="maintenance">Maintenance</a>
+            </h2>
+
+            <div class="rybbit-settings-card">
+                <form method="post" action="options.php">
+                    <?php settings_fields('rybbit_analytics_settings'); ?>
+                    <?php do_settings_sections('rybbit_analytics_settings'); ?>
+                    <?php settings_errors(); ?>
+
+                    <div class="rybbit-tab-panel" data-tab="tracking" role="tabpanel">
+                        <table class="form-table" role="presentation">
+                            <tr>
                                 <th scope="row"><label for="rybbit_site_id">Site ID <span class="required">*</span></label></th>
                                 <td>
-                                    <input type="text" id="rybbit_site_id" name="rybbit_site_id" value="<?php echo esc_attr($site_id); ?>" size="50" required aria-required="true" />
+                                    <input type="text" id="rybbit_site_id" name="rybbit_site_id" value="<?php echo esc_attr($site_id); ?>" class="regular-text rybbit-input-wide" required aria-required="true" />
+                                    <p class="description">Find this in your Rybbit dashboard under your site’s tracking settings.</p>
                                 </td>
                             </tr>
-                            <tr valign="top">
+                            <tr>
                                 <th scope="row"><label for="rybbit_script_url">Script URL <span class="required">*</span></label></th>
                                 <td>
-                                    <input type="url" id="rybbit_script_url" name="rybbit_script_url" value="<?php echo esc_attr($script_url); ?>" size="50" required aria-required="true" />
+                                    <input type="url" id="rybbit_script_url" name="rybbit_script_url" value="<?php echo esc_attr($script_url); ?>" class="regular-text rybbit-input-url" required aria-required="true" />
                                     <p class="description">Example: https://app.rybbit.io/api/script.js</p>
                                 </td>
                             </tr>
-                            <tr valign="top">
+                            <tr>
                                 <th scope="row"><label for="rybbit_excluded_roles">Do not track these roles</label></th>
                                 <td>
-                                    <select id="rybbit_excluded_roles" name="rybbit_excluded_roles[]" multiple size="6" style="min-width: 280px;">
+                                    <select id="rybbit_excluded_roles" name="rybbit_excluded_roles[]" multiple size="8" class="rybbit-input-wide">
                                         <?php foreach ($roles_list as $role_slug => $role_data) :
                                             $name = isset($role_data['name']) ? $role_data['name'] : $role_slug;
                                         ?>
@@ -273,90 +333,98 @@ class Rybbit_Analytics_Admin {
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <p class="description" style="max-width: 720px;">
-                                        Selected roles will not receive the tracking script.
-                                    </p>
+                                    <p class="description">Selected roles will not receive the tracking script (frontend and wp-admin).</p>
                                 </td>
                             </tr>
+                        </table>
+                    </div>
 
-                            <tr valign="top">
+                    <div class="rybbit-tab-panel" data-tab="privacy" role="tabpanel" style="display:none">
+                        <table class="form-table" role="presentation">
+                            <tr>
                                 <th scope="row"><label for="rybbit_identify_mode">Identify logged-in users</label></th>
                                 <td>
-                                    <select id="rybbit_identify_mode" name="rybbit_identify_mode">
+                                    <select id="rybbit_identify_mode" name="rybbit_identify_mode" class="rybbit-select-wide">
                                         <option value="disabled" <?php selected($identify_mode, 'disabled'); ?>>Disabled</option>
                                         <option value="pseudonymized" <?php selected($identify_mode, 'pseudonymized'); ?>>Pseudonymized (hashed)</option>
                                         <option value="full" <?php selected($identify_mode, 'full'); ?>>Full (cleartext email)</option>
                                     </select>
                                     <p class="description" style="max-width: 720px;">
-                                        <strong>GDPR/Privacy:</strong> Identifying users is personal data processing. Only enable this if you have a lawful basis (e.g. user consent) and have updated your privacy policy / consent banner accordingly.
-                                        <br />
-                                        <strong>Pseudonymized</strong> sends a stable WordPress user id plus hashed traits (e.g. SHA-256 email hash).<br />
-                                        <strong>Full</strong> additionally sends cleartext traits like email and display name. Use only if you explicitly need it.
+                                        <strong>GDPR/Privacy:</strong> Identifying users is personal data processing. Only enable this if you have a lawful basis (e.g. consent) and have updated your privacy policy / consent banner accordingly.
                                     </p>
                                 </td>
                             </tr>
+                            <tr>
+                                <th scope="row"><label for="rybbit_identify_userid_strategy">User ID used for identification</label></th>
+                                <td>
+                                    <select id="rybbit_identify_userid_strategy" name="rybbit_identify_userid_strategy" class="rybbit-select-wide">
+                                        <option value="wp_scoped" <?php selected($identify_userid_strategy, 'wp_scoped'); ?>>WordPress scoped (recommended)</option>
+                                        <option value="wp_user_id" <?php selected($identify_userid_strategy, 'wp_user_id'); ?>>WordPress user ID (numeric)</option>
+                                        <option value="user_login" <?php selected($identify_userid_strategy, 'user_login'); ?>>Username (user_login)</option>
+                                        <option value="email" <?php selected($identify_userid_strategy, 'email'); ?>>Email address</option>
+                                        <option value="user_meta" <?php selected($identify_userid_strategy, 'user_meta'); ?>>Custom user meta value</option>
+                                    </select>
+                                    <p class="description">Controls what is sent as the Rybbit <code>userId</code> when identifying logged-in users.</p>
 
-                            <tr valign="top">
+                                    <div class="rybbit-meta-key-wrap" data-rybbit-user-meta-key>
+                                        <label for="rybbit_identify_userid_meta_key"><strong>User meta key</strong></label><br />
+                                        <input type="text" id="rybbit_identify_userid_meta_key" name="rybbit_identify_userid_meta_key" value="<?php echo esc_attr($identify_userid_meta_key); ?>" placeholder="e.g. customer_id" class="regular-text rybbit-input-wide" />
+                                        <p class="description">The value of this user meta field will be used as the Rybbit userId.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="rybbit-tab-panel" data-tab="script" role="tabpanel" style="display:none">
+                        <table class="form-table" role="presentation">
+                            <tr>
                                 <th scope="row"><label for="rybbit_skip_patterns">Skip patterns</label></th>
                                 <td>
-                                    <textarea id="rybbit_skip_patterns" name="rybbit_skip_patterns" rows="5" cols="50" class="large-text code"><?php echo esc_textarea($skip_patterns); ?></textarea>
+                                    <textarea id="rybbit_skip_patterns" name="rybbit_skip_patterns" rows="8" class="large-text code rybbit-input-wide"><?php echo esc_textarea($skip_patterns); ?></textarea>
                                     <p class="description">
-                                        One pattern per line. Matching paths won’t be tracked.<br />
-                                        Wildcards: <code>*</code> matches within one path segment; <code>**</code> matches across segments.<br />
-                                        Examples: <code>/admin/*</code> matches <code>/admin/dashboard</code> but not <code>/admin/users/list</code>. <code>/admin/**</code> matches both.
+                                        One pattern per line. Matching paths won’t be tracked.
+                                        Wildcards: <code>*</code> matches within one segment; <code>**</code> matches across segments.
+                                        Examples: <code>/admin/*</code>, <code>/admin/**</code>, <code>/blog/*/comments</code>.
                                     </p>
                                 </td>
                             </tr>
-
-                            <tr valign="top">
+                            <tr>
                                 <th scope="row"><label for="rybbit_mask_patterns">Mask patterns</label></th>
                                 <td>
-                                    <textarea id="rybbit_mask_patterns" name="rybbit_mask_patterns" rows="5" cols="50" class="large-text code"><?php echo esc_textarea($mask_patterns); ?></textarea>
+                                    <textarea id="rybbit_mask_patterns" name="rybbit_mask_patterns" rows="8" class="large-text code rybbit-input-wide"><?php echo esc_textarea($mask_patterns); ?></textarea>
                                     <p class="description">
-                                        One pattern per line. Matching paths are tracked but the URL will be replaced with the pattern in analytics.<br />
-                                        Wildcards: <code>*</code> matches within one segment; <code>**</code> matches across segments.
+                                        One pattern per line. Matching paths are tracked but the URL path will be replaced with the pattern in analytics.
                                     </p>
                                 </td>
                             </tr>
-
-                            <tr valign="top">
+                            <tr>
                                 <th scope="row"><label for="rybbit_debounce">Debounce (ms)</label></th>
                                 <td>
                                     <input type="number" min="0" step="1" id="rybbit_debounce" name="rybbit_debounce" value="<?php echo esc_attr($debounce); ?>" class="small-text" />
                                     <p class="description">Delay before tracking a pageview after History API URL changes. Set to 0 to disable.</p>
                                 </td>
                             </tr>
+                        </table>
+                    </div>
 
-                            <tr valign="top">
+                    <div class="rybbit-tab-panel" data-tab="maintenance" role="tabpanel" style="display:none">
+                        <table class="form-table" role="presentation">
+                            <tr>
                                 <th scope="row"><label for="rybbit_delete_data_on_uninstall">Delete data on uninstall</label></th>
                                 <td>
-                                    <input type="checkbox" id="rybbit_delete_data_on_uninstall" name="rybbit_delete_data_on_uninstall" value="1" <?php checked('1', $delete_data_on_uninstall); ?> />
-                                    <p class="description" style="max-width: 720px;">
-                                        If enabled, all Rybbit Analytics plugin settings will be permanently removed when the plugin is uninstalled (deleted).
-                                        This does <strong>not</strong> run when the plugin is simply deactivated.
-                                        Keep this disabled if you plan to reinstall later.
-                                    </p>
+                                    <label>
+                                        <input type="checkbox" id="rybbit_delete_data_on_uninstall" name="rybbit_delete_data_on_uninstall" value="1" <?php checked('1', $delete_data_on_uninstall); ?> />
+                                        Remove all plugin settings when the plugin is uninstalled (deleted).
+                                    </label>
+                                    <p class="description">This does not run when the plugin is simply deactivated.</p>
                                 </td>
                             </tr>
-
                         </table>
-                        <?php submit_button(); ?>
-                    </form>
-                </div>
+                    </div>
 
-                <aside class="rybbit-settings-help">
-                    <h2>Quick help</h2>
-                    <p class="rybbit-inline-note">
-                        <strong>Site ID</strong>: find it in your Rybbit dashboard under your site’s tracking settings.
-                    </p>
-                    <p class="rybbit-inline-note">
-                        <strong>Skip/Mask patterns</strong>: enter one pattern per line. Wildcards:
-                        <span class="rybbit-code">*</span> (one segment) and <span class="rybbit-code">**</span> (multiple segments).
-                    </p>
-                    <p class="rybbit-inline-note">
-                        <strong>Privacy</strong>: if you enable user identification, make sure you have a lawful basis (e.g. user consent) and update your privacy policy.
-                    </p>
-                </aside>
+                    <?php submit_button(); ?>
+                </form>
             </div>
         </div>
         <?php

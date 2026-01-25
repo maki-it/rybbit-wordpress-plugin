@@ -29,9 +29,45 @@ if (!function_exists('rybbit_analytics_get_identify_payload')) {
             return null;
         }
 
-        // Stable, site-scoped id (helps on multisite setups)
+        // Determine userId strategy.
+        $strategy = get_option('rybbit_identify_userid_strategy', 'wp_scoped');
+        $strategy = is_string($strategy) ? $strategy : 'wp_scoped';
+
         $blog_id = function_exists('get_current_blog_id') ? (int) get_current_blog_id() : 0;
+
+        // Default userId (stable, site-scoped id - helps on multisite setups)
         $user_id = 'wp:' . $blog_id . ':' . (int) $user->ID;
+
+        if ($strategy === 'wp_user_id') {
+            $user_id = (string) ((int) $user->ID);
+        } elseif ($strategy === 'user_login') {
+            if (!empty($user->user_login)) {
+                $user_id = (string) $user->user_login;
+            }
+        } elseif ($strategy === 'email') {
+            if (!empty($user->user_email)) {
+                $email = strtolower(trim((string) $user->user_email));
+
+                // In pseudonymized mode, never use cleartext email as userId.
+                if ($mode === 'pseudonymized' && function_exists('hash')) {
+                    $user_id = 'sha256:' . hash('sha256', $email);
+                } else {
+                    $user_id = $email;
+                }
+            }
+        } elseif ($strategy === 'user_meta') {
+            $meta_key = get_option('rybbit_identify_userid_meta_key', '');
+            $meta_key = sanitize_key((string) $meta_key);
+            if ($meta_key !== '') {
+                $meta_val = get_user_meta((int) $user->ID, $meta_key, true);
+                if ($meta_val !== null && $meta_val !== false) {
+                    $meta_val = trim((string) $meta_val);
+                    if ($meta_val !== '') {
+                        $user_id = $meta_val;
+                    }
+                }
+            }
+        }
 
         // Always safe-ish traits
         $traits = array(
