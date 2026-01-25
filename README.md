@@ -16,3 +16,7 @@ Simple WordPress Plugin to add the Rybbit tracking script
 5. Choose the downloaded zip file and click `Install Now`.
 6. After installation, click `Activate Plugin`.
 7. Go to `Settings` > `Rybbit Analytics` to configure the plugin with your Rybbit Site ID and other settings.
+
+# Screenshot
+
+![Rybbit Analytics Settings Page](assets/img/tracking.png)
