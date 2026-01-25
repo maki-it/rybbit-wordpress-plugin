@@ -1,6 +1,8 @@
-# Rybbit Wordpress Plugin
+# Rybbit Analytics
 
-Simple WordPress Plugin to add the Rybbit tracking script
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/maki-it/rybbit-wordpress-plugin?style=flat-square)](
+
+WordPress Plugin to add and manage the Rybbit tracking script on your sites.
 
 ## Requirements
 
