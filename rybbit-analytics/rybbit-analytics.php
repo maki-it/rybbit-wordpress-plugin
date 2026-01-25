@@ -25,6 +25,9 @@ new Rybbit_Analytics();
 // Initialize context-specific logic
 if (is_admin()) {
     new Rybbit_Analytics_Admin();
+
+    // Also load tracking hooks in wp-admin (script injection is still governed by excluded roles).
+    new Rybbit_Analytics_Public();
 } else {
     new Rybbit_Analytics_Public();
 }
