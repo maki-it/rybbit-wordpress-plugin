@@ -32,10 +32,27 @@
   border-radius: 6px;
   padding: 10px 12px;
   max-height: 280px;
-  overflow: auto;
   font-size: 12px;
   line-height: 1.4;
   margin: 0;
+
+  /* Keep the block inside the white settings card */
+  max-width: 100%;
+  box-sizing: border-box;
+
+  /* Make long lines safe */
+  overflow-x: auto;
+  overflow-y: auto;
+
+  /* Preserve formatting but allow breaking of extreme tokens as a fallback */
+  white-space: pre;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Debug tab: wrap long lines so they never push outside the card */
+.settings_page_rybbit-analytics .rybbit-tab-panel[data-tab="debug"] .rybbit-identify-payload {
+  white-space: pre-wrap;
 }
 
 .settings_page_rybbit-analytics .rybbit-refresh-payload {

@@ -72,6 +72,9 @@
   border-radius: 8px;
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
   padding: 16px;
+
+  /* Keep long content (e.g. debug <pre>) from bleeding past the card edges */
+  overflow-x: auto;
 }
 
 .settings_page_rybbit-analytics .rybbit-settings-help {
