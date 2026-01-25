@@ -76,7 +76,7 @@ class Rybbit_Analytics_Admin {
             'sanitize_callback' => function ($value) {
                 return ($value === '1' || $value === 1 || $value === true || $value === 'on') ? '1' : '0';
             },
-            'default' => '0',
+            'default' => '1',
         ));
 
         // Role-based exclusion list (multi-select). Stored as JSON array of role slugs.
@@ -270,7 +270,7 @@ class Rybbit_Analytics_Admin {
         $mask_patterns = get_option('rybbit_mask_patterns', '');
         $debounce = get_option('rybbit_debounce', '500');
         $identify_mode = get_option('rybbit_identify_mode', 'disabled');
-        $delete_data_on_uninstall = get_option('rybbit_delete_data_on_uninstall', '0');
+        $delete_data_on_uninstall = get_option('rybbit_delete_data_on_uninstall', '1');
         $excluded_roles_json = get_option('rybbit_excluded_roles', '[]');
         $excluded_roles = json_decode((string) $excluded_roles_json, true);
         if (!is_array($excluded_roles)) {
