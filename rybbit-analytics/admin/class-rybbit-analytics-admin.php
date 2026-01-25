@@ -256,6 +256,11 @@ class Rybbit_Analytics_Admin {
             '1.0.0',
             true
         );
+
+        wp_localize_script('rybbit-analytics-admin-settings', 'rybbitAdmin', array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('rybbit_admin_settings'),
+        ));
     }
 
     public function settings_page() {
@@ -371,6 +376,16 @@ class Rybbit_Analytics_Admin {
                                         <input type="text" id="rybbit_identify_userid_meta_key" name="rybbit_identify_userid_meta_key" value="<?php echo esc_attr($identify_userid_meta_key); ?>" placeholder="e.g. customer_id" class="regular-text rybbit-input-wide" />
                                         <p class="description">The value of this user meta field will be used as the Rybbit userId.</p>
                                     </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label>Identify payload preview</label></th>
+                                <td>
+                                    <pre id="rybbit_identify_payload" class="rybbit-identify-payload"></pre>
+                                    <p class="description">
+                                        Preview of the identify payload sent to Rybbit for the current user.
+                                        <a href="#" class="rybbit-refresh-payload">Refresh preview</a>.
+                                    </p>
                                 </td>
                             </tr>
                         </table>

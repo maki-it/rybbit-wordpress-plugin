@@ -23,6 +23,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-rybbit-analytics.php';
 require_once plugin_dir_path(__FILE__) . 'includes/functions.php';
 require_once plugin_dir_path(__FILE__) . 'admin/class-rybbit-analytics-admin.php';
 require_once plugin_dir_path(__FILE__) . 'public/class-rybbit-analytics-public.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-rybbit-analytics-admin-ajax.php';
 
 // Initialize main plugin class
 new Rybbit_Analytics();
@@ -30,6 +31,7 @@ new Rybbit_Analytics();
 // Initialize context-specific logic
 if (is_admin()) {
     new Rybbit_Analytics_Admin();
+    new Rybbit_Analytics_Admin_Ajax();
 
     // Also load tracking hooks in wp-admin (script injection is still governed by excluded roles).
     new Rybbit_Analytics_Public();
@@ -51,4 +53,3 @@ register_activation_hook(__FILE__, function () {
         add_option('rybbit_delete_data_on_uninstall', '0');
     }
 });
-

@@ -25,3 +25,19 @@
   margin-top: 10px;
   padding-left: 2px;
 }
+
+.settings_page_rybbit-analytics .rybbit-identify-payload {
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  padding: 10px 12px;
+  max-height: 280px;
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.settings_page_rybbit-analytics .rybbit-refresh-payload {
+  text-decoration: none;
+}

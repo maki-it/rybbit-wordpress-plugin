@@ -18,19 +18,22 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Tag is like v1.2.3 -> version is 1.2.3
           VERSION="${GITHUB_REF_NAME#v}"
+
+          # Replace the whole header line, independent of current version.
           sed -i -E "s/^Version:[[:space:]]*.*/Version: ${VERSION}/" rybbit-analytics/rybbit-analytics.php
+
+          # Assert it worked.
+          grep -n -E "^Version:[[:space:]]*${VERSION}$" rybbit-analytics/rybbit-analytics.php
 
       - name: Prepare plugin folder
         run: |
           cp README.md LICENSE rybbit-analytics/
 
       - name: Create plugin zip
-        shell: bash
         run: |
-          set -euo pipefail
-          zip -r rybbit-analytics.zip rybbit-analytics \
-            -x "**/.git/**" "**/.github/**" "**/.DS_Store" "**/__MACOSX/**"
+          zip -r rybbit-analytics.zip rybbit-analytics
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
