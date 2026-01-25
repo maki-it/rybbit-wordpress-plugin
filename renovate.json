@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>maki-it/renovate-config:default.json5"
+  ],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["major"],
+      "minimumReleaseAge": "2 days"
+    },
+    {
+      "matchUpdateTypes": ["minor"],
+      "minimumReleaseAge": "1 days",
+      "automerge": true
+    },
+    {
+      "matchUpdateTypes": ["patch", "pin"],
+      "minimumReleaseAge": "1 days",
+      "automerge": true
+    }
+  ]
+}
