@@ -5,43 +5,90 @@
   max-width: 1080px;
 }
 
-.settings_page_rybbit-analytics .wrap h1 {
-  margin-bottom: 8px;
+/* Header */
+.settings_page_rybbit-analytics .rybbit-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
-.settings_page_rybbit-analytics .wrap .rybbit-settings-card {
-  background: #fff;
-  border: 1px solid #dcdcde;
-  border-radius: 10px;
-  padding: 18px 18px 6px;
-  box-shadow: 0 1px 1px rgba(0,0,0,.04);
+.settings_page_rybbit-analytics .rybbit-header .rybbit-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--wp-admin-theme-color, #2271b1);
+  color: #fff;
 }
 
-.settings_page_rybbit-analytics .wrap .rybbit-settings-grid {
+.settings_page_rybbit-analytics .rybbit-header h1 {
+  margin: 0;
+  padding: 0;
+}
+
+.settings_page_rybbit-analytics .rybbit-subtitle {
+  margin: 6px 0 0;
+  color: var(--wp-admin-theme-color-darker-20, #50575e);
+}
+
+/* Layout */
+.settings_page_rybbit-analytics .rybbit-settings-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
 }
 
 @media (min-width: 980px) {
-  .settings_page_rybbit-analytics .wrap .rybbit-settings-grid {
+  .settings_page_rybbit-analytics .rybbit-settings-grid {
     grid-template-columns: 3fr 2fr;
     align-items: start;
   }
 }
 
-.settings_page_rybbit-analytics .wrap .rybbit-settings-help {
-  background: #f6f7f7;
-  border: 1px solid #dcdcde;
-  border-radius: 10px;
+/* Card uses WP-ish tokens */
+.settings_page_rybbit-analytics .rybbit-settings-card {
+  background: var(--wp-admin-theme-color-background, #fff);
+  border: 1px solid var(--wp-admin-border-color, #dcdcde);
+  border-radius: 8px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
   padding: 16px;
 }
 
-.settings_page_rybbit-analytics .wrap .rybbit-settings-help h2 {
-  margin-top: 0;
-  font-size: 14px;
+.settings_page_rybbit-analytics .rybbit-settings-help {
+  background: #f6f7f7;
+  border: 1px solid var(--wp-admin-border-color, #dcdcde);
+  border-radius: 8px;
+  padding: 16px;
 }
 
+.settings_page_rybbit-analytics .rybbit-settings-help h2 {
+  margin-top: 0;
+  font-size: 13px;
+}
+
+/* Section headings */
+.settings_page_rybbit-analytics .rybbit-section {
+  margin-top: 8px;
+}
+
+.settings_page_rybbit-analytics .rybbit-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 18px 0 10px;
+  padding-top: 14px;
+  border-top: 1px solid #dcdcde;
+}
+
+.settings_page_rybbit-analytics .rybbit-section:first-child .rybbit-section-title {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* Form tweaks */
 .settings_page_rybbit-analytics .form-table th {
   width: 240px;
 }

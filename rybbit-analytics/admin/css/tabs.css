@@ -1,0 +1,27 @@
+/* Rybbit Analytics – Settings tabs */
+
+.settings_page_rybbit-analytics .nav-tab-wrapper {
+  margin: 0 0 12px;
+}
+
+.settings_page_rybbit-analytics .rybbit-tab-panel {
+  margin: 0;
+}
+
+/* Make key inputs wider */
+.settings_page_rybbit-analytics .rybbit-input-wide {
+  width: min(760px, 100%);
+}
+
+.settings_page_rybbit-analytics .rybbit-input-url {
+  width: min(820px, 100%);
+}
+
+.settings_page_rybbit-analytics .rybbit-select-wide {
+  width: min(520px, 100%);
+}
+
+.settings_page_rybbit-analytics .rybbit-meta-key-wrap {
+  margin-top: 10px;
+  padding-left: 2px;
+}

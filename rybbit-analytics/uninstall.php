@@ -21,6 +21,8 @@ $option_names = array(
     'rybbit_mask_patterns',
     'rybbit_debounce',
     'rybbit_identify_mode',
+    'rybbit_identify_userid_strategy',
+    'rybbit_identify_userid_meta_key',
     'rybbit_delete_data_on_uninstall',
 );
 

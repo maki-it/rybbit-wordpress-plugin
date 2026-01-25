@@ -13,6 +13,11 @@ if (!defined('WPINC')) {
     die;
 }
 
+// Plugin basename for hooks like plugin_action_links_{basename}
+if (!defined('RYBBIT_ANALYTICS_PLUGIN_BASENAME')) {
+    define('RYBBIT_ANALYTICS_PLUGIN_BASENAME', plugin_basename(__FILE__));
+}
+
 // Require main class files
 require_once plugin_dir_path(__FILE__) . 'includes/class-rybbit-analytics.php';
 require_once plugin_dir_path(__FILE__) . 'includes/functions.php';
@@ -46,3 +51,4 @@ register_activation_hook(__FILE__, function () {
         add_option('rybbit_delete_data_on_uninstall', '0');
     }
 });
+
