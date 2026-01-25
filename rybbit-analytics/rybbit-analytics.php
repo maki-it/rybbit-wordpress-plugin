@@ -51,6 +51,6 @@ register_activation_hook(__FILE__, function () {
     }
 
     if (get_option('rybbit_delete_data_on_uninstall', null) === null) {
-        add_option('rybbit_delete_data_on_uninstall', '0');
+        add_option('rybbit_delete_data_on_uninstall', '1');
     }
 });
