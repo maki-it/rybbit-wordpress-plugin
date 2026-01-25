@@ -565,7 +565,7 @@ class Rybbit_Analytics_Admin {
                                             'identify_mode' => $identify_mode,
                                             'identify_userid_strategy' => $identify_userid_strategy,
                                             'identify_userid_meta_key' => $identify_userid_meta_key,
-                                        ), JSON_PRETTY_PRINT));
+                                        ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
                                     ?></pre>
                                     <p class="description">Values shown here reflect what’s currently saved in the database.</p>
                                 </td>
@@ -580,7 +580,7 @@ class Rybbit_Analytics_Admin {
                                         Roles: <code><?php echo esc_html(implode(', ', $current_roles)); ?></code><br />
                                         Excluded by role: <strong><?php echo $is_excluded_by_role ? 'yes' : 'no'; ?></strong>
                                     </p>
-                                    <p class="description">If excluded by role is “yes”, the tracking script won’t be printed for this user.</p>
+                                    <p class="description">If excluded by role is “yes”, the tracking script is disabled for this user.</p>
                                 </td>
                             </tr>
 
