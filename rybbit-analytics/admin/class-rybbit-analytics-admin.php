@@ -410,9 +410,18 @@ class Rybbit_Analytics_Admin {
                                 <td>
                                     <textarea id="rybbit_skip_patterns" name="rybbit_skip_patterns" rows="8" class="large-text code rybbit-input-wide"><?php echo esc_textarea($skip_patterns); ?></textarea>
                                     <p class="description">
-                                        One pattern per line. Matching paths won’t be tracked.
-                                        Wildcards: <code>*</code> matches within one segment; <code>**</code> matches across segments.
-                                        Examples: <code>/admin/*</code>, <code>/admin/**</code>, <code>/blog/*/comments</code>.
+                                        One pattern per line. Matching URL paths won’t be tracked.
+                                    </p>
+                                    <p class="description" style="margin-top: 6px;">
+                                        <strong>Wildcards:</strong>
+                                        <code>*</code> matches within one path segment (doesn’t cross <code>/</code>),
+                                        <code>**</code> matches across multiple segments (can include <code>/</code>).
+                                    </p>
+                                    <p class="description" style="margin-top: 6px;">
+                                        <strong>Examples:</strong><br />
+                                        <code>/admin/*</code> matches <code>/admin/dashboard</code> but not <code>/admin/users/list</code><br />
+                                        <code>/admin/**</code> matches <code>/admin/dashboard</code> and <code>/admin/users/list</code><br />
+                                        <code>/blog/*/comments</code> matches <code>/blog/post-123/comments</code> but not <code>/blog/category/post/comments</code>
                                     </p>
                                 </td>
                             </tr>
@@ -421,7 +430,14 @@ class Rybbit_Analytics_Admin {
                                 <td>
                                     <textarea id="rybbit_mask_patterns" name="rybbit_mask_patterns" rows="8" class="large-text code rybbit-input-wide"><?php echo esc_textarea($mask_patterns); ?></textarea>
                                     <p class="description">
-                                        One pattern per line. Matching paths are tracked but the URL path will be replaced with the pattern in analytics.
+                                        One pattern per line. Matching URL paths are tracked, but the recorded path will be replaced with the pattern (privacy masking).
+                                    </p>
+                                    <p class="description" style="margin-top: 6px;">
+                                        <strong>Example:</strong><br />
+                                        If you set <code>/account/**</code> and a user visits <code>/account/orders/123</code>, analytics will store <code>/account/**</code> instead of the real URL.
+                                    </p>
+                                    <p class="description" style="margin-top: 6px;">
+                                        <strong>Wildcards:</strong> Same as Skip patterns (<code>*</code> within a segment, <code>**</code> across segments).
                                     </p>
                                 </td>
                             </tr>
