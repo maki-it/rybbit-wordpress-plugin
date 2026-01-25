@@ -3,7 +3,9 @@
 Plugin Name: Rybbit Analytics
 Description: Analytics plugin for WordPress.
 Version: 1.0.0
-Author: Kim Oliver Drechsel <kontakt@maki-it.de>
+Plugin URI: https://github.com/maki-it/rybbit-wordpress-plugin
+Author: Maki IT
+Author URI: https://maki-it.de
 */
 
 // If this file is called directly, abort.
@@ -26,3 +28,18 @@ if (is_admin()) {
 } else {
     new Rybbit_Analytics_Public();
 }
+
+// Set defaults on activation (only if options don't exist yet).
+register_activation_hook(__FILE__, function () {
+    if (get_option('rybbit_do_not_track_admins', null) === null) {
+        add_option('rybbit_do_not_track_admins', '1');
+    }
+
+    if (get_option('rybbit_identify_mode', null) === null) {
+        add_option('rybbit_identify_mode', 'disabled');
+    }
+
+    if (get_option('rybbit_delete_data_on_uninstall', null) === null) {
+        add_option('rybbit_delete_data_on_uninstall', '0');
+    }
+});
