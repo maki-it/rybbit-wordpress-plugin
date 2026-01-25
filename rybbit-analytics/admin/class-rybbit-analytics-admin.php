@@ -302,6 +302,7 @@ class Rybbit_Analytics_Admin {
                 <a href="#privacy" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="privacy">Privacy</a>
                 <a href="#script" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="script">Script attributes</a>
                 <a href="#maintenance" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="maintenance">Maintenance</a>
+                <a href="#about" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="about">About</a>
             </h2>
 
             <div class="rybbit-settings-card">
@@ -381,10 +382,10 @@ class Rybbit_Analytics_Admin {
                             <tr>
                                 <th scope="row"><label>Identify payload preview</label></th>
                                 <td>
-                                    <pre id="rybbit_identify_payload" class="rybbit-identify-payload"></pre>
+                                    <pre id="rybbit_identify_payload" class="rybbit-identify-payload" data-rybbit-preview-status=""></pre>
                                     <p class="description">
-                                        Preview of the identify payload sent to Rybbit for the current user.
-                                        <a href="#" class="rybbit-refresh-payload">Refresh preview</a>.
+                                        Preview of the identify payload that would be sent for the current logged-in user.
+                                        <a href="#" class="rybbit-refresh-payload">Refresh preview</a>
                                     </p>
                                 </td>
                             </tr>
@@ -433,6 +434,42 @@ class Rybbit_Analytics_Admin {
                                         Remove all plugin settings when the plugin is uninstalled (deleted).
                                     </label>
                                     <p class="description">This does not run when the plugin is simply deactivated.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="rybbit-tab-panel" data-tab="about" role="tabpanel" style="display:none">
+                        <?php
+                        $data = get_file_data(plugin_dir_path(__DIR__) . 'rybbit-analytics.php', array('Version' => 'Version'), 'plugin');
+                        $version = isset($data['Version']) ? (string) $data['Version'] : '';
+                        ?>
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row">Plugin version</th>
+                                <td>
+                                    <code><?php echo esc_html($version !== '' ? $version : 'unknown'); ?></code>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Links</th>
+                                <td>
+                                    <p>
+                                        <a href="https://github.com/maki-it/rybbit-wordpress-plugin" target="_blank" rel="noopener noreferrer">GitHub repository</a>
+                                    </p>
+                                    <p>
+                                        <a href="https://rybbit.com/docs" target="_blank" rel="noopener noreferrer">Rybbit documentation</a>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Troubleshooting</th>
+                                <td>
+                                    <ul style="margin: 0; padding-left: 18px;">
+                                        <li>Make sure <strong>Site ID</strong> and <strong>Script URL</strong> are set.</li>
+                                        <li>If tracking doesn’t fire for logged-in users, check <strong>Do not track these roles</strong>.</li>
+                                        <li>For identify(), enable it under <strong>Privacy</strong> and verify the preview payload.</li>
+                                    </ul>
                                 </td>
                             </tr>
                         </table>

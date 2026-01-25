@@ -89,7 +89,6 @@
     var refreshLink = document.querySelector('.rybbit-refresh-payload');
 
     var timer = null;
-    var inflight = null;
 
     function setText(text) {
       pre.textContent = text;
@@ -101,16 +100,11 @@
     }
 
     function refresh(e) {
-      if (e) e.preventDefault();
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
 
       if (!window.rybbitAdmin || !window.rybbitAdmin.ajaxUrl || !window.rybbitAdmin.nonce) {
         setText('Preview unavailable (missing ajaxUrl/nonce).');
         return;
-      }
-
-      // Abort previous request if possible.
-      if (inflight && typeof inflight.abort === 'function') {
-        try { inflight.abort(); } catch (err) { /* ignore */ }
       }
 
       setText('Loading preview…');
@@ -122,17 +116,21 @@
       form.append('userid_strategy', strategyEl.value);
       form.append('userid_meta_key', metaKeyEl ? metaKeyEl.value : '');
 
-      inflight = fetch(window.rybbitAdmin.ajaxUrl, {
+      fetch(window.rybbitAdmin.ajaxUrl, {
         method: 'POST',
         credentials: 'same-origin',
         body: form
       })
         .then(function(res) {
+          if (!res.ok) {
+            throw new Error('HTTP ' + res.status);
+          }
           return res.json();
         })
         .then(function(json) {
           if (!json || json.success !== true) {
-            setText('No preview available.');
+            var msg = (json && json.data && json.data.message) ? String(json.data.message) : 'Unknown error';
+            setText('No preview available. ' + msg);
             return;
           }
           var payload = json.data ? json.data.payload : null;
@@ -143,7 +141,7 @@
           setText(JSON.stringify(payload, null, 2));
         })
         .catch(function(err) {
-          setText('Preview error.');
+          setText('Preview error: ' + (err && err.message ? err.message : 'unknown'));
         });
     }
 
@@ -151,7 +149,9 @@
     strategyEl.addEventListener('change', schedule);
     if (metaKeyEl) metaKeyEl.addEventListener('input', schedule);
 
-    if (refreshLink) refreshLink.addEventListener('click', refresh);
+    if (refreshLink) {
+      refreshLink.addEventListener('click', refresh);
+    }
 
     // Initial render
     refresh();

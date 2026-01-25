@@ -20,7 +20,10 @@ class Rybbit_Analytics_Admin_Ajax {
             wp_send_json_error(array('message' => 'Forbidden'), 403);
         }
 
-        check_ajax_referer('rybbit_admin_settings', 'nonce');
+        // Provide a friendly JSON error on nonce failure.
+        if (!check_ajax_referer('rybbit_admin_settings', 'nonce', false)) {
+            wp_send_json_error(array('message' => 'Invalid nonce. Please reload the page.'), 403);
+        }
 
         $identify_mode = isset($_POST['identify_mode']) ? sanitize_text_field(wp_unslash($_POST['identify_mode'])) : 'disabled';
         $userid_strategy = isset($_POST['userid_strategy']) ? sanitize_text_field(wp_unslash($_POST['userid_strategy'])) : 'wp_scoped';
