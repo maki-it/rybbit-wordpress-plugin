@@ -1,11 +1,16 @@
 <?php
 /*
 Plugin Name: Rybbit Analytics
-Description: Analytics plugin for WordPress.
-Version: 1.0.0
 Plugin URI: https://github.com/maki-it/rybbit-wordpress-plugin
+Description: Analytics plugin for WordPress.
+Version: 0.0.0
+Requires at least: 5.8
+Requires PHP: 7.4
 Author: Maki IT
 Author URI: https://maki-it.de
+License: GPLv3 or later
+License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
+Update URI: https://github.com/maki-it/rybbit-wordpress-plugin
 */
 
 // If this file is called directly, abort.
