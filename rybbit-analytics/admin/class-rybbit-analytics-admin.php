@@ -79,11 +79,11 @@ class Rybbit_Analytics_Admin {
             'default' => '1',
         ));
 
-        // Role-based exclusion list (multi-select). Stored as JSON array of role slugs.
+        // Role-based exclusion list (multi-select). Stored as an array of role slugs.
         register_setting('rybbit_analytics_settings', 'rybbit_excluded_roles', array(
-            'type' => 'string',
-            'sanitize_callback' => array($this, 'sanitize_roles_json_array'),
-            'default' => wp_json_encode(array('administrator')),
+            'type' => 'array',
+            'sanitize_callback' => array($this, 'sanitize_roles_array'),
+            'default' => array('administrator'),
         ));
 
         // Choose which value is used as the Rybbit userId.
@@ -206,19 +206,35 @@ class Rybbit_Analytics_Admin {
     }
 
     /**
-     * Sanitize roles input as a JSON array of role slugs.
-     * Accepts either a PHP array from multi-select or a JSON string.
+     * Sanitize roles input.
+     *
+     * Accepts:
+     * - PHP array (from multi-select)
+     * - JSON array string (legacy)
+     * - newline-separated string
+     *
+     * Returns a cleaned array of existing role slugs.
      */
-    public function sanitize_roles_json_array($value) {
+    public function sanitize_roles_array($value) {
+        // Normalize to array.
         if (is_array($value)) {
             $roles = $value;
         } else {
-            $value = trim((string) $value);
-            if ($value === '') {
-                return '[]';
+            $str = trim((string) $value);
+            if ($str === '') {
+                $roles = array();
+            } else {
+                $decoded = json_decode($str, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $roles = $decoded;
+                } else {
+                    // Fallback: newline-separated.
+                    $roles = preg_split('/\r\n|\r|\n/', $str);
+                    if (!is_array($roles)) {
+                        $roles = array();
+                    }
+                }
             }
-            $decoded = json_decode($value, true);
-            $roles = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : array();
         }
 
         $roles = array_values(array_filter(array_map(function ($r) {
@@ -226,13 +242,21 @@ class Rybbit_Analytics_Admin {
             return $r !== '' ? $r : null;
         }, $roles)));
 
+        // Only allow existing roles.
         global $wp_roles;
         if (!isset($wp_roles) || !is_object($wp_roles)) {
             $wp_roles = wp_roles();
         }
         $existing = is_object($wp_roles) ? array_keys((array) $wp_roles->roles) : array();
 
-        $roles = array_values(array_intersect($roles, $existing));
+        return array_values(array_intersect($roles, $existing));
+    }
+
+    /**
+     * Back-compat wrapper: old name returned JSON; now return JSON for callers that expect it.
+     */
+    public function sanitize_roles_json_array($value) {
+        $roles = $this->sanitize_roles_array($value);
         return wp_json_encode($roles);
     }
 
@@ -284,11 +308,8 @@ class Rybbit_Analytics_Admin {
         $debounce = get_option('rybbit_debounce', '500');
         $identify_mode = get_option('rybbit_identify_mode', 'disabled');
         $delete_data_on_uninstall = get_option('rybbit_delete_data_on_uninstall', '1');
-        $excluded_roles_json = get_option('rybbit_excluded_roles', '[]');
-        $excluded_roles = json_decode((string) $excluded_roles_json, true);
-        if (!is_array($excluded_roles)) {
-            $excluded_roles = array();
-        }
+        $excluded_roles_opt = get_option('rybbit_excluded_roles', array());
+        $excluded_roles = $this->sanitize_roles_array($excluded_roles_opt);
         $identify_userid_strategy = get_option('rybbit_identify_userid_strategy', 'wp_scoped');
         $identify_userid_meta_key = get_option('rybbit_identify_userid_meta_key', '');
 
