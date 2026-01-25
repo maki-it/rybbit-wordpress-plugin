@@ -7,9 +7,7 @@ class Rybbit_Analytics_Admin {
         // Admin hooks
         add_action('admin_menu', array($this, 'add_menu'));
         add_action('admin_init', array($this, 'register_settings'));
-
-        // Add links on the Plugins page
-        add_filter('plugin_action_links_' . plugin_basename(dirname(__DIR__) . '/rybbit-analytics.php'), array($this, 'action_links'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
     }
     public function add_menu() {
         // Add admin menu
@@ -202,6 +200,23 @@ class Rybbit_Analytics_Admin {
         return wp_json_encode($roles);
     }
 
+    /**
+     * Load admin assets only on the plugin settings page.
+     */
+    public function enqueue_admin_assets($hook_suffix) {
+        // Our settings page is Settings -> Rybbit Analytics
+        if ($hook_suffix !== 'settings_page_rybbit-analytics') {
+            return;
+        }
+
+        wp_enqueue_style(
+            'rybbit-analytics-admin-settings',
+            plugin_dir_url(__FILE__) . 'css/settings.css',
+            array(),
+            '1.0.0'
+        );
+    }
+
     public function settings_page() {
         $site_id = get_option('rybbit_site_id', '');
         $script_url = get_option('rybbit_script_url', 'https://app.rybbit.io/api/script.js');
@@ -225,105 +240,124 @@ class Rybbit_Analytics_Admin {
         ?>
         <div class="wrap">
             <h1>Rybbit Analytics Settings</h1>
-            <form method="post" action="options.php">
-                <?php settings_fields('rybbit_analytics_settings'); ?>
-                <?php do_settings_sections('rybbit_analytics_settings'); ?>
-                <?php settings_errors(); ?>
-                <table class="form-table">
-                    <tr valign="top">
-                        <th scope="row"><label for="rybbit_site_id">Site ID <span class="required">*</span></label></th>
-                        <td>
-                            <input type="text" id="rybbit_site_id" name="rybbit_site_id" value="<?php echo esc_attr($site_id); ?>" size="50" required aria-required="true" />
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <th scope="row"><label for="rybbit_script_url">Script URL <span class="required">*</span></label></th>
-                        <td>
-                            <input type="url" id="rybbit_script_url" name="rybbit_script_url" value="<?php echo esc_attr($script_url); ?>" size="50" required aria-required="true" />
-                            <p class="description">Example: https://app.rybbit.io/api/script.js</p>
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <th scope="row"><label for="rybbit_excluded_roles">Do not track these roles</label></th>
-                        <td>
-                            <select id="rybbit_excluded_roles" name="rybbit_excluded_roles[]" multiple size="6" style="min-width: 280px;">
-                                <?php foreach ($roles_list as $role_slug => $role_data) :
-                                    $name = isset($role_data['name']) ? $role_data['name'] : $role_slug;
-                                ?>
-                                    <option value="<?php echo esc_attr($role_slug); ?>" <?php echo in_array($role_slug, $excluded_roles, true) ? 'selected' : ''; ?>>
-                                        <?php echo esc_html($name); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <p class="description" style="max-width: 720px;">
-                                Selected roles will not receive the tracking script.
-                            </p>
-                        </td>
-                    </tr>
 
-                    <tr valign="top">
-                        <th scope="row"><label for="rybbit_identify_mode">Identify logged-in users</label></th>
-                        <td>
-                            <select id="rybbit_identify_mode" name="rybbit_identify_mode">
-                                <option value="disabled" <?php selected($identify_mode, 'disabled'); ?>>Disabled</option>
-                                <option value="pseudonymized" <?php selected($identify_mode, 'pseudonymized'); ?>>Pseudonymized (hashed)</option>
-                                <option value="full" <?php selected($identify_mode, 'full'); ?>>Full (cleartext email)</option>
-                            </select>
-                            <p class="description" style="max-width: 720px;">
-                                <strong>GDPR/Privacy:</strong> Identifying users is personal data processing. Only enable this if you have a lawful basis (e.g. consent) and have updated your privacy policy / consent banner accordingly.
-                                <br />
-                                <strong>Pseudonymized</strong> sends a stable WordPress user id plus hashed traits (e.g. SHA-256 email hash).<br />
-                                <strong>Full</strong> additionally sends cleartext traits like email and display name. Use only if you explicitly need it.
-                            </p>
-                        </td>
-                    </tr>
+            <div class="rybbit-settings-grid">
+                <div class="rybbit-settings-card">
+                    <form method="post" action="options.php">
+                        <?php settings_fields('rybbit_analytics_settings'); ?>
+                        <?php do_settings_sections('rybbit_analytics_settings'); ?>
+                        <?php settings_errors(); ?>
+                        <table class="form-table">
+                            <tr valign="top">
+                                <th scope="row"><label for="rybbit_site_id">Site ID <span class="required">*</span></label></th>
+                                <td>
+                                    <input type="text" id="rybbit_site_id" name="rybbit_site_id" value="<?php echo esc_attr($site_id); ?>" size="50" required aria-required="true" />
+                                </td>
+                            </tr>
+                            <tr valign="top">
+                                <th scope="row"><label for="rybbit_script_url">Script URL <span class="required">*</span></label></th>
+                                <td>
+                                    <input type="url" id="rybbit_script_url" name="rybbit_script_url" value="<?php echo esc_attr($script_url); ?>" size="50" required aria-required="true" />
+                                    <p class="description">Example: https://app.rybbit.io/api/script.js</p>
+                                </td>
+                            </tr>
+                            <tr valign="top">
+                                <th scope="row"><label for="rybbit_excluded_roles">Do not track these roles</label></th>
+                                <td>
+                                    <select id="rybbit_excluded_roles" name="rybbit_excluded_roles[]" multiple size="6" style="min-width: 280px;">
+                                        <?php foreach ($roles_list as $role_slug => $role_data) :
+                                            $name = isset($role_data['name']) ? $role_data['name'] : $role_slug;
+                                        ?>
+                                            <option value="<?php echo esc_attr($role_slug); ?>" <?php echo in_array($role_slug, $excluded_roles, true) ? 'selected' : ''; ?>>
+                                                <?php echo esc_html($name); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <p class="description" style="max-width: 720px;">
+                                        Selected roles will not receive the tracking script.
+                                    </p>
+                                </td>
+                            </tr>
 
-                    <tr valign="top">
-                        <th scope="row"><label for="rybbit_skip_patterns">Skip patterns</label></th>
-                        <td>
-                            <textarea id="rybbit_skip_patterns" name="rybbit_skip_patterns" rows="5" cols="50" class="large-text code"><?php echo esc_textarea($skip_patterns); ?></textarea>
-                            <p class="description">
-                                One pattern per line. Matching paths won’t be tracked.<br />
-                                Wildcards: <code>*</code> matches within one path segment; <code>**</code> matches across segments.<br />
-                                Examples: <code>/admin/*</code> matches <code>/admin/dashboard</code> but not <code>/admin/users/list</code>. <code>/admin/**</code> matches both.
-                            </p>
-                        </td>
-                    </tr>
+                            <tr valign="top">
+                                <th scope="row"><label for="rybbit_identify_mode">Identify logged-in users</label></th>
+                                <td>
+                                    <select id="rybbit_identify_mode" name="rybbit_identify_mode">
+                                        <option value="disabled" <?php selected($identify_mode, 'disabled'); ?>>Disabled</option>
+                                        <option value="pseudonymized" <?php selected($identify_mode, 'pseudonymized'); ?>>Pseudonymized (hashed)</option>
+                                        <option value="full" <?php selected($identify_mode, 'full'); ?>>Full (cleartext email)</option>
+                                    </select>
+                                    <p class="description" style="max-width: 720px;">
+                                        <strong>GDPR/Privacy:</strong> Identifying users is personal data processing. Only enable this if you have a lawful basis (e.g. user consent) and have updated your privacy policy / consent banner accordingly.
+                                        <br />
+                                        <strong>Pseudonymized</strong> sends a stable WordPress user id plus hashed traits (e.g. SHA-256 email hash).<br />
+                                        <strong>Full</strong> additionally sends cleartext traits like email and display name. Use only if you explicitly need it.
+                                    </p>
+                                </td>
+                            </tr>
 
-                    <tr valign="top">
-                        <th scope="row"><label for="rybbit_mask_patterns">Mask patterns</label></th>
-                        <td>
-                            <textarea id="rybbit_mask_patterns" name="rybbit_mask_patterns" rows="5" cols="50" class="large-text code"><?php echo esc_textarea($mask_patterns); ?></textarea>
-                            <p class="description">
-                                One pattern per line. Matching paths are tracked but the URL will be replaced with the pattern in analytics.<br />
-                                Wildcards: <code>*</code> matches within one segment; <code>**</code> matches across segments.
-                            </p>
-                        </td>
-                    </tr>
+                            <tr valign="top">
+                                <th scope="row"><label for="rybbit_skip_patterns">Skip patterns</label></th>
+                                <td>
+                                    <textarea id="rybbit_skip_patterns" name="rybbit_skip_patterns" rows="5" cols="50" class="large-text code"><?php echo esc_textarea($skip_patterns); ?></textarea>
+                                    <p class="description">
+                                        One pattern per line. Matching paths won’t be tracked.<br />
+                                        Wildcards: <code>*</code> matches within one path segment; <code>**</code> matches across segments.<br />
+                                        Examples: <code>/admin/*</code> matches <code>/admin/dashboard</code> but not <code>/admin/users/list</code>. <code>/admin/**</code> matches both.
+                                    </p>
+                                </td>
+                            </tr>
 
-                    <tr valign="top">
-                        <th scope="row"><label for="rybbit_debounce">Debounce (ms)</label></th>
-                        <td>
-                            <input type="number" min="0" step="1" id="rybbit_debounce" name="rybbit_debounce" value="<?php echo esc_attr($debounce); ?>" class="small-text" />
-                            <p class="description">Delay before tracking a pageview after History API URL changes. Set to 0 to disable.</p>
-                        </td>
-                    </tr>
+                            <tr valign="top">
+                                <th scope="row"><label for="rybbit_mask_patterns">Mask patterns</label></th>
+                                <td>
+                                    <textarea id="rybbit_mask_patterns" name="rybbit_mask_patterns" rows="5" cols="50" class="large-text code"><?php echo esc_textarea($mask_patterns); ?></textarea>
+                                    <p class="description">
+                                        One pattern per line. Matching paths are tracked but the URL will be replaced with the pattern in analytics.<br />
+                                        Wildcards: <code>*</code> matches within one segment; <code>**</code> matches across segments.
+                                    </p>
+                                </td>
+                            </tr>
 
-                    <tr valign="top">
-                        <th scope="row"><label for="rybbit_delete_data_on_uninstall">Delete data on uninstall</label></th>
-                        <td>
-                            <input type="checkbox" id="rybbit_delete_data_on_uninstall" name="rybbit_delete_data_on_uninstall" value="1" <?php checked('1', $delete_data_on_uninstall); ?> />
-                            <p class="description" style="max-width: 720px;">
-                                If enabled, all Rybbit Analytics plugin settings will be permanently removed when the plugin is uninstalled (deleted).
-                                This does <strong>not</strong> run when the plugin is simply deactivated.
-                                Keep this disabled if you plan to reinstall later.
-                            </p>
-                        </td>
-                    </tr>
+                            <tr valign="top">
+                                <th scope="row"><label for="rybbit_debounce">Debounce (ms)</label></th>
+                                <td>
+                                    <input type="number" min="0" step="1" id="rybbit_debounce" name="rybbit_debounce" value="<?php echo esc_attr($debounce); ?>" class="small-text" />
+                                    <p class="description">Delay before tracking a pageview after History API URL changes. Set to 0 to disable.</p>
+                                </td>
+                            </tr>
 
-                </table>
-                <?php submit_button(); ?>
-            </form>
+                            <tr valign="top">
+                                <th scope="row"><label for="rybbit_delete_data_on_uninstall">Delete data on uninstall</label></th>
+                                <td>
+                                    <input type="checkbox" id="rybbit_delete_data_on_uninstall" name="rybbit_delete_data_on_uninstall" value="1" <?php checked('1', $delete_data_on_uninstall); ?> />
+                                    <p class="description" style="max-width: 720px;">
+                                        If enabled, all Rybbit Analytics plugin settings will be permanently removed when the plugin is uninstalled (deleted).
+                                        This does <strong>not</strong> run when the plugin is simply deactivated.
+                                        Keep this disabled if you plan to reinstall later.
+                                    </p>
+                                </td>
+                            </tr>
+
+                        </table>
+                        <?php submit_button(); ?>
+                    </form>
+                </div>
+
+                <aside class="rybbit-settings-help">
+                    <h2>Quick help</h2>
+                    <p class="rybbit-inline-note">
+                        <strong>Site ID</strong>: find it in your Rybbit dashboard under your site’s tracking settings.
+                    </p>
+                    <p class="rybbit-inline-note">
+                        <strong>Skip/Mask patterns</strong>: enter one pattern per line. Wildcards:
+                        <span class="rybbit-code">*</span> (one segment) and <span class="rybbit-code">**</span> (multiple segments).
+                    </p>
+                    <p class="rybbit-inline-note">
+                        <strong>Privacy</strong>: if you enable user identification, make sure you have a lawful basis (e.g. user consent) and update your privacy policy.
+                    </p>
+                </aside>
+            </div>
         </div>
         <?php
     }
