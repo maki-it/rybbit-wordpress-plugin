@@ -21,8 +21,8 @@
   align-items: center;
   justify-content: center;
 
-  /* Black badge background */
-  background: #000;
+  /* Use WordPress admin color scheme */
+  background: var(--wp-admin-theme-color, #2271b1);
   color: #fff;
 }
 
