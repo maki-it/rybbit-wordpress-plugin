@@ -2,7 +2,7 @@
 /*
 Plugin Name: Rybbit Analytics
 Plugin URI: https://github.com/maki-it/rybbit-wordpress-plugin
-Description: Analytics plugin for WordPress.
+Description: Add and manage the Rybbit tracking script
 Version: 0.0.0
 Requires at least: 5.8
 Requires PHP: 7.4
