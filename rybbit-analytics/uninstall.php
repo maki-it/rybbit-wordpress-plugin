@@ -16,6 +16,7 @@ $option_names = array(
     'rybbit_site_id',
     'rybbit_script_url',
     'rybbit_do_not_track_admins',
+    'rybbit_excluded_roles',
     'rybbit_skip_patterns',
     'rybbit_mask_patterns',
     'rybbit_debounce',

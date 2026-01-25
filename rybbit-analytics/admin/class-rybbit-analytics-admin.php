@@ -75,6 +75,13 @@ class Rybbit_Analytics_Admin {
             },
             'default' => '0',
         ));
+
+        // Role-based exclusion list (multi-select). Stored as JSON array of role slugs.
+        register_setting('rybbit_analytics_settings', 'rybbit_excluded_roles', array(
+            'type' => 'string',
+            'sanitize_callback' => array($this, 'sanitize_roles_json_array'),
+            'default' => wp_json_encode(array('administrator')),
+        ));
     }
 
     /**
@@ -164,15 +171,57 @@ class Rybbit_Analytics_Admin {
         return (string) max(0, intval($value, 10));
     }
 
+    /**
+     * Sanitize roles input as a JSON array of role slugs.
+     * Accepts either a PHP array from multi-select or a JSON string.
+     */
+    public function sanitize_roles_json_array($value) {
+        if (is_array($value)) {
+            $roles = $value;
+        } else {
+            $value = trim((string) $value);
+            if ($value === '') {
+                return '[]';
+            }
+            $decoded = json_decode($value, true);
+            $roles = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : array();
+        }
+
+        $roles = array_values(array_filter(array_map(function ($r) {
+            $r = sanitize_key((string) $r);
+            return $r !== '' ? $r : null;
+        }, $roles)));
+
+        global $wp_roles;
+        if (!isset($wp_roles) || !is_object($wp_roles)) {
+            $wp_roles = wp_roles();
+        }
+        $existing = is_object($wp_roles) ? array_keys((array) $wp_roles->roles) : array();
+
+        $roles = array_values(array_intersect($roles, $existing));
+        return wp_json_encode($roles);
+    }
+
     public function settings_page() {
         $site_id = get_option('rybbit_site_id', '');
         $script_url = get_option('rybbit_script_url', 'https://app.rybbit.io/api/script.js');
-        $do_not_track_admins = get_option('rybbit_do_not_track_admins', '1');
         $skip_patterns = get_option('rybbit_skip_patterns', '');
         $mask_patterns = get_option('rybbit_mask_patterns', '');
         $debounce = get_option('rybbit_debounce', '500');
         $identify_mode = get_option('rybbit_identify_mode', 'disabled');
         $delete_data_on_uninstall = get_option('rybbit_delete_data_on_uninstall', '0');
+        $excluded_roles_json = get_option('rybbit_excluded_roles', '[]');
+        $excluded_roles = json_decode((string) $excluded_roles_json, true);
+        if (!is_array($excluded_roles)) {
+            $excluded_roles = array();
+        }
+
+        // Build available roles list.
+        global $wp_roles;
+        if (!isset($wp_roles) || !is_object($wp_roles)) {
+            $wp_roles = wp_roles();
+        }
+        $roles_list = is_object($wp_roles) ? (array) $wp_roles->roles : array();
         ?>
         <div class="wrap">
             <h1>Rybbit Analytics Settings</h1>
@@ -185,7 +234,6 @@ class Rybbit_Analytics_Admin {
                         <th scope="row"><label for="rybbit_site_id">Site ID <span class="required">*</span></label></th>
                         <td>
                             <input type="text" id="rybbit_site_id" name="rybbit_site_id" value="<?php echo esc_attr($site_id); ?>" size="50" required aria-required="true" />
-                            <p class="description">Find this in your Rybbit dashboard under your site’s tracking settings.</p>
                         </td>
                     </tr>
                     <tr valign="top">
@@ -196,9 +244,21 @@ class Rybbit_Analytics_Admin {
                         </td>
                     </tr>
                     <tr valign="top">
-                        <th scope="row"><label for="rybbit_do_not_track_admins">Do not track Administrators</label></th>
-                        <td><input type="checkbox" id="rybbit_do_not_track_admins" name="rybbit_do_not_track_admins" value="1" <?php checked('1', $do_not_track_admins); ?> />
-                        <span class="description">If checked, tracking code will not be injected for users with the Administrator role.</span></td>
+                        <th scope="row"><label for="rybbit_excluded_roles">Do not track these roles</label></th>
+                        <td>
+                            <select id="rybbit_excluded_roles" name="rybbit_excluded_roles[]" multiple size="6" style="min-width: 280px;">
+                                <?php foreach ($roles_list as $role_slug => $role_data) :
+                                    $name = isset($role_data['name']) ? $role_data['name'] : $role_slug;
+                                ?>
+                                    <option value="<?php echo esc_attr($role_slug); ?>" <?php echo in_array($role_slug, $excluded_roles, true) ? 'selected' : ''; ?>>
+                                        <?php echo esc_html($name); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="description" style="max-width: 720px;">
+                                Selected roles will not receive the tracking script.
+                            </p>
+                        </td>
                     </tr>
 
                     <tr valign="top">

@@ -8,8 +8,22 @@ class Rybbit_Analytics_Public {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('wp_head', array($this, 'add_tracking_script'));
 
+        // Also inject on wp-admin pages.
+        add_action('admin_head', array($this, 'add_tracking_script_in_admin'));
+
         // Clear Rybbit user id on WP logout screens
         add_action('login_head', array($this, 'maybe_clear_user_on_logout_screen'));
+    }
+
+    /**
+     * Inject tracking into wp-admin (excluding AJAX requests).
+     */
+    public function add_tracking_script_in_admin() {
+        if (defined('DOING_AJAX') && DOING_AJAX) {
+            return;
+        }
+
+        $this->add_tracking_script();
     }
 
     /**
@@ -64,18 +78,35 @@ class Rybbit_Analytics_Public {
     public function add_tracking_script() {
         $site_id = get_option('rybbit_site_id', '');
         $script_url = get_option('rybbit_script_url', 'https://app.rybbit.io/api/script.js');
+
+        $excluded_roles_json = get_option('rybbit_excluded_roles', null);
         $do_not_track_admins = get_option('rybbit_do_not_track_admins', '1');
 
-        $skip_patterns = get_option('rybbit_skip_patterns', '[]');
-        $mask_patterns = get_option('rybbit_mask_patterns', '[]');
+        $skip_patterns = get_option('rybbit_skip_patterns', '');
+        $mask_patterns = get_option('rybbit_mask_patterns', '');
         $debounce = get_option('rybbit_debounce', '500');
 
         if (empty($site_id) || empty($script_url)) {
             return;
         }
 
-        if ($do_not_track_admins === '1' && is_user_logged_in() && current_user_can('administrator')) {
-            return;
+        // Role-based exclusions:
+        // - If the new setting exists, use it.
+        // - Otherwise fall back to the legacy admin-only checkbox.
+        $excluded_roles = array();
+        if ($excluded_roles_json !== null) {
+            $decoded = json_decode((string) $excluded_roles_json, true);
+            $excluded_roles = is_array($decoded) ? $decoded : array();
+        } elseif ($do_not_track_admins === '1') {
+            $excluded_roles = array('administrator');
+        }
+
+        if (!empty($excluded_roles) && is_user_logged_in()) {
+            $user = wp_get_current_user();
+            $user_roles = ($user && isset($user->roles)) ? (array) $user->roles : array();
+            if (!empty(array_intersect($excluded_roles, $user_roles))) {
+                return;
+            }
         }
 
         // Normalize/validate attribute values.
