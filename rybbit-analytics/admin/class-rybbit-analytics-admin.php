@@ -311,6 +311,7 @@ class Rybbit_Analytics_Admin {
                 <a href="#privacy" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="privacy">Privacy</a>
                 <a href="#script" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="script">Script attributes</a>
                 <a href="#maintenance" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="maintenance">Maintenance</a>
+                <a href="#debug" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="debug">Debug</a>
                 <a href="#about" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="about">About</a>
             </h2>
 
@@ -444,6 +445,94 @@ class Rybbit_Analytics_Admin {
                                         Remove all plugin settings when the plugin is uninstalled (deleted).
                                     </label>
                                     <p class="description">This does not run when the plugin is simply deactivated.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="rybbit-tab-panel" data-tab="debug" role="tabpanel" style="display:none">
+                        <?php
+                        $excluded_roles_effective = $excluded_roles;
+                        $current_user = wp_get_current_user();
+                        $current_roles = ($current_user && isset($current_user->roles)) ? (array) $current_user->roles : array();
+
+                        $is_excluded_by_role = false;
+                        if (!empty($excluded_roles_effective) && is_user_logged_in()) {
+                            $is_excluded_by_role = !empty(array_intersect($excluded_roles_effective, $current_roles));
+                        }
+
+                        // Build a script tag preview equivalent to the output logic.
+                        $debounce_preview = is_string($debounce) ? trim($debounce) : (string) $debounce;
+                        if ($debounce_preview === '' || !preg_match('/^\d+$/', $debounce_preview)) {
+                            $debounce_preview = '500';
+                        }
+
+                        // (Admin UI stores one pattern per line)
+                        $skip_lines = preg_split('/\r\n|\r|\n/', (string) $skip_patterns);
+                        $skip_arr = array_values(array_filter(array_map('trim', is_array($skip_lines) ? $skip_lines : array())));
+                        $mask_lines = preg_split('/\r\n|\r|\n/', (string) $mask_patterns);
+                        $mask_arr = array_values(array_filter(array_map('trim', is_array($mask_lines) ? $mask_lines : array())));
+
+                        $skip_json = wp_json_encode($skip_arr);
+                        $mask_json = wp_json_encode($mask_arr);
+
+                        // Quote JSON strings safely for HTML attributes.
+                        $script_tag_preview = sprintf(
+                            '<script src="%s" async data-site-id="%s" data-skip-patterns=%s data-mask-patterns=%s data-debounce="%s"></script>',
+                            esc_url($script_url),
+                            esc_attr($site_id),
+                            wp_json_encode($skip_json ? $skip_json : '[]'),
+                            wp_json_encode($mask_json ? $mask_json : '[]'),
+                            esc_attr($debounce_preview)
+                        );
+                        ?>
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row">Effective settings</th>
+                                <td>
+                                    <pre class="rybbit-identify-payload"><?php
+                                        echo esc_html(wp_json_encode(array(
+                                            'site_id' => $site_id,
+                                            'script_url' => $script_url,
+                                            'excluded_roles' => $excluded_roles_effective,
+                                            'skip_patterns_lines' => $skip_arr,
+                                            'mask_patterns_lines' => $mask_arr,
+                                            'debounce' => $debounce_preview,
+                                            'identify_mode' => $identify_mode,
+                                            'identify_userid_strategy' => $identify_userid_strategy,
+                                            'identify_userid_meta_key' => $identify_userid_meta_key,
+                                        ), JSON_PRETTY_PRINT));
+                                    ?></pre>
+                                    <p class="description">Values shown here reflect what’s currently saved in the database.</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Current user</th>
+                                <td>
+                                    <p>
+                                        Logged in: <strong><?php echo is_user_logged_in() ? 'yes' : 'no'; ?></strong><br />
+                                        User ID: <code><?php echo is_user_logged_in() ? (int) get_current_user_id() : 0; ?></code><br />
+                                        Roles: <code><?php echo esc_html(implode(', ', $current_roles)); ?></code><br />
+                                        Excluded by role: <strong><?php echo $is_excluded_by_role ? 'yes' : 'no'; ?></strong>
+                                    </p>
+                                    <p class="description">If excluded by role is “yes”, the tracking script won’t be printed for this user.</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Tracking script preview</th>
+                                <td>
+                                    <pre class="rybbit-identify-payload"><?php echo esc_html($script_tag_preview); ?></pre>
+                                    <p class="description">This is how the script tag will look in page source (attributes included).</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Quick checks</th>
+                                <td>
+                                    <ul style="margin: 0; padding-left: 18px;">
+                                        <li><strong>Site ID</strong> and <strong>Script URL</strong> must be set, otherwise nothing is output.</li>
+                                        <li>Script is injected into <code>wp_head</code> (frontend) and <code>admin_head</code> (wp-admin).</li>
+                                        <li>Role exclusion applies equally to frontend and wp-admin.</li>
+                                    </ul>
                                 </td>
                             </tr>
                         </table>
