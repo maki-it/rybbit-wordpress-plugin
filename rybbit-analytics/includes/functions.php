@@ -1,0 +1,3 @@
+<?php
+// General plugin functions for Rybbit Analytics
+// ...existing code...
