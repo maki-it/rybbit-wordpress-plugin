@@ -5,7 +5,6 @@
 class Rybbit_Analytics_Admin_Ajax {
     public function __construct() {
         add_action('wp_ajax_rybbit_preview_identify_payload', array($this, 'preview_identify_payload'));
-        add_action('wp_ajax_rybbit_check_latest_version', array($this, 'check_latest_version'));
     }
 
     /**
@@ -55,37 +54,6 @@ class Rybbit_Analytics_Admin_Ajax {
         // Provide a consistent response shape.
         wp_send_json_success(array(
             'payload' => $payload,
-        ));
-    }
-
-    /**
-     * Force-refresh and return the latest plugin version info.
-     */
-    public function check_latest_version() {
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Forbidden'), 403);
-        }
-
-        if (!check_ajax_referer('rybbit_admin_settings', 'nonce', false)) {
-            wp_send_json_error(array('message' => 'Invalid nonce. Please reload the page.'), 403);
-        }
-
-        if (!class_exists('Rybbit_Analytics_Updates')) {
-            wp_send_json_error(array('message' => 'Update checker is unavailable.'), 500);
-        }
-
-        $installed = Rybbit_Analytics_Updates::get_installed_version();
-        $latest = Rybbit_Analytics_Updates::get_latest_version(true);
-
-        $update_available = null;
-        if (is_string($installed) && $installed !== '' && is_string($latest) && $latest !== '') {
-            $update_available = version_compare($installed, $latest, '<');
-        }
-
-        wp_send_json_success(array(
-            'installed' => $installed,
-            'latest' => $latest,
-            'updateAvailable' => $update_available,
         ));
     }
 }

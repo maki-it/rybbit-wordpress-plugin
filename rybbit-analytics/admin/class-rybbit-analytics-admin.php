@@ -298,8 +298,6 @@ class Rybbit_Analytics_Admin {
     }
 
     public function settings_page() {
-        // Note: update checks are triggered client-side when the About tab is opened.
-
         $site_id = get_option('rybbit_site_id', '');
         $script_url = get_option('rybbit_script_url', 'https://app.rybbit.io/api/script.js');
         $script_loading = get_option('rybbit_script_loading', 'defer');
@@ -616,15 +614,6 @@ class Rybbit_Analytics_Admin {
                                 <th scope="row">Installed plugin version</th>
                                 <td>
                                     <code class="rybbit-installed-version"><?php echo esc_html($version !== '' ? $version : 'unknown'); ?></code>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Latest plugin version</th>
-                                <td>
-                                    <span class="rybbit-latest-version-wrap">
-                                        <code class="rybbit-latest-version">Checking…</code>
-                                    </span>
-                                    <div class="rybbit-update-status" style="margin-top: 6px;"></div>
                                 </td>
                             </tr>
 
