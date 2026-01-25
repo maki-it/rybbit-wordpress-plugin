@@ -86,7 +86,7 @@ class Rybbit_Analytics_Public {
         $script_url = get_option('rybbit_script_url', 'https://app.rybbit.io/api/script.js');
         $script_loading = get_option('rybbit_script_loading', 'defer');
 
-        $excluded_roles_json = get_option('rybbit_excluded_roles', null);
+        $excluded_roles_opt = get_option('rybbit_excluded_roles', null);
         $do_not_track_admins = get_option('rybbit_do_not_track_admins', '1');
 
         $skip_patterns = get_option('rybbit_skip_patterns', '');
@@ -101,9 +101,8 @@ class Rybbit_Analytics_Public {
         // - If the new setting exists, use it.
         // - Otherwise fall back to the legacy admin-only checkbox.
         $excluded_roles = array();
-        if ($excluded_roles_json !== null) {
-            $decoded = json_decode((string) $excluded_roles_json, true);
-            $excluded_roles = is_array($decoded) ? $decoded : array();
+        if ($excluded_roles_opt !== null) {
+            $excluded_roles = $this->normalize_roles_option_to_array($excluded_roles_opt);
         } elseif ($do_not_track_admins === '1') {
             $excluded_roles = array('administrator');
         }
@@ -299,5 +298,31 @@ class Rybbit_Analytics_Public {
         }
 
         return wp_json_encode(array_values($out));
+    }
+
+    /**
+     * Normalize the excluded roles option to an array of role slugs.
+     * Accepts:
+     * - array (preferred)
+     * - JSON string array (legacy)
+     * - anything else -> []
+     */
+    private function normalize_roles_option_to_array($value) {
+        if (is_array($value)) {
+            $roles = $value;
+        } else {
+            $decoded = json_decode((string) $value, true);
+            $roles = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : array();
+        }
+
+        $out = array();
+        foreach ($roles as $r) {
+            $r = sanitize_key((string) $r);
+            if ($r !== '') {
+                $out[] = $r;
+            }
+        }
+
+        return array_values(array_unique($out));
     }
 }
