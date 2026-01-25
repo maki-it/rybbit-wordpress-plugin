@@ -308,8 +308,9 @@ class Rybbit_Analytics_Admin {
             <div class="rybbit-settings-card">
                 <form method="post" action="options.php">
                     <?php settings_fields('rybbit_analytics_settings'); ?>
-                    <?php do_settings_sections('rybbit_analytics_settings'); ?>
-                    <?php settings_errors(); ?>
+                    <?php settings_errors('rybbit_analytics_settings'); ?>
+
+                    <!-- removed do_settings_sections('rybbit_analytics_settings'); since no sections are registered -->
 
                     <div class="rybbit-tab-panel" data-tab="tracking" role="tabpanel">
                         <table class="form-table" role="presentation">
