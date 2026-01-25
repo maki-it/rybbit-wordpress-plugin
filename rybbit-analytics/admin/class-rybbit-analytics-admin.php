@@ -289,7 +289,16 @@ class Rybbit_Analytics_Admin {
         <div class="wrap">
             <div class="rybbit-header">
                 <div class="rybbit-icon" aria-hidden="true">
-                    <span class="dashicons dashicons-chart-area"></span>
+                    <?php
+                    // Inline SVG to avoid extra requests.
+                    $icon_path = plugin_dir_path(__FILE__) . 'assets/rybbit-icon.svg';
+                    if (file_exists($icon_path)) {
+                        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                        echo file_get_contents($icon_path);
+                    } else {
+                        echo '<span class="dashicons dashicons-chart-area"></span>';
+                    }
+                    ?>
                 </div>
                 <div>
                     <h1>Rybbit Analytics</h1>
