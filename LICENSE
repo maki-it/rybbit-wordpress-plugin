@@ -15,3 +15,17 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+Third-party assets / trademarks
+
+This project may include a Rybbit logo/icon (e.g. in:
+- rybbit-analytics/admin/assets/rybbit-icon.svg
+
+The Rybbit name and logo are trademarks and/or copyrighted material of their respective owner(s)
+and are used here for identification/compatibility purposes.
+
+These assets are NOT covered by this project's GPL license. All rights remain with their owners.
+If you are the rights holder and would like this asset removed or attribution adjusted, please open
+an issue at: https://github.com/maki-it/rybbit-wordpress-plugin
