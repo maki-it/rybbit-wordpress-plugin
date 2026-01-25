@@ -24,6 +24,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/functions.php';
 require_once plugin_dir_path(__FILE__) . 'admin/class-rybbit-analytics-admin.php';
 require_once plugin_dir_path(__FILE__) . 'public/class-rybbit-analytics-public.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-rybbit-analytics-admin-ajax.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-rybbit-analytics-updates.php';
 
 // Initialize main plugin class
 new Rybbit_Analytics();
