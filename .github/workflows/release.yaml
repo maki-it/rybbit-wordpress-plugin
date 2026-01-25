@@ -13,9 +13,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Set Version in Plugin File
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          sed -i "s/Version: 1.0/Version: $VERSION/" rybbit-analytics/rybbit-analytics.php
+
       - name: Prepare plugin folder
         run: |
-          mv src rybbit-analytics/
           cp README.md LICENSE rybbit-analytics/
 
       - name: Create plugin zip
