@@ -15,7 +15,7 @@ jobs:
 
       - name: Prepare plugin folder
         run: |
-          mv src/* rybbit-analytics/
+          mv src rybbit-analytics/
           cp README.md LICENSE rybbit-analytics/
 
       - name: Create plugin zip
