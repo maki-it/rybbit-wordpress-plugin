@@ -106,6 +106,16 @@ class Rybbit_Analytics_Admin {
             },
             'default' => '',
         ));
+
+        // Script loading mode: defer (default) or async.
+        register_setting('rybbit_analytics_settings', 'rybbit_script_loading', array(
+            'type' => 'string',
+            'sanitize_callback' => function ($value) {
+                $value = is_string($value) ? strtolower(trim($value)) : '';
+                return in_array($value, array('defer', 'async'), true) ? $value : 'defer';
+            },
+            'default' => 'defer',
+        ));
     }
 
     /**
@@ -268,6 +278,7 @@ class Rybbit_Analytics_Admin {
 
         $site_id = get_option('rybbit_site_id', '');
         $script_url = get_option('rybbit_script_url', 'https://app.rybbit.io/api/script.js');
+        $script_loading = get_option('rybbit_script_loading', 'defer');
         $skip_patterns = get_option('rybbit_skip_patterns', '');
         $mask_patterns = get_option('rybbit_mask_patterns', '');
         $debounce = get_option('rybbit_debounce', '500');
@@ -353,6 +364,16 @@ class Rybbit_Analytics_Admin {
                                         <?php endforeach; ?>
                                     </select>
                                     <p class="description">Selected roles will not receive the tracking script (frontend and wp-admin).</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="rybbit_script_loading">Script loading</label></th>
+                                <td>
+                                    <select id="rybbit_script_loading" name="rybbit_script_loading" class="rybbit-select-wide">
+                                        <option value="defer" <?php selected($script_loading, 'defer'); ?>>Defer (recommended)</option>
+                                        <option value="async" <?php selected($script_loading, 'async'); ?>>Async</option>
+                                    </select>
+                                    <p class="description">Controls whether the tracking script tag uses <code>defer</code> (default) or <code>async</code>.</p>
                                 </td>
                             </tr>
                         </table>
@@ -494,10 +515,14 @@ class Rybbit_Analytics_Admin {
                         $skip_json = wp_json_encode($skip_arr);
                         $mask_json = wp_json_encode($mask_arr);
 
+                        $script_loading_preview = get_option('rybbit_script_loading', 'defer');
+                        $script_loading_attr = ($script_loading_preview === 'async') ? ' async' : ' defer';
+
                         // Quote JSON strings safely for HTML attributes.
                         $script_tag_preview = sprintf(
-                            '<script src="%s" async data-site-id="%s" data-skip-patterns=%s data-mask-patterns=%s data-debounce="%s"></script>',
+                            '<script src="%s"%s data-site-id="%s" data-skip-patterns=%s data-mask-patterns=%s data-debounce="%s"></script>',
                             esc_url($script_url),
+                            $script_loading_attr,
                             esc_attr($site_id),
                             wp_json_encode($skip_json ? $skip_json : '[]'),
                             wp_json_encode($mask_json ? $mask_json : '[]'),

@@ -84,6 +84,7 @@ class Rybbit_Analytics_Public {
     public function add_tracking_script() {
         $site_id = get_option('rybbit_site_id', '');
         $script_url = get_option('rybbit_script_url', 'https://app.rybbit.io/api/script.js');
+        $script_loading = get_option('rybbit_script_loading', 'defer');
 
         $excluded_roles_json = get_option('rybbit_excluded_roles', null);
         $do_not_track_admins = get_option('rybbit_do_not_track_admins', '1');
@@ -129,7 +130,7 @@ class Rybbit_Analytics_Public {
         <!-- Rybbit Analytics Tracking -->
         <script
             src="<?php echo esc_url($script_url); ?>"
-            async
+            <?php echo ($script_loading === 'async') ? 'async' : 'defer'; ?>
             data-site-id="<?php echo esc_attr($site_id); ?>"
             data-skip-patterns='<?php echo esc_attr($skip_patterns_json); ?>'
             data-mask-patterns='<?php echo esc_attr($mask_patterns_json); ?>'

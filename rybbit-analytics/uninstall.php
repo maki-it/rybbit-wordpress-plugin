@@ -15,6 +15,7 @@ if ($delete_all !== '1' && (!is_multisite() || get_site_option('rybbit_delete_da
 $option_names = array(
     'rybbit_site_id',
     'rybbit_script_url',
+    'rybbit_script_loading',
     'rybbit_do_not_track_admins',
     'rybbit_excluded_roles',
     'rybbit_skip_patterns',
