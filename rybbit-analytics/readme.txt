@@ -7,6 +7,7 @@ Tested up to: 6.9
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
+Add and manage the Rybbit tracking script.
 
 == Description ==
 Add and manage the Rybbit tracking script for WordPress. Configure privacy, role exclusions, and script attributes.
