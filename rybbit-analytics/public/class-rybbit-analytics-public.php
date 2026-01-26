@@ -394,11 +394,15 @@ class Rybbit_Analytics_Public {
             $attr_lines[] = "data-replay-slim-dom-options='" . $replay_slim_dom_options_attr . "'";
         }
 
+        // Render tag as a single string to avoid any trailing indentation before the closing bracket.
+        $script_tag = "<script\n            " . implode("\n            ", $attr_lines) . "\n        ></script>";
+
         ?>
         <!-- Rybbit Analytics Tracking -->
-        <script
-            <?php echo implode("\n            ", $attr_lines); ?>
-        ></script>
+        <?php
+        // Print the script tag and a newline so the end comment always starts on its own line.
+        echo $script_tag . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        ?>
         <!-- End Rybbit Analytics Tracking -->
         <?php
 
