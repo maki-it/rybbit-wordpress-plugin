@@ -9,11 +9,17 @@ class Rybbit_Analytics_Public {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('wp_head', array($this, 'add_tracking_script'));
 
+        // If a logout happened, clear any persisted Rybbit user id on the next page load.
+        add_action('wp_head', array($this, 'maybe_clear_user_after_logout'));
+
         // Optional: also track wp-admin pages
         add_action('admin_head', array($this, 'maybe_add_tracking_script_admin'));
 
         // Clear Rybbit user id on WP logout screens
         add_action('login_head', array($this, 'maybe_clear_user_on_logout_screen'));
+
+        // Mark logout in a way we can detect on the next request (covers logout flows that *don't* hit wp-login.php?action=logout).
+        add_action('wp_logout', array($this, 'mark_logout_for_user_id_clearing'));
     }
 
     /**
@@ -86,6 +92,93 @@ class Rybbit_Analytics_Public {
         })();
         </script>
         <?php
+    }
+
+    /**
+     * Set a short-lived cookie marker on logout so we can clear the ID on the next page load.
+     */
+    public function mark_logout_for_user_id_clearing() {
+        $identify_mode = get_option('rybbit_identify_mode', 'disabled');
+        if ($identify_mode === 'disabled') {
+            return;
+        }
+
+        // Use a short lifetime; we only need the very next request.
+        $expires = time() + 300; // 5 minutes
+        $path = defined('COOKIEPATH') ? COOKIEPATH : '/';
+        $domain = defined('COOKIE_DOMAIN') ? COOKIE_DOMAIN : '';
+
+        // Best-effort: set both non-SSL and SSL flags based on current request.
+        $secure = is_ssl();
+        $httponly = false; // needs to be readable by PHP on next request; JS doesn't need it.
+
+        setcookie('rybbit_clear_user_id', '1', $expires, $path, $domain, $secure, $httponly);
+    }
+
+    /**
+     * If a logout marker cookie is present, clear any persisted Rybbit user id.
+     * This handles logout flows that redirect away from wp-login.php action=logout.
+     */
+    public function maybe_clear_user_after_logout() {
+        if (empty($_COOKIE['rybbit_clear_user_id'])) {
+            return;
+        }
+
+        $identify_mode = get_option('rybbit_identify_mode', 'disabled');
+        if ($identify_mode === 'disabled') {
+            // Clear marker cookie to avoid it sticking around.
+            $this->clear_logout_marker_cookie();
+            return;
+        }
+
+        // Clear marker cookie early to avoid repeated calls even if JS errors.
+        $this->clear_logout_marker_cookie();
+        ?>
+        <script>
+        (function() {
+            var attempts = 0;
+            var maxAttempts = 20;
+            var interval = 100;
+
+            function tryClear() {
+                attempts++;
+                try {
+                    if (window.rybbit && typeof window.rybbit.clearUserId === 'function') {
+                        window.rybbit.clearUserId();
+                        return true;
+                    }
+                } catch (e) {
+                    return true;
+                }
+                return false;
+            }
+
+            if (tryClear()) {
+                return;
+            }
+
+            var timer = setInterval(function() {
+                if (tryClear() || attempts >= maxAttempts) {
+                    clearInterval(timer);
+                }
+            }, interval);
+        })();
+        </script>
+        <?php
+    }
+
+    /**
+     * Clear the logout marker cookie.
+     */
+    private function clear_logout_marker_cookie() {
+        $path = defined('COOKIEPATH') ? COOKIEPATH : '/';
+        $domain = defined('COOKIE_DOMAIN') ? COOKIE_DOMAIN : '';
+
+        // Clear both secure and non-secure variants.
+        setcookie('rybbit_clear_user_id', '', time() - 3600, $path, $domain, false, false);
+        setcookie('rybbit_clear_user_id', '', time() - 3600, $path, $domain, true, false);
+
+        unset($_COOKIE['rybbit_clear_user_id']);
     }
 
     public function enqueue_scripts() {
