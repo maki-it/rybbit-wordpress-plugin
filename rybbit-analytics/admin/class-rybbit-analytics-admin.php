@@ -537,17 +537,18 @@ class Rybbit_Analytics_Admin {
                         $mask_json = wp_json_encode($mask_arr);
 
                         $script_loading_preview = get_option('rybbit_script_loading', 'defer');
-                        $script_loading_attr = ($script_loading_preview === 'async') ? ' async' : ' defer';
 
-                        // Quote JSON strings safely for HTML attributes.
-                        $script_tag_preview = sprintf(
-                            '<script src="%s"%s data-site-id="%s" data-skip-patterns=%s data-mask-patterns=%s data-debounce="%s"></script>',
-                            esc_url($script_url),
-                            $script_loading_attr,
-                            esc_attr($site_id),
-                            wp_json_encode($skip_json ? $skip_json : '[]'),
-                            wp_json_encode($mask_json ? $mask_json : '[]'),
-                            esc_attr($debounce_preview)
+                        // Preview values that correspond to how the tracking script is output.
+                        // Note: keep this as data (not a literal script tag) to satisfy WordPress enqueue sniffs.
+                        $tracking_script_preview = array(
+                            'src' => esc_url_raw($script_url),
+                            'loading' => ($script_loading_preview === 'async') ? 'async' : 'defer',
+                            'attributes' => array(
+                                'data-site-id' => (string) $site_id,
+                                'data-skip-patterns' => ($skip_json ? $skip_json : '[]'),
+                                'data-mask-patterns' => ($mask_json ? $mask_json : '[]'),
+                                'data-debounce' => (string) $debounce_preview,
+                            ),
                         );
                         ?>
                         <table class="form-table" role="presentation">
@@ -585,10 +586,12 @@ class Rybbit_Analytics_Admin {
                             </tr>
 
                             <tr>
-                                <th scope="row">Tracking script preview</th>
+                                <th scope="row">Tracking script data</th>
                                 <td>
-                                    <pre class="rybbit-identify-payload"><?php echo esc_html($script_tag_preview); ?></pre>
-                                    <p class="description">This is how the script tag will look in page source (attributes included).</p>
+                                    <pre class="rybbit-identify-payload"><?php
+                                        echo esc_html(wp_json_encode($tracking_script_preview, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+                                    ?></pre>
+                                    <p class="description">This shows the script URL and attributes that will be applied when the tracking script is output.</p>
                                 </td>
                             </tr>
 
