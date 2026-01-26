@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Admin AJAX handlers for Rybbit Analytics.
  */

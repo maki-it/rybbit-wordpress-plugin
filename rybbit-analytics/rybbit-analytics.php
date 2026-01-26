@@ -2,15 +2,15 @@
 /*
 Plugin Name: Rybbit Analytics
 Plugin URI: https://github.com/maki-it/rybbit-wordpress-plugin
-Description: Add and manage the Rybbit tracking script
+Description: Add and manage the Rybbit tracking script.
 Version: 0.0.0
+Tested up to: 6.9
 Requires at least: 5.8
 Requires PHP: 7.4
 Author: Maki IT
 Author URI: https://maki-it.de
 License: GPLv3 or later
 License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
-Update URI: https://github.com/maki-it/rybbit-wordpress-plugin
 */
 
 // If this file is called directly, abort.
