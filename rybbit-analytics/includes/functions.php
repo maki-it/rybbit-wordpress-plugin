@@ -1,5 +1,9 @@
 <?php
-// General plugin functions for Rybbit Analytics
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+/**
+ * General plugin functions for Rybbit Analytics
+ */
 
 if (!function_exists('rybbit_analytics_get_identify_payload')) {
     /**
