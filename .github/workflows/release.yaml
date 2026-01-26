@@ -27,6 +27,61 @@ jobs:
           # Assert it worked.
           grep -n -E "^Version:[[:space:]]*${VERSION}$" rybbit-analytics/rybbit-analytics.php
 
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Fetch release notes for changelog
+        id: changelog
+        run: |
+          TAG_NAME=${GITHUB_REF_NAME}
+          RELEASE_NOTES=$(gh release view "$TAG_NAME" --json body -q ".body")
+          # Escape EOF for heredoc
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo "$RELEASE_NOTES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate readme.txt
+        shell: bash
+        env:
+          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
+          VERSION: "${{ env.VERSION }}"
+        run: |
+          cat > rybbit-analytics/readme.txt <<EOF
+=== Rybbit Analytics ===
+Contributors: makiit
+Tags: rybbit, analytics, tracking, privacy
+Stable tag: $VERSION
+Requires at least: 5.8
+Tested up to: 6.9
+Requires PHP: 7.4
+License: GPLv3 or later
+License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
+
+== Description ==
+Add and manage the Rybbit tracking script for WordPress. Configure privacy, role exclusions, and script attributes.
+
+== Installation ==
+1. Upload and install the Plugin zip archive via the Admin UI or extract the plugin files to the `/wp-content/plugins/rybbit-analytics` directory.
+2. Activate the plugin through the 'Plugins' screen in WordPress.
+3. Configure settings under Settings > Rybbit Analytics.
+
+== Changelog ==
+EOF
+          echo "$RELEASE_NOTES" >> rybbit-analytics/readme.txt
+          cat >> rybbit-analytics/readme.txt <<'EOF'
+
+== Frequently Asked Questions ==
+= How do I get my Site ID? =
+Find your Site ID in your Rybbit dashboard under tracking settings.
+
+== License ==
+GPLv3 or later
+EOF
+
       - name: Prepare plugin folder
         run: |
           cp README.md LICENSE rybbit-analytics/
