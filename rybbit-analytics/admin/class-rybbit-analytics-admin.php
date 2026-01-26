@@ -473,7 +473,7 @@ class Rybbit_Analytics_Admin {
             <h2 class="nav-tab-wrapper" role="tablist" aria-label="Rybbit Analytics settings">
                 <a href="#tracking" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="true" data-tab="tracking">Tracking</a>
                 <a href="#privacy" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="privacy">Privacy</a>
-                <a href="#script" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="script">Script attributes</a>
+                <a href="#script" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="script">Script Attributes</a>
                 <a href="#replay" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="replay">Session Replay</a>
                 <a href="#maintenance" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="maintenance">Maintenance</a>
                 <a href="#debug" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="debug">Debug</a>
@@ -814,9 +814,61 @@ class Rybbit_Analytics_Admin {
                             ),
                         );
 
+                        // Default values (from tracking-script.mdx) used to decide which attributes are emitted.
+                        $defaults_for_omit = array(
+                            'data-skip-patterns' => '[]',
+                            'data-mask-patterns' => '[]',
+                            'data-debounce' => '500',
+                            'data-replay-mask-text-selectors' => '[]',
+                            'data-replay-block-class' => 'rr-block',
+                            'data-replay-ignore-class' => 'rr-ignore',
+                            'data-replay-mask-text-class' => 'rr-mask',
+                            'data-replay-mask-all-inputs' => 'true',
+                            'data-replay-collect-fonts' => 'true',
+                            'data-replay-mask-input-options' => '{"password":true,"email":true}',
+                            'data-replay-sampling' => '{"mousemove":false,"mouseInteraction":{"MouseUp":false,"MouseDown":false,"Click":true,"ContextMenu":false,"DblClick":true,"Focus":true,"Blur":true,"TouchStart":false,"TouchEnd":false},"scroll":500,"input":"last","media":800}',
+                            'data-replay-slim-dom-options' => '{"script":false,"comment":true,"headFavicon":true,"headWhitespace":true,"headMetaDescKeywords":true,"headMetaSocial":true,"headMetaRobots":true,"headMetaHttpEquiv":true,"headMetaAuthorship":true,"headMetaVerification":true}',
+                        );
+
+                        // Normalize the JSON defaults to canonical encoding to match stored/preview strings.
+                        $defaults_for_omit['data-replay-mask-input-options'] = wp_json_encode(json_decode($defaults_for_omit['data-replay-mask-input-options'], true));
+                        $defaults_for_omit['data-replay-sampling'] = wp_json_encode(json_decode($defaults_for_omit['data-replay-sampling'], true));
+                        $defaults_for_omit['data-replay-slim-dom-options'] = wp_json_encode(json_decode($defaults_for_omit['data-replay-slim-dom-options'], true));
+
+                        $tracking_script_preview_for_debug = $tracking_script_preview;
+
+                        // Normalize potentially pretty-printed JSON strings for comparisons.
+                        foreach (array('data-replay-mask-input-options', 'data-replay-sampling', 'data-replay-slim-dom-options') as $k) {
+                            if (isset($tracking_script_preview_for_debug['attributes'][$k])) {
+                                $v = (string) $tracking_script_preview_for_debug['attributes'][$k];
+                                $decoded = json_decode($v, true);
+                                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                    $tracking_script_preview_for_debug['attributes'][$k] = wp_json_encode($decoded);
+                                }
+                            }
+                        }
+
+                        // Omit attributes that match defaults (and omit empty selectors/selectors).
+                        foreach ($tracking_script_preview_for_debug['attributes'] as $attr_key => $attr_val) {
+                            // Always keep site id.
+                            if ($attr_key === 'data-site-id') {
+                                continue;
+                            }
+
+                            // Omit empty selector attrs (these are optional).
+                            if (in_array($attr_key, array('data-replay-block-selector', 'data-replay-ignore-selector'), true)) {
+                                if (trim((string) $attr_val) === '') {
+                                    unset($tracking_script_preview_for_debug['attributes'][$attr_key]);
+                                }
+                                continue;
+                            }
+
+                            if (isset($defaults_for_omit[$attr_key]) && (string) $attr_val === (string) $defaults_for_omit[$attr_key]) {
+                                unset($tracking_script_preview_for_debug['attributes'][$attr_key]);
+                            }
+                        }
+
                         // Decode JSON-bearing attributes for readable debug output.
-                        // (In the actual script tag these values are JSON strings, but for the debug preview
-                        // it's much more useful to show them as structured data.)
                         $decode_json_if_possible = function ($value) {
                             if (!is_string($value)) {
                                 return $value;
@@ -825,7 +877,6 @@ class Rybbit_Analytics_Admin {
                             if ($trimmed === '') {
                                 return $value;
                             }
-                            // Only attempt to decode objects/arrays.
                             if ($trimmed[0] !== '{' && $trimmed[0] !== '[') {
                                 return $value;
                             }
@@ -836,14 +887,19 @@ class Rybbit_Analytics_Admin {
                             return $value;
                         };
 
-                        $tracking_script_preview_for_debug = $tracking_script_preview;
                         if (isset($tracking_script_preview_for_debug['attributes']) && is_array($tracking_script_preview_for_debug['attributes'])) {
-                            $tracking_script_preview_for_debug['attributes']['data-skip-patterns'] = $decode_json_if_possible($tracking_script_preview_for_debug['attributes']['data-skip-patterns']);
-                            $tracking_script_preview_for_debug['attributes']['data-mask-patterns'] = $decode_json_if_possible($tracking_script_preview_for_debug['attributes']['data-mask-patterns']);
-                            $tracking_script_preview_for_debug['attributes']['data-replay-mask-text-selectors'] = $decode_json_if_possible($tracking_script_preview_for_debug['attributes']['data-replay-mask-text-selectors']);
-                            $tracking_script_preview_for_debug['attributes']['data-replay-mask-input-options'] = $decode_json_if_possible($tracking_script_preview_for_debug['attributes']['data-replay-mask-input-options']);
-                            $tracking_script_preview_for_debug['attributes']['data-replay-sampling'] = $decode_json_if_possible($tracking_script_preview_for_debug['attributes']['data-replay-sampling']);
-                            $tracking_script_preview_for_debug['attributes']['data-replay-slim-dom-options'] = $decode_json_if_possible($tracking_script_preview_for_debug['attributes']['data-replay-slim-dom-options']);
+                            foreach (array(
+                                'data-skip-patterns',
+                                'data-mask-patterns',
+                                'data-replay-mask-text-selectors',
+                                'data-replay-mask-input-options',
+                                'data-replay-sampling',
+                                'data-replay-slim-dom-options',
+                            ) as $k) {
+                                if (isset($tracking_script_preview_for_debug['attributes'][$k])) {
+                                    $tracking_script_preview_for_debug['attributes'][$k] = $decode_json_if_possible($tracking_script_preview_for_debug['attributes'][$k]);
+                                }
+                            }
                         }
                         ?>
                         <table class="form-table" role="presentation">
