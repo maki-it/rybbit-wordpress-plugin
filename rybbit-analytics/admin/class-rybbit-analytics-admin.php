@@ -117,6 +117,79 @@ class Rybbit_Analytics_Admin {
             },
             'default' => 'defer',
         ));
+
+        // Session Replay (rrweb) script attribute settings
+        register_setting('rybbit_analytics_settings', 'rybbit_replay_mask_text_selectors', array(
+            'type' => 'string',
+            'sanitize_callback' => array($this, 'sanitize_selectors_newline_list'),
+            'default' => '',
+        ));
+        register_setting('rybbit_analytics_settings', 'rybbit_replay_block_class', array(
+            'type' => 'string',
+            'sanitize_callback' => function ($value) {
+                return $this->sanitize_css_class_with_default($value, 'rr-block');
+            },
+            'default' => 'rr-block',
+        ));
+        register_setting('rybbit_analytics_settings', 'rybbit_replay_block_selector', array(
+            'type' => 'string',
+            'sanitize_callback' => array($this, 'sanitize_css_selector_text'),
+            'default' => '',
+        ));
+        register_setting('rybbit_analytics_settings', 'rybbit_replay_ignore_class', array(
+            'type' => 'string',
+            'sanitize_callback' => function ($value) {
+                return $this->sanitize_css_class_with_default($value, 'rr-ignore');
+            },
+            'default' => 'rr-ignore',
+        ));
+        register_setting('rybbit_analytics_settings', 'rybbit_replay_ignore_selector', array(
+            'type' => 'string',
+            'sanitize_callback' => array($this, 'sanitize_css_selector_text'),
+            'default' => '',
+        ));
+        register_setting('rybbit_analytics_settings', 'rybbit_replay_mask_text_class', array(
+            'type' => 'string',
+            'sanitize_callback' => function ($value) {
+                return $this->sanitize_css_class_with_default($value, 'rr-mask');
+            },
+            'default' => 'rr-mask',
+        ));
+        register_setting('rybbit_analytics_settings', 'rybbit_replay_mask_all_inputs', array(
+            'type' => 'string',
+            'sanitize_callback' => function ($value) {
+                return ($value === '1' || $value === 1 || $value === true || $value === 'on') ? '1' : '0';
+            },
+            'default' => '1',
+        ));
+        register_setting('rybbit_analytics_settings', 'rybbit_replay_mask_input_options', array(
+            'type' => 'string',
+            'sanitize_callback' => function ($value) {
+                return $this->sanitize_json_object_string_or_empty($value, 'rybbit_replay_mask_input_options');
+            },
+            'default' => '{"password":true,"email":true}',
+        ));
+        register_setting('rybbit_analytics_settings', 'rybbit_replay_collect_fonts', array(
+            'type' => 'string',
+            'sanitize_callback' => function ($value) {
+                return ($value === '1' || $value === 1 || $value === true || $value === 'on') ? '1' : '0';
+            },
+            'default' => '1',
+        ));
+        register_setting('rybbit_analytics_settings', 'rybbit_replay_sampling', array(
+            'type' => 'string',
+            'sanitize_callback' => function ($value) {
+                return $this->sanitize_json_object_string_or_empty($value, 'rybbit_replay_sampling');
+            },
+            'default' => $replay_sampling_default_json_pretty,
+        ));
+        register_setting('rybbit_analytics_settings', 'rybbit_replay_slim_dom_options', array(
+            'type' => 'string',
+            'sanitize_callback' => function ($value) {
+                return $this->sanitize_slim_dom_options($value);
+            },
+            'default' => $replay_slim_dom_default_json_pretty,
+        ));
     }
 
     /**
@@ -270,25 +343,33 @@ class Rybbit_Analytics_Admin {
             return;
         }
 
+        $settings_css_path = plugin_dir_path(__FILE__) . 'css/settings.css';
+        $tabs_css_path = plugin_dir_path(__FILE__) . 'css/tabs.css';
+        $settings_js_path = plugin_dir_path(__FILE__) . 'js/settings.js';
+
+        $settings_css_ver = file_exists($settings_css_path) ? (string) filemtime($settings_css_path) : '1.0.0';
+        $tabs_css_ver = file_exists($tabs_css_path) ? (string) filemtime($tabs_css_path) : '1.0.0';
+        $settings_js_ver = file_exists($settings_js_path) ? (string) filemtime($settings_js_path) : '1.0.0';
+
         wp_enqueue_style(
             'rybbit-analytics-admin-settings',
             plugin_dir_url(__FILE__) . 'css/settings.css',
             array(),
-            '1.0.0'
+            $settings_css_ver
         );
 
         wp_enqueue_style(
             'rybbit-analytics-admin-tabs',
             plugin_dir_url(__FILE__) . 'css/tabs.css',
             array('rybbit-analytics-admin-settings'),
-            '1.0.0'
+            $tabs_css_ver
         );
 
         wp_enqueue_script(
             'rybbit-analytics-admin-settings',
             plugin_dir_url(__FILE__) . 'js/settings.js',
             array(),
-            '1.0.0',
+            $settings_js_ver,
             true
         );
 
@@ -312,6 +393,85 @@ class Rybbit_Analytics_Admin {
         $excluded_roles = $this->sanitize_roles_array($excluded_roles_opt);
         $identify_userid_strategy = get_option('rybbit_identify_userid_strategy', 'wp_scoped');
         $identify_userid_meta_key = get_option('rybbit_identify_userid_meta_key', '');
+
+        // Documented defaults (from tracking-script.mdx)
+        $replay_sampling_default_json_pretty = wp_json_encode(array(
+            'mousemove' => false,
+            'mouseInteraction' => array(
+                'MouseUp' => false,
+                'MouseDown' => false,
+                'Click' => true,
+                'ContextMenu' => false,
+                'DblClick' => true,
+                'Focus' => true,
+                'Blur' => true,
+                'TouchStart' => false,
+                'TouchEnd' => false,
+            ),
+            'scroll' => 500,
+            'input' => 'last',
+            'media' => 800,
+        ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        $replay_slim_dom_default_json_pretty = wp_json_encode(array(
+            'script' => false,
+            'comment' => true,
+            'headFavicon' => true,
+            'headWhitespace' => true,
+            'headMetaDescKeywords' => true,
+            'headMetaSocial' => true,
+            'headMetaRobots' => true,
+            'headMetaHttpEquiv' => true,
+            'headMetaAuthorship' => true,
+            'headMetaVerification' => true,
+        ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        // Session Replay options
+        $replay_mask_text_selectors = get_option('rybbit_replay_mask_text_selectors', '');
+        $replay_block_class = get_option('rybbit_replay_block_class', 'rr-block');
+        $replay_block_selector = get_option('rybbit_replay_block_selector', '');
+        $replay_ignore_class = get_option('rybbit_replay_ignore_class', 'rr-ignore');
+        $replay_ignore_selector = get_option('rybbit_replay_ignore_selector', '');
+        $replay_mask_text_class = get_option('rybbit_replay_mask_text_class', 'rr-mask');
+        $replay_mask_all_inputs = get_option('rybbit_replay_mask_all_inputs', '1');
+        $replay_mask_input_options = get_option('rybbit_replay_mask_input_options', '{"password":true,"email":true}');
+        $replay_collect_fonts = get_option('rybbit_replay_collect_fonts', '1');
+        $replay_sampling = get_option('rybbit_replay_sampling', $replay_sampling_default_json_pretty);
+        $replay_slim_dom_options = get_option('rybbit_replay_slim_dom_options', $replay_slim_dom_default_json_pretty);
+
+        // Pretty-print JSON fields for display (saved values may be normalized/minified).
+        $replay_mask_input_options_display = is_string($replay_mask_input_options) ? trim($replay_mask_input_options) : '';
+        if ($replay_mask_input_options_display !== '') {
+            $decoded = json_decode($replay_mask_input_options_display, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $replay_mask_input_options_display = wp_json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            }
+        }
+
+        $replay_sampling_display = is_string($replay_sampling) ? trim($replay_sampling) : '';
+        if ($replay_sampling_display !== '') {
+            $decoded = json_decode($replay_sampling_display, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $replay_sampling_display = wp_json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            }
+        }
+
+        $replay_slim_dom_options_display = is_string($replay_slim_dom_options) ? trim($replay_slim_dom_options) : '';
+        if ($replay_slim_dom_options_display !== '') {
+            $lower = strtolower($replay_slim_dom_options_display);
+            if ($lower !== 'true' && $lower !== 'false') {
+                $decoded = json_decode($replay_slim_dom_options_display, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $replay_slim_dom_options_display = wp_json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                }
+            } else {
+                $replay_slim_dom_options_display = $lower;
+            }
+        }
+
+        // Encode defaults for safe transport in HTML data attributes.
+        $replay_sampling_default_b64 = base64_encode($replay_sampling_default_json_pretty ? $replay_sampling_default_json_pretty : '{}');
+        $replay_slim_dom_default_b64 = base64_encode($replay_slim_dom_default_json_pretty ? $replay_slim_dom_default_json_pretty : '{}');
 
         // Build available roles list.
         global $wp_roles;
@@ -343,7 +503,8 @@ class Rybbit_Analytics_Admin {
             <h2 class="nav-tab-wrapper" role="tablist" aria-label="Rybbit Analytics settings">
                 <a href="#tracking" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="true" data-tab="tracking">Tracking</a>
                 <a href="#privacy" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="privacy">Privacy</a>
-                <a href="#script" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="script">Script attributes</a>
+                <a href="#script" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="script">Script Attributes</a>
+                <a href="#replay" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="replay">Session Replay</a>
                 <a href="#maintenance" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="maintenance">Maintenance</a>
                 <a href="#debug" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="debug">Debug</a>
                 <a href="#about" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="about">About</a>
@@ -495,6 +656,137 @@ class Rybbit_Analytics_Admin {
                         </table>
                     </div>
 
+                    <div class="rybbit-tab-panel" data-tab="replay" role="tabpanel" style="display:none">
+                        <table class="form-table" role="presentation">
+                            <tr>
+                                <th scope="row"><label for="rybbit_replay_mask_text_selectors">Mask text selectors</label></th>
+                                <td>
+                                    <textarea id="rybbit_replay_mask_text_selectors" name="rybbit_replay_mask_text_selectors" rows="6" class="large-text code rybbit-input-wide"><?php echo esc_textarea($replay_mask_text_selectors); ?></textarea>
+                                    <p class="description" style="max-width: 720px;">
+                                        One CSS selector per line. Text content of matching elements will be masked in session replays.
+                                        Example: <code>.user-name</code> or <code>#email</code>.
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="rybbit_replay_block_class">Block class</label></th>
+                                <td>
+                                    <input type="text" id="rybbit_replay_block_class" name="rybbit_replay_block_class" value="<?php echo esc_attr($replay_block_class); ?>" class="regular-text" />
+                                    <p class="description">Elements with this CSS class won’t be recorded at all (default: <code>rr-block</code>).</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="rybbit_replay_block_selector">Block selector</label></th>
+                                <td>
+                                    <input type="text" id="rybbit_replay_block_selector" name="rybbit_replay_block_selector" value="<?php echo esc_attr($replay_block_selector); ?>" class="regular-text rybbit-input-wide" placeholder=".sensitive-content, #payment-modal" />
+                                    <p class="description">CSS selector for elements to exclude entirely from recording.</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="rybbit_replay_ignore_class">Ignore class</label></th>
+                                <td>
+                                    <input type="text" id="rybbit_replay_ignore_class" name="rybbit_replay_ignore_class" value="<?php echo esc_attr($replay_ignore_class); ?>" class="regular-text" />
+                                    <p class="description">Elements with this CSS class appear in replay, but interactions aren’t recorded (default: <code>rr-ignore</code>).</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="rybbit_replay_ignore_selector">Ignore selector</label></th>
+                                <td>
+                                    <input type="text" id="rybbit_replay_ignore_selector" name="rybbit_replay_ignore_selector" value="<?php echo esc_attr($replay_ignore_selector); ?>" class="regular-text rybbit-input-wide" placeholder="input[name='credit-card']" />
+                                    <p class="description">CSS selector for inputs/elements whose events should be ignored.</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="rybbit_replay_mask_text_class">Mask text class</label></th>
+                                <td>
+                                    <input type="text" id="rybbit_replay_mask_text_class" name="rybbit_replay_mask_text_class" value="<?php echo esc_attr($replay_mask_text_class); ?>" class="regular-text" />
+                                    <p class="description">Elements with this CSS class have their text masked (default: <code>rr-mask</code>).</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="rybbit_replay_mask_all_inputs">Mask all inputs</label></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" id="rybbit_replay_mask_all_inputs" name="rybbit_replay_mask_all_inputs" value="1" <?php checked('1', $replay_mask_all_inputs); ?> />
+                                        Mask all input values for privacy
+                                    </label>
+                                    <p class="description">When enabled, session replay masks input values as asterisks.</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="rybbit_replay_mask_input_options">Mask input options (JSON)</label></th>
+                                <td>
+                                    <?php
+                                    // Default from tracking-script.mdx
+                                    $replay_mask_input_options_default_json = wp_json_encode(array(
+                                        'password' => true,
+                                        'email' => true,
+                                    ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                                    $replay_mask_input_options_default_b64 = base64_encode($replay_mask_input_options_default_json);
+                                    ?>
+                                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom: 6px;">
+                                        <button
+                                            type="button"
+                                            class="button button-secondary rybbit-reset-json"
+                                            data-rybbit-reset-target="#rybbit_replay_mask_input_options"
+                                            data-rybbit-reset-value-b64="<?php echo esc_attr($replay_mask_input_options_default_b64); ?>"
+                                        >Reset to defaults</button>
+                                    </div>
+                                    <textarea id="rybbit_replay_mask_input_options" name="rybbit_replay_mask_input_options" rows="5" class="large-text code rybbit-input-wide"><?php echo esc_textarea($replay_mask_input_options_display); ?></textarea>
+                                    <p class="description" style="max-width: 720px;">JSON object to control which input types are masked. Example: <code>{"password":true,"email":true,"tel":true}</code>.</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="rybbit_replay_collect_fonts">Collect fonts</label></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" id="rybbit_replay_collect_fonts" name="rybbit_replay_collect_fonts" value="1" <?php checked('1', $replay_collect_fonts); ?> />
+                                        Collect website fonts for accurate replays
+                                    </label>
+                                    <p class="description">Disable to reduce replay data size.</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="rybbit_replay_sampling">Sampling (JSON)</label></th>
+                                <td>
+                                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom: 6px;">
+                                        <button
+                                            type="button"
+                                            class="button button-secondary rybbit-reset-json"
+                                            data-rybbit-reset-target="#rybbit_replay_sampling"
+                                            data-rybbit-reset-value-b64="<?php echo esc_attr($replay_sampling_default_b64); ?>"
+                                        >Reset to defaults</button>
+                                    </div>
+                                    <textarea id="rybbit_replay_sampling" name="rybbit_replay_sampling" rows="9" class="large-text code rybbit-input-wide"><?php echo esc_textarea($replay_sampling_display); ?></textarea>
+
+                                    <p class="description" style="max-width: 720px; margin-top: 6px;">
+                                        Optional JSON object to reduce replay volume.
+                                        <a href="https://rybbit.com/docs/script#sampling-configuration" target="_blank" rel="noopener noreferrer">Sampling configuration docs</a>.
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th scope="row"><label for="rybbit_replay_slim_dom_options">SlimDOM options</label></th>
+                                <td>
+                                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom: 6px;">
+                                        <button
+                                            type="button"
+                                            class="button button-secondary rybbit-reset-json"
+                                            data-rybbit-reset-target="#rybbit_replay_slim_dom_options"
+                                            data-rybbit-reset-value-b64="<?php echo esc_attr($replay_slim_dom_default_b64); ?>"
+                                        >Reset to defaults</button>
+                                    </div>
+                                    <textarea id="rybbit_replay_slim_dom_options" name="rybbit_replay_slim_dom_options" rows="9" class="large-text code rybbit-input-wide"><?php echo esc_textarea($replay_slim_dom_options_display); ?></textarea>
+                                    <p class="description" style="max-width: 720px;">
+                                        Optional replay DOM slimming config. Set to <code>true</code> to enable all slimDOM options, <code>false</code> to disable them, or provide a JSON object for fine-grained control.
+                                        <a href="https://rybbit.com/docs/script#slimdom-options" target="_blank" rel="noopener noreferrer">SlimDOM options docs</a>.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
                     <div class="rybbit-tab-panel" data-tab="maintenance" role="tabpanel" style="display:none">
                         <table class="form-table" role="presentation">
                             <tr>
@@ -538,6 +830,11 @@ class Rybbit_Analytics_Admin {
 
                         $script_loading_preview = get_option('rybbit_script_loading', 'defer');
 
+                        // Session replay preview values (normalize to the same shapes we output).
+                        $replay_selectors_lines = preg_split('/\r\n|\r|\n/', (string) $replay_mask_text_selectors);
+                        $replay_selectors_arr = array_values(array_filter(array_map('trim', is_array($replay_selectors_lines) ? $replay_selectors_lines : array())));
+                        $replay_selectors_json = wp_json_encode($replay_selectors_arr);
+
                         // Preview values that correspond to how the tracking script is output.
                         // Note: keep this as data (not a literal script tag) to satisfy WordPress enqueue sniffs.
                         $tracking_script_preview = array(
@@ -548,8 +845,108 @@ class Rybbit_Analytics_Admin {
                                 'data-skip-patterns' => ($skip_json ? $skip_json : '[]'),
                                 'data-mask-patterns' => ($mask_json ? $mask_json : '[]'),
                                 'data-debounce' => (string) $debounce_preview,
+                                // Session Replay attributes
+                                'data-replay-mask-text-selectors' => ($replay_selectors_json ? $replay_selectors_json : '[]'),
+                                'data-replay-block-class' => (string) $replay_block_class,
+                                'data-replay-block-selector' => (string) $replay_block_selector,
+                                'data-replay-ignore-class' => (string) $replay_ignore_class,
+                                'data-replay-ignore-selector' => (string) $replay_ignore_selector,
+                                'data-replay-mask-text-class' => (string) $replay_mask_text_class,
+                                'data-replay-mask-all-inputs' => ($replay_mask_all_inputs === '1') ? 'true' : 'false',
+                                'data-replay-mask-input-options' => (string) $replay_mask_input_options,
+                                'data-replay-collect-fonts' => ($replay_collect_fonts === '1') ? 'true' : 'false',
+                                'data-replay-sampling' => (string) $replay_sampling,
+                                'data-replay-slim-dom-options' => (string) $replay_slim_dom_options,
                             ),
                         );
+
+                        // Default values (from tracking-script.mdx) used to decide which attributes are emitted.
+                        $defaults_for_omit = array(
+                            'data-skip-patterns' => '[]',
+                            'data-mask-patterns' => '[]',
+                            'data-debounce' => '500',
+                            'data-replay-mask-text-selectors' => '[]',
+                            'data-replay-block-class' => 'rr-block',
+                            'data-replay-ignore-class' => 'rr-ignore',
+                            'data-replay-mask-text-class' => 'rr-mask',
+                            'data-replay-mask-all-inputs' => 'true',
+                            'data-replay-collect-fonts' => 'true',
+                            'data-replay-mask-input-options' => '{"password":true,"email":true}',
+                            'data-replay-sampling' => '{"mousemove":false,"mouseInteraction":{"MouseUp":false,"MouseDown":false,"Click":true,"ContextMenu":false,"DblClick":true,"Focus":true,"Blur":true,"TouchStart":false,"TouchEnd":false},"scroll":500,"input":"last","media":800}',
+                            'data-replay-slim-dom-options' => '{"script":false,"comment":true,"headFavicon":true,"headWhitespace":true,"headMetaDescKeywords":true,"headMetaSocial":true,"headMetaRobots":true,"headMetaHttpEquiv":true,"headMetaAuthorship":true,"headMetaVerification":true}',
+                        );
+
+                        // Normalize the JSON defaults to canonical encoding to match stored/preview strings.
+                        $defaults_for_omit['data-replay-mask-input-options'] = wp_json_encode(json_decode($defaults_for_omit['data-replay-mask-input-options'], true));
+                        $defaults_for_omit['data-replay-sampling'] = wp_json_encode(json_decode($defaults_for_omit['data-replay-sampling'], true));
+                        $defaults_for_omit['data-replay-slim-dom-options'] = wp_json_encode(json_decode($defaults_for_omit['data-replay-slim-dom-options'], true));
+
+                        $tracking_script_preview_for_debug = $tracking_script_preview;
+
+                        // Normalize potentially pretty-printed JSON strings for comparisons.
+                        foreach (array('data-replay-mask-input-options', 'data-replay-sampling', 'data-replay-slim-dom-options') as $k) {
+                            if (isset($tracking_script_preview_for_debug['attributes'][$k])) {
+                                $v = (string) $tracking_script_preview_for_debug['attributes'][$k];
+                                $decoded = json_decode($v, true);
+                                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                    $tracking_script_preview_for_debug['attributes'][$k] = wp_json_encode($decoded);
+                                }
+                            }
+                        }
+
+                        // Omit attributes that match defaults (and omit empty selectors/selectors).
+                        foreach ($tracking_script_preview_for_debug['attributes'] as $attr_key => $attr_val) {
+                            // Always keep site id.
+                            if ($attr_key === 'data-site-id') {
+                                continue;
+                            }
+
+                            // Omit empty selector attrs (these are optional).
+                            if (in_array($attr_key, array('data-replay-block-selector', 'data-replay-ignore-selector'), true)) {
+                                if (trim((string) $attr_val) === '') {
+                                    unset($tracking_script_preview_for_debug['attributes'][$attr_key]);
+                                }
+                                continue;
+                            }
+
+                            if (isset($defaults_for_omit[$attr_key]) && (string) $attr_val === (string) $defaults_for_omit[$attr_key]) {
+                                unset($tracking_script_preview_for_debug['attributes'][$attr_key]);
+                            }
+                        }
+
+                        // Decode JSON-bearing attributes for readable debug output.
+                        $decode_json_if_possible = function ($value) {
+                            if (!is_string($value)) {
+                                return $value;
+                            }
+                            $trimmed = trim($value);
+                            if ($trimmed === '') {
+                                return $value;
+                            }
+                            if ($trimmed[0] !== '{' && $trimmed[0] !== '[') {
+                                return $value;
+                            }
+                            $decoded = json_decode($trimmed, true);
+                            if (json_last_error() === JSON_ERROR_NONE) {
+                                return $decoded;
+                            }
+                            return $value;
+                        };
+
+                        if (isset($tracking_script_preview_for_debug['attributes']) && is_array($tracking_script_preview_for_debug['attributes'])) {
+                            foreach (array(
+                                'data-skip-patterns',
+                                'data-mask-patterns',
+                                'data-replay-mask-text-selectors',
+                                'data-replay-mask-input-options',
+                                'data-replay-sampling',
+                                'data-replay-slim-dom-options',
+                            ) as $k) {
+                                if (isset($tracking_script_preview_for_debug['attributes'][$k])) {
+                                    $tracking_script_preview_for_debug['attributes'][$k] = $decode_json_if_possible($tracking_script_preview_for_debug['attributes'][$k]);
+                                }
+                            }
+                        }
                         ?>
                         <table class="form-table" role="presentation">
                             <tr>
@@ -589,7 +986,7 @@ class Rybbit_Analytics_Admin {
                                 <th scope="row">Tracking script data</th>
                                 <td>
                                     <pre class="rybbit-identify-payload"><?php
-                                        echo esc_html(wp_json_encode($tracking_script_preview, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+                                        echo esc_html(wp_json_encode($tracking_script_preview_for_debug, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
                                     ?></pre>
                                     <p class="description">This shows the script URL and attributes that will be applied when the tracking script is output.</p>
                                 </td>
@@ -665,5 +1062,87 @@ class Rybbit_Analytics_Admin {
     // Backwards compatibility if something calls the old method name.
     public function settings_link($links) {
         return $this->action_links($links);
+    }
+
+    /**
+     * Sanitize a newline-separated list of CSS selectors.
+     * - Removes empty lines
+     * - Normalizes line endings to \n
+     */
+    public function sanitize_selectors_newline_list($value) {
+        // Reuse the same semantics as patterns list, but keep name explicit.
+        return $this->sanitize_patterns_newline_list($value);
+    }
+
+    /**
+     * Sanitize a CSS class name with a fallback default.
+     */
+    private function sanitize_css_class_with_default($value, $default) {
+        $value = trim((string) $value);
+        $value = sanitize_html_class($value);
+        if ($value === '') {
+            return (string) $default;
+        }
+        return $value;
+    }
+
+    /**
+     * Sanitize a CSS selector text field.
+     * We don't attempt to validate CSS selector syntax; we just store a trimmed string.
+     */
+    public function sanitize_css_selector_text($value) {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+        // Allow common selector characters; store as plain text.
+        return sanitize_text_field($value);
+    }
+
+    /**
+     * Sanitize a JSON object string or empty string.
+     *
+     * - Empty => '' (omit attribute)
+     * - Valid JSON object => normalized wp_json_encode(object)
+     * - Invalid => keep previous value and add a settings error
+     */
+    private function sanitize_json_object_string_or_empty($value, $option_name_for_error) {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+
+        $decoded = json_decode($value, true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+            add_settings_error(
+                $option_name_for_error,
+                $option_name_for_error . '_invalid_json',
+                'Invalid JSON. Please provide a JSON object (example: {"password":true,"email":true}).',
+                'error'
+            );
+            return (string) get_option($option_name_for_error, '');
+        }
+
+        return (string) wp_json_encode($decoded);
+    }
+
+    /**
+     * SlimDOM options accept:
+     * - '' (omit)
+     * - 'true' or 'false'
+     * - JSON object string
+     */
+    private function sanitize_slim_dom_options($value) {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+
+        $lower = strtolower($value);
+        if ($lower === 'true' || $lower === 'false') {
+            return $lower;
+        }
+
+        return $this->sanitize_json_object_string_or_empty($value, 'rybbit_replay_slim_dom_options');
     }
 }

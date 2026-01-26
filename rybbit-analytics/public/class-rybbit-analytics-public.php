@@ -184,6 +184,21 @@ class Rybbit_Analytics_Public {
     public function enqueue_scripts() {
         // Enqueue frontend scripts/styles
     }
+    /**
+     * Escape a value for a single-quoted HTML attribute.
+     *
+     * We intentionally keep double quotes (") unescaped so JSON strings look like the docs:
+     *   data-foo='{"a":1}'
+     */
+    private function esc_attr_single_quote($value) {
+        $value = (string) $value;
+        // Escape & and < and > for HTML safety.
+        $value = htmlspecialchars($value, ENT_NOQUOTES, 'UTF-8');
+        // In a single-quoted attribute, only single quotes must be escaped.
+        $value = str_replace("'", '&#039;', $value);
+        return $value;
+    }
+
     public function add_tracking_script() {
         $site_id = get_option('rybbit_site_id', '');
         $script_url = get_option('rybbit_script_url', 'https://app.rybbit.io/api/script.js');
@@ -195,6 +210,19 @@ class Rybbit_Analytics_Public {
         $skip_patterns = get_option('rybbit_skip_patterns', '');
         $mask_patterns = get_option('rybbit_mask_patterns', '');
         $debounce = get_option('rybbit_debounce', '500');
+
+        // Session Replay options
+        $replay_mask_text_selectors = get_option('rybbit_replay_mask_text_selectors', '');
+        $replay_block_class = get_option('rybbit_replay_block_class', 'rr-block');
+        $replay_block_selector = get_option('rybbit_replay_block_selector', '');
+        $replay_ignore_class = get_option('rybbit_replay_ignore_class', 'rr-ignore');
+        $replay_ignore_selector = get_option('rybbit_replay_ignore_selector', '');
+        $replay_mask_text_class = get_option('rybbit_replay_mask_text_class', 'rr-mask');
+        $replay_mask_all_inputs = get_option('rybbit_replay_mask_all_inputs', '1');
+        $replay_mask_input_options = get_option('rybbit_replay_mask_input_options', '{"password":true,"email":true}');
+        $replay_collect_fonts = get_option('rybbit_replay_collect_fonts', '1');
+        $replay_sampling = get_option('rybbit_replay_sampling', '{"mousemove":false,"mouseInteraction":{"MouseUp":false,"MouseDown":false,"Click":true,"ContextMenu":false,"DblClick":true,"Focus":true,"Blur":true,"TouchStart":false,"TouchEnd":false},"scroll":500,"input":"last","media":800}');
+        $replay_slim_dom_options = get_option('rybbit_replay_slim_dom_options', '{"script":false,"comment":true,"headFavicon":true,"headWhitespace":true,"headMetaDescKeywords":true,"headMetaSocial":true,"headMetaRobots":true,"headMetaHttpEquiv":true,"headMetaAuthorship":true,"headMetaVerification":true}');
 
         if (empty($site_id) || empty($script_url)) {
             return;
@@ -228,16 +256,153 @@ class Rybbit_Analytics_Public {
         $skip_patterns_json = $this->patterns_to_json_array_string($skip_patterns);
         $mask_patterns_json = $this->patterns_to_json_array_string($mask_patterns);
 
+        // Normalize replay attribute values.
+        $replay_selectors_json = $this->normalize_json_array_string($replay_mask_text_selectors);
+
+        $replay_block_class = sanitize_html_class(trim((string) $replay_block_class));
+        if ($replay_block_class === '') {
+            $replay_block_class = 'rr-block';
+        }
+
+        $replay_ignore_class = sanitize_html_class(trim((string) $replay_ignore_class));
+        if ($replay_ignore_class === '') {
+            $replay_ignore_class = 'rr-ignore';
+        }
+
+        $replay_mask_text_class = sanitize_html_class(trim((string) $replay_mask_text_class));
+        if ($replay_mask_text_class === '') {
+            $replay_mask_text_class = 'rr-mask';
+        }
+
+        $replay_block_selector = trim((string) $replay_block_selector);
+        $replay_ignore_selector = trim((string) $replay_ignore_selector);
+
+        $replay_mask_all_inputs_str = ($replay_mask_all_inputs === '1') ? 'true' : 'false';
+        $replay_collect_fonts_str = ($replay_collect_fonts === '1') ? 'true' : 'false';
+
+        // ----- Default values (from tracking-script.mdx) -----
+        $default_skip_patterns_json = '[]';
+        $default_mask_patterns_json = '[]';
+        $default_debounce = '500';
+
+        $default_replay_mask_text_selectors_json = '[]';
+        $default_replay_block_class = 'rr-block';
+        $default_replay_ignore_class = 'rr-ignore';
+        $default_replay_mask_text_class = 'rr-mask';
+        $default_replay_mask_all_inputs_str = 'true';
+        $default_replay_collect_fonts_str = 'true';
+        $default_replay_mask_input_options_json = '{"password":true,"email":true}';
+        $default_replay_sampling_json = '{"mousemove":false,"mouseInteraction":{"MouseUp":false,"MouseDown":false,"Click":true,"ContextMenu":false,"DblClick":true,"Focus":true,"Blur":true,"TouchStart":false,"TouchEnd":false},"scroll":500,"input":"last","media":800}';
+        $default_replay_slim_dom_options_json = '{"script":false,"comment":true,"headFavicon":true,"headWhitespace":true,"headMetaDescKeywords":true,"headMetaSocial":true,"headMetaRobots":true,"headMetaHttpEquiv":true,"headMetaAuthorship":true,"headMetaVerification":true}';
+
+        // Normalize defaults to the same canonical JSON strings we store/output.
+        $default_replay_mask_input_options_json = wp_json_encode(json_decode($default_replay_mask_input_options_json, true));
+        $default_replay_sampling_json = wp_json_encode(json_decode($default_replay_sampling_json, true));
+        $default_replay_slim_dom_options_json = wp_json_encode(json_decode($default_replay_slim_dom_options_json, true));
+
+        // Current JSON fields are stored normalized via sanitize callbacks, but might be pretty-printed.
+        // Normalize them for reliable comparison.
+        $replay_mask_input_options_norm = $replay_mask_input_options;
+        $tmp = json_decode($replay_mask_input_options_norm, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($tmp)) {
+            $replay_mask_input_options_norm = wp_json_encode($tmp);
+        }
+        $replay_sampling_norm = $replay_sampling;
+        $tmp = json_decode($replay_sampling_norm, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($tmp)) {
+            $replay_sampling_norm = wp_json_encode($tmp);
+        }
+        $replay_slim_dom_options_norm = $replay_slim_dom_options;
+        $tmp = json_decode($replay_slim_dom_options_norm, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($tmp)) {
+            $replay_slim_dom_options_norm = wp_json_encode($tmp);
+        }
+
+        // Decide which attributes to emit: omit when empty or equal to documented defaults.
+        $has_skip_patterns = ($skip_patterns_json !== $default_skip_patterns_json);
+        $has_mask_patterns = ($mask_patterns_json !== $default_mask_patterns_json);
+        $has_debounce = ($debounce !== $default_debounce);
+
+        $has_replay_selectors = ($replay_selectors_json !== $default_replay_mask_text_selectors_json);
+        $has_replay_block_class = ($replay_block_class !== $default_replay_block_class);
+        $has_replay_block_selector = ($replay_block_selector !== '');
+        $has_replay_ignore_class = ($replay_ignore_class !== $default_replay_ignore_class);
+        $has_replay_ignore_selector = ($replay_ignore_selector !== '');
+        $has_replay_mask_text_class = ($replay_mask_text_class !== $default_replay_mask_text_class);
+        $has_replay_mask_all_inputs = ($replay_mask_all_inputs_str !== $default_replay_mask_all_inputs_str);
+        $has_replay_mask_input_options = ($replay_mask_input_options_norm !== '' && $replay_mask_input_options_norm !== $default_replay_mask_input_options_json);
+        $has_replay_collect_fonts = ($replay_collect_fonts_str !== $default_replay_collect_fonts_str);
+        $has_replay_sampling = ($replay_sampling_norm !== '' && $replay_sampling_norm !== $default_replay_sampling_json);
+        $has_replay_slim_dom_options = ($replay_slim_dom_options_norm !== '' && $replay_slim_dom_options_norm !== $default_replay_slim_dom_options_json);
+
+        // Pre-escape JSON-ish values for single-quoted attributes so view-source matches docs.
+        $skip_patterns_attr = $this->esc_attr_single_quote($skip_patterns_json);
+        $mask_patterns_attr = $this->esc_attr_single_quote($mask_patterns_json);
+        $replay_selectors_attr = $this->esc_attr_single_quote($replay_selectors_json);
+        $replay_mask_input_options_attr = $this->esc_attr_single_quote($replay_mask_input_options_norm);
+        $replay_sampling_attr = $this->esc_attr_single_quote($replay_sampling_norm);
+        $replay_slim_dom_options_attr = $this->esc_attr_single_quote($replay_slim_dom_options_norm);
+
+        // Build the attribute lines explicitly to avoid odd whitespace from PHP templating.
+        $attr_lines = array();
+        $attr_lines[] = 'src="' . esc_url($script_url) . '"';
+        $attr_lines[] = ($script_loading === 'async') ? 'async' : 'defer';
+        $attr_lines[] = 'data-site-id="' . esc_attr($site_id) . '"';
+
+        if ($has_skip_patterns) {
+            $attr_lines[] = "data-skip-patterns='" . $skip_patterns_attr . "'";
+        }
+        if ($has_mask_patterns) {
+            $attr_lines[] = "data-mask-patterns='" . $mask_patterns_attr . "'";
+        }
+        if ($has_debounce) {
+            $attr_lines[] = 'data-debounce="' . esc_attr($debounce) . '"';
+        }
+
+        // Session replay
+        if ($has_replay_selectors) {
+            $attr_lines[] = "data-replay-mask-text-selectors='" . $replay_selectors_attr . "'";
+        }
+        if ($has_replay_block_class) {
+            $attr_lines[] = 'data-replay-block-class="' . esc_attr($replay_block_class) . '"';
+        }
+        if ($has_replay_block_selector) {
+            $attr_lines[] = 'data-replay-block-selector="' . esc_attr($replay_block_selector) . '"';
+        }
+        if ($has_replay_ignore_class) {
+            $attr_lines[] = 'data-replay-ignore-class="' . esc_attr($replay_ignore_class) . '"';
+        }
+        if ($has_replay_ignore_selector) {
+            $attr_lines[] = 'data-replay-ignore-selector="' . esc_attr($replay_ignore_selector) . '"';
+        }
+        if ($has_replay_mask_text_class) {
+            $attr_lines[] = 'data-replay-mask-text-class="' . esc_attr($replay_mask_text_class) . '"';
+        }
+        if ($has_replay_mask_all_inputs) {
+            $attr_lines[] = 'data-replay-mask-all-inputs="' . esc_attr($replay_mask_all_inputs_str) . '"';
+        }
+        if ($has_replay_mask_input_options) {
+            $attr_lines[] = "data-replay-mask-input-options='" . $replay_mask_input_options_attr . "'";
+        }
+        if ($has_replay_collect_fonts) {
+            $attr_lines[] = 'data-replay-collect-fonts="' . esc_attr($replay_collect_fonts_str) . '"';
+        }
+        if ($has_replay_sampling) {
+            $attr_lines[] = "data-replay-sampling='" . $replay_sampling_attr . "'";
+        }
+        if ($has_replay_slim_dom_options) {
+            $attr_lines[] = "data-replay-slim-dom-options='" . $replay_slim_dom_options_attr . "'";
+        }
+
+        // Render tag as a single string to avoid any trailing indentation before the closing bracket.
+        $script_tag = "<script\n            " . implode("\n            ", $attr_lines) . "\n        ></script>";
+
         ?>
         <!-- Rybbit Analytics Tracking -->
-        <script
-            src="<?php echo esc_url($script_url); ?>"
-            <?php echo ($script_loading === 'async') ? 'async' : 'defer'; ?>
-            data-site-id="<?php echo esc_attr($site_id); ?>"
-            data-skip-patterns='<?php echo esc_attr($skip_patterns_json); ?>'
-            data-mask-patterns='<?php echo esc_attr($mask_patterns_json); ?>'
-            data-debounce="<?php echo esc_attr($debounce); ?>"
-        ></script>
+        <?php
+        // Print the script tag and a newline so the end comment always starts on its own line.
+        echo $script_tag . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        ?>
         <!-- End Rybbit Analytics Tracking -->
         <?php
 
