@@ -439,6 +439,36 @@ class Rybbit_Analytics_Admin {
         $replay_sampling = get_option('rybbit_replay_sampling', $replay_sampling_default_json_pretty);
         $replay_slim_dom_options = get_option('rybbit_replay_slim_dom_options', $replay_slim_dom_default_json_pretty);
 
+        // Pretty-print JSON fields for display (saved values may be normalized/minified).
+        $replay_mask_input_options_display = is_string($replay_mask_input_options) ? trim($replay_mask_input_options) : '';
+        if ($replay_mask_input_options_display !== '') {
+            $decoded = json_decode($replay_mask_input_options_display, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $replay_mask_input_options_display = wp_json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            }
+        }
+
+        $replay_sampling_display = is_string($replay_sampling) ? trim($replay_sampling) : '';
+        if ($replay_sampling_display !== '') {
+            $decoded = json_decode($replay_sampling_display, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $replay_sampling_display = wp_json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            }
+        }
+
+        $replay_slim_dom_options_display = is_string($replay_slim_dom_options) ? trim($replay_slim_dom_options) : '';
+        if ($replay_slim_dom_options_display !== '') {
+            $lower = strtolower($replay_slim_dom_options_display);
+            if ($lower !== 'true' && $lower !== 'false') {
+                $decoded = json_decode($replay_slim_dom_options_display, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $replay_slim_dom_options_display = wp_json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                }
+            } else {
+                $replay_slim_dom_options_display = $lower;
+            }
+        }
+
         // Encode defaults for safe transport in HTML data attributes.
         $replay_sampling_default_b64 = base64_encode($replay_sampling_default_json_pretty ? $replay_sampling_default_json_pretty : '{}');
         $replay_slim_dom_default_b64 = base64_encode($replay_slim_dom_default_json_pretty ? $replay_slim_dom_default_json_pretty : '{}');
@@ -686,7 +716,23 @@ class Rybbit_Analytics_Admin {
                             <tr>
                                 <th scope="row"><label for="rybbit_replay_mask_input_options">Mask input options (JSON)</label></th>
                                 <td>
-                                    <textarea id="rybbit_replay_mask_input_options" name="rybbit_replay_mask_input_options" rows="5" class="large-text code rybbit-input-wide"><?php echo esc_textarea($replay_mask_input_options); ?></textarea>
+                                    <?php
+                                    // Default from tracking-script.mdx
+                                    $replay_mask_input_options_default_json = wp_json_encode(array(
+                                        'password' => true,
+                                        'email' => true,
+                                    ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                                    $replay_mask_input_options_default_b64 = base64_encode($replay_mask_input_options_default_json);
+                                    ?>
+                                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom: 6px;">
+                                        <button
+                                            type="button"
+                                            class="button button-secondary rybbit-reset-json"
+                                            data-rybbit-reset-target="#rybbit_replay_mask_input_options"
+                                            data-rybbit-reset-value-b64="<?php echo esc_attr($replay_mask_input_options_default_b64); ?>"
+                                        >Reset to defaults</button>
+                                    </div>
+                                    <textarea id="rybbit_replay_mask_input_options" name="rybbit_replay_mask_input_options" rows="5" class="large-text code rybbit-input-wide"><?php echo esc_textarea($replay_mask_input_options_display); ?></textarea>
                                     <p class="description" style="max-width: 720px;">JSON object to control which input types are masked. Example: <code>{"password":true,"email":true,"tel":true}</code>.</p>
                                 </td>
                             </tr>
@@ -711,7 +757,7 @@ class Rybbit_Analytics_Admin {
                                             data-rybbit-reset-value-b64="<?php echo esc_attr($replay_sampling_default_b64); ?>"
                                         >Reset to defaults</button>
                                     </div>
-                                    <textarea id="rybbit_replay_sampling" name="rybbit_replay_sampling" rows="9" class="large-text code rybbit-input-wide"><?php echo esc_textarea($replay_sampling); ?></textarea>
+                                    <textarea id="rybbit_replay_sampling" name="rybbit_replay_sampling" rows="9" class="large-text code rybbit-input-wide"><?php echo esc_textarea($replay_sampling_display); ?></textarea>
 
                                     <p class="description" style="max-width: 720px; margin-top: 6px;">
                                         Optional JSON object to reduce replay volume.
@@ -731,7 +777,7 @@ class Rybbit_Analytics_Admin {
                                             data-rybbit-reset-value-b64="<?php echo esc_attr($replay_slim_dom_default_b64); ?>"
                                         >Reset to defaults</button>
                                     </div>
-                                    <textarea id="rybbit_replay_slim_dom_options" name="rybbit_replay_slim_dom_options" rows="9" class="large-text code rybbit-input-wide"><?php echo esc_textarea($replay_slim_dom_options); ?></textarea>
+                                    <textarea id="rybbit_replay_slim_dom_options" name="rybbit_replay_slim_dom_options" rows="9" class="large-text code rybbit-input-wide"><?php echo esc_textarea($replay_slim_dom_options_display); ?></textarea>
                                     <p class="description" style="max-width: 720px;">
                                         Optional replay DOM slimming config. Set to <code>true</code> to enable all slimDOM options, <code>false</code> to disable them, or provide a JSON object for fine-grained control.
                                         <a href="https://rybbit.com/docs/script#slimdom-options" target="_blank" rel="noopener noreferrer">SlimDOM options docs</a>.
