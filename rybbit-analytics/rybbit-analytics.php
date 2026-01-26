@@ -10,7 +10,6 @@ Author: Maki IT
 Author URI: https://maki-it.de
 License: GPLv3 or later
 License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
-Update URI: https://github.com/maki-it/rybbit-wordpress-plugin
 */
 
 // If this file is called directly, abort.
