@@ -184,6 +184,21 @@ class Rybbit_Analytics_Public {
     public function enqueue_scripts() {
         // Enqueue frontend scripts/styles
     }
+    /**
+     * Escape a value for a single-quoted HTML attribute.
+     *
+     * We intentionally keep double quotes (") unescaped so JSON strings look like the docs:
+     *   data-foo='{"a":1}'
+     */
+    private function esc_attr_single_quote($value) {
+        $value = (string) $value;
+        // Escape & and < and > for HTML safety.
+        $value = htmlspecialchars($value, ENT_NOQUOTES, 'UTF-8');
+        // In a single-quoted attribute, only single quotes must be escaped.
+        $value = str_replace("'", '&#039;', $value);
+        return $value;
+    }
+
     public function add_tracking_script() {
         $site_id = get_option('rybbit_site_id', '');
         $script_url = get_option('rybbit_script_url', 'https://app.rybbit.io/api/script.js');
@@ -195,6 +210,19 @@ class Rybbit_Analytics_Public {
         $skip_patterns = get_option('rybbit_skip_patterns', '');
         $mask_patterns = get_option('rybbit_mask_patterns', '');
         $debounce = get_option('rybbit_debounce', '500');
+
+        // Session Replay options
+        $replay_mask_text_selectors = get_option('rybbit_replay_mask_text_selectors', '');
+        $replay_block_class = get_option('rybbit_replay_block_class', 'rr-block');
+        $replay_block_selector = get_option('rybbit_replay_block_selector', '');
+        $replay_ignore_class = get_option('rybbit_replay_ignore_class', 'rr-ignore');
+        $replay_ignore_selector = get_option('rybbit_replay_ignore_selector', '');
+        $replay_mask_text_class = get_option('rybbit_replay_mask_text_class', 'rr-mask');
+        $replay_mask_all_inputs = get_option('rybbit_replay_mask_all_inputs', '1');
+        $replay_mask_input_options = get_option('rybbit_replay_mask_input_options', '{"password":true,"email":true}');
+        $replay_collect_fonts = get_option('rybbit_replay_collect_fonts', '1');
+        $replay_sampling = get_option('rybbit_replay_sampling', '{"mousemove":false,"mouseInteraction":{"MouseUp":false,"MouseDown":false,"Click":true,"ContextMenu":false,"DblClick":true,"Focus":true,"Blur":true,"TouchStart":false,"TouchEnd":false},"scroll":500,"input":"last","media":800}');
+        $replay_slim_dom_options = get_option('rybbit_replay_slim_dom_options', '{"script":false,"comment":true,"headFavicon":true,"headWhitespace":true,"headMetaDescKeywords":true,"headMetaSocial":true,"headMetaRobots":true,"headMetaHttpEquiv":true,"headMetaAuthorship":true,"headMetaVerification":true}');
 
         if (empty($site_id) || empty($script_url)) {
             return;
@@ -228,15 +256,78 @@ class Rybbit_Analytics_Public {
         $skip_patterns_json = $this->patterns_to_json_array_string($skip_patterns);
         $mask_patterns_json = $this->patterns_to_json_array_string($mask_patterns);
 
+        // Normalize replay attribute values.
+        $replay_selectors_json = $this->normalize_json_array_string($replay_mask_text_selectors);
+
+        $replay_block_class = sanitize_html_class(trim((string) $replay_block_class));
+        if ($replay_block_class === '') {
+            $replay_block_class = 'rr-block';
+        }
+
+        $replay_ignore_class = sanitize_html_class(trim((string) $replay_ignore_class));
+        if ($replay_ignore_class === '') {
+            $replay_ignore_class = 'rr-ignore';
+        }
+
+        $replay_mask_text_class = sanitize_html_class(trim((string) $replay_mask_text_class));
+        if ($replay_mask_text_class === '') {
+            $replay_mask_text_class = 'rr-mask';
+        }
+
+        $replay_block_selector = trim((string) $replay_block_selector);
+        $replay_ignore_selector = trim((string) $replay_ignore_selector);
+
+        $replay_mask_all_inputs_str = ($replay_mask_all_inputs === '1') ? 'true' : 'false';
+        $replay_collect_fonts_str = ($replay_collect_fonts === '1') ? 'true' : 'false';
+
+        // JSON fields: best-effort ensure they're either empty, 'true'/'false' (slimdom), or valid JSON object strings.
+        $replay_mask_input_options = trim((string) $replay_mask_input_options);
+        $replay_sampling = trim((string) $replay_sampling);
+        $replay_slim_dom_options = trim((string) $replay_slim_dom_options);
+
+        // Only emit optional JSON attributes when non-empty to avoid overriding script defaults.
+        $has_replay_mask_input_options = ($replay_mask_input_options !== '');
+        $has_replay_sampling = ($replay_sampling !== '');
+        $has_replay_slim_dom_options = ($replay_slim_dom_options !== '');
+
+        // Pre-escape JSON-ish values for single-quoted attributes so view-source matches docs.
+        $skip_patterns_attr = $this->esc_attr_single_quote($skip_patterns_json);
+        $mask_patterns_attr = $this->esc_attr_single_quote($mask_patterns_json);
+        $replay_selectors_attr = $this->esc_attr_single_quote($replay_selectors_json);
+        $replay_mask_input_options_attr = $this->esc_attr_single_quote($replay_mask_input_options);
+        $replay_sampling_attr = $this->esc_attr_single_quote($replay_sampling);
+        $replay_slim_dom_options_attr = $this->esc_attr_single_quote($replay_slim_dom_options);
+
         ?>
         <!-- Rybbit Analytics Tracking -->
         <script
             src="<?php echo esc_url($script_url); ?>"
             <?php echo ($script_loading === 'async') ? 'async' : 'defer'; ?>
             data-site-id="<?php echo esc_attr($site_id); ?>"
-            data-skip-patterns='<?php echo esc_attr($skip_patterns_json); ?>'
-            data-mask-patterns='<?php echo esc_attr($mask_patterns_json); ?>'
+            data-skip-patterns='<?php echo $skip_patterns_attr; ?>'
+            data-mask-patterns='<?php echo $mask_patterns_attr; ?>'
             data-debounce="<?php echo esc_attr($debounce); ?>"
+            data-replay-mask-text-selectors='<?php echo $replay_selectors_attr; ?>'
+            data-replay-block-class="<?php echo esc_attr($replay_block_class); ?>"
+            <?php if ($replay_block_selector !== '') : ?>
+            data-replay-block-selector="<?php echo esc_attr($replay_block_selector); ?>"
+            <?php endif; ?>
+            data-replay-ignore-class="<?php echo esc_attr($replay_ignore_class); ?>"
+            <?php if ($replay_ignore_selector !== '') : ?>
+            data-replay-ignore-selector="<?php echo esc_attr($replay_ignore_selector); ?>"
+            <?php endif; ?>
+            data-replay-mask-text-class="<?php echo esc_attr($replay_mask_text_class); ?>"
+            data-replay-mask-all-inputs="<?php echo esc_attr($replay_mask_all_inputs_str); ?>"
+            <?php if ($has_replay_mask_input_options) : ?>
+            data-replay-mask-input-options='<?php echo $replay_mask_input_options_attr; ?>'
+            <?php endif; ?>
+            data-replay-collect-fonts="<?php echo esc_attr($replay_collect_fonts_str); ?>"
+            <?php if ($has_replay_sampling) : ?>
+            data-replay-sampling='<?php echo $replay_sampling_attr; ?>'
+            <?php endif; ?>
+            <?php if ($has_replay_slim_dom_options) : ?>
+            data-replay-slim-dom-options='<?php echo $replay_slim_dom_options_attr; ?>'
+            <?php endif; ?>
         ></script>
         <!-- End Rybbit Analytics Tracking -->
         <?php

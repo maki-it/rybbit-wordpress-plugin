@@ -171,9 +171,69 @@
     refresh();
   }
 
+  function initJsonResetButtons() {
+    var buttons = document.querySelectorAll('.rybbit-reset-json');
+    if (!buttons.length) return;
+
+    function decodeBase64Utf8(b64) {
+      if (!b64) return '';
+      try {
+        // atob gives a binary string; decodeURIComponent trick restores UTF-8.
+        var binary = window.atob(b64);
+        var bytes = Array.prototype.map.call(binary, function(ch) {
+          return '%' + ('00' + ch.charCodeAt(0).toString(16)).slice(-2);
+        }).join('');
+        return decodeURIComponent(bytes);
+      } catch (e) {
+        try {
+          return window.atob(b64);
+        } catch (e2) {
+          return '';
+        }
+      }
+    }
+
+    buttons.forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        var targetSel = btn.getAttribute('data-rybbit-reset-target');
+        if (!targetSel) return;
+
+        var target = document.querySelector(targetSel);
+        if (!target) return;
+
+        // Prefer base64 (safe for multiline JSON). Fallback to legacy plain value.
+        var valueB64 = btn.getAttribute('data-rybbit-reset-value-b64');
+        var value = valueB64 ? decodeBase64Utf8(valueB64) : btn.getAttribute('data-rybbit-reset-value');
+
+        if (value == null) value = '';
+
+        // Confirm if field already has content.
+        var existing = (target.value || '').trim();
+        if (existing) {
+          var ok = window.confirm('Replace the current value with the documented default?');
+          if (!ok) return;
+        }
+
+        target.value = value;
+
+        try {
+          target.dispatchEvent(new Event('input', { bubbles: true }));
+          target.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (err) {
+          // ignore
+        }
+
+        target.focus();
+      });
+    });
+  }
+
   ready(function() {
     initTabs();
     initUserMetaKeyToggle();
     initIdentifyPreview();
+    initJsonResetButtons();
   });
 })();
