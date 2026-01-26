@@ -21,6 +21,9 @@ jobs:
           # Tag is like v1.2.3 -> version is 1.2.3
           VERSION="${GITHUB_REF_NAME#v}"
 
+          # Make VERSION available to later steps.
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
           # Replace the whole header line, independent of current version.
           sed -i -E "s/^Version:[[:space:]]*.*/Version: ${VERSION}/" rybbit-analytics/rybbit-analytics.php
 
@@ -48,40 +51,40 @@ jobs:
         shell: bash
         env:
           RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
-          VERSION: "${{ env.VERSION }}"
+          VERSION: ${{ env.VERSION }}
         run: |
           cat > rybbit-analytics/readme.txt <<EOF
-=== Rybbit Analytics ===
-Contributors: makiit
-Tags: rybbit, analytics, tracking, privacy
-Stable tag: $VERSION
-Requires at least: 5.8
-Tested up to: 6.9
-Requires PHP: 7.4
-License: GPLv3 or later
-License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
-Add and manage the Rybbit tracking script.
-  
-  == Description ==
-Add and manage the Rybbit tracking script for WordPress. Configure privacy, role exclusions, and script attributes.
+          === Rybbit Analytics ===
+          Contributors: makiit
+          Tags: rybbit, analytics, tracking, privacy
+          Stable tag: $VERSION
+          Requires at least: 5.8
+          Tested up to: 6.9
+          Requires PHP: 7.4
+          License: GPLv3 or later
+          License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
+          Add and manage the Rybbit tracking script.
+            
+            == Description ==
+          Add and manage the Rybbit tracking script for WordPress. Configure privacy, role exclusions, and script attributes.
 
-== Installation ==
-1. Upload and install the Plugin zip archive via the Admin UI or extract the plugin files to the `/wp-content/plugins/rybbit-analytics` directory.
-2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Configure settings under Settings > Rybbit Analytics.
+          == Installation ==
+          1. Upload and install the Plugin zip archive via the Admin UI or extract the plugin files to the `/wp-content/plugins/rybbit-analytics` directory.
+          2. Activate the plugin through the 'Plugins' screen in WordPress.
+          3. Configure settings under Settings > Rybbit Analytics.
 
-== Changelog ==
-EOF
+          == Changelog ==
+          EOF
           echo "$RELEASE_NOTES" >> rybbit-analytics/readme.txt
           cat >> rybbit-analytics/readme.txt <<'EOF'
 
-== Frequently Asked Questions ==
-= How do I get my Site ID? =
-Find your Site ID in your Rybbit dashboard under tracking settings.
+          == Frequently Asked Questions ==
+          = How do I get my Site ID? =
+          Find your Site ID in your Rybbit dashboard under tracking settings.
 
-== License ==
-GPLv3 or later
-EOF
+          == License ==
+          GPLv3 or later
+          EOF
 
       - name: Prepare plugin folder
         run: |
