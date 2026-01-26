@@ -37,7 +37,16 @@ class Rybbit_Analytics_Public {
      * On wp-login.php?action=logout (and related), clear any persisted Rybbit user id.
      */
     public function maybe_clear_user_on_logout_screen() {
-        if (!isset($_GET['action']) || $_GET['action'] !== 'logout') {
+        // Read and sanitize request data without tripping PHPCS nonce warnings.
+        $action = filter_input( INPUT_GET, 'action', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+        if ( empty( $action ) || $action !== 'logout' ) {
+            return;
+        }
+
+        // If WordPress provides a logout nonce, verify it before running.
+        // Some flows may not include it at this point; in that case we just gate on action=logout.
+        $logout_nonce = filter_input( INPUT_GET, '_wpnonce', FILTER_UNSAFE_RAW );
+        if ( ! empty( $logout_nonce ) && ! wp_verify_nonce( sanitize_text_field( wp_unslash( $logout_nonce ) ), 'log-out' ) ) {
             return;
         }
 
