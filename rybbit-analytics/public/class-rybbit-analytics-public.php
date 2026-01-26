@@ -153,7 +153,7 @@ class Rybbit_Analytics_Public {
                 <script>
                 (function() {
                     var userId = <?php echo wp_json_encode($user_id); ?>;
-                    var traits = <?php echo $traits_json ? $traits_json : '{}'; ?>;
+                    var traits = <?php echo esc_js($traits_json ? $traits_json : '{}'); ?>;
 
                     // Try for ~2 seconds to wait for the tracker to load.
                     var attempts = 0;
