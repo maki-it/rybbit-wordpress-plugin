@@ -35,22 +35,67 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gh
 
-      - name: Fetch release notes for changelog
+      - name: Fetch stable releases for changelog
         id: changelog
+        shell: bash
         run: |
-          TAG_NAME=${GITHUB_REF_NAME}
-          RELEASE_NOTES=$(gh release view "$TAG_NAME" --json body -q ".body")
-          # Escape EOF for heredoc
-          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-          echo "$RELEASE_NOTES" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          set -euo pipefail
+
+          # WordPress readme.txt changelog expects headings like:
+          # = 1.2.3 =
+          # - Change
+          # We'll build this from ALL stable (non-prerelease) GitHub releases.
+          #
+          # NOTE: Not all `gh` versions support `gh release list --json body`.
+          # To stay compatible, we:
+          #  1) List stable tag names
+          #  2) Fetch each release body with `gh release view`.
+
+          CHANGELOG=$(mktemp)
+
+          # Grab stable release tags and keep only semver-ish tags.
+          mapfile -t TAGS < <(
+            gh release list --limit 200 --exclude-pre-releases --json tagName \
+              --jq '.[].tagName | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))'
+          )
+
+          for TAG in "${TAGS[@]}"; do
+            VERSION=${TAG#v}
+
+            # Fetch body for each release. `--jq` keeps the output plain text.
+            BODY=$(gh release view "$TAG" --json body --jq '.body // ""')
+
+            {
+              echo "= ${VERSION} ="
+
+              # Turn each non-empty line into a bullet.
+              # If a line is already a bullet, keep it as-is.
+              echo "$BODY" \
+                | sed -e 's/\r$//' \
+                | awk 'NF { if ($0 ~ /^[[:space:]]*[-*][[:space:]]+/) { print $0 } else { print "- " $0 } }'
+
+              echo
+            } >> "$CHANGELOG"
+          done
+
+          # If there are no releases yet, keep changelog non-empty for readme formatting.
+          if ! test -s "$CHANGELOG"; then
+            echo "= ${GITHUB_REF_NAME#v} =" > "$CHANGELOG"
+            echo "- Initial release" >> "$CHANGELOG"
+            echo >> "$CHANGELOG"
+          fi
+
+          # Export as multiline env var.
+          echo "CHANGELOG<<EOF" >> "$GITHUB_ENV"
+          cat "$CHANGELOG" >> "$GITHUB_ENV"
+          echo "EOF" >> "$GITHUB_ENV"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate readme.txt
         shell: bash
         env:
-          RELEASE_NOTES: ${{ env.RELEASE_NOTES }}
+          CHANGELOG: ${{ env.CHANGELOG }}
           VERSION: ${{ env.VERSION }}
         run: |
           cat > rybbit-analytics/readme.txt <<EOF
@@ -75,7 +120,7 @@ jobs:
 
           == Changelog ==
           EOF
-          echo "$RELEASE_NOTES" >> rybbit-analytics/readme.txt
+          echo "$CHANGELOG" >> rybbit-analytics/readme.txt
           cat >> rybbit-analytics/readme.txt <<'EOF'
           
           See full changelog at: 
