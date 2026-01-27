@@ -35,7 +35,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gh
 
-      - name: Fetch releases for changelog
+      - name: Fetch releases for changelog (fast)
         id: changelog
         shell: bash
         run: |
@@ -46,38 +46,48 @@ jobs:
           # - Change
           # We'll build this from ALL GitHub releases (including pre-releases).
           #
-          # NOTE: Not all `gh` versions support `gh release list --json body`.
-          # To stay compatible, we:
-          #  1) List tag names
-          #  2) Fetch each release body with `gh release view`.
+          # Performance: avoid fetching bodies one-by-one. Instead, fetch releases
+          # in bulk via the GitHub API (100 per page) using `gh api --paginate`.
 
           CHANGELOG=$(mktemp)
 
-          # Grab release tags and keep only semver-ish tags.
-          mapfile -t TAGS < <(
-            gh release list --limit 200 --json tagName \
-              --jq '.[].tagName | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))'
-          )
+          # Tags we want to include:
+          # - stable:     v1.0.0
+          # - pre-release v1.0.0-rc.1 (and any other SemVer pre-release/build suffix)
+          TAG_REGEX='^v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$'
 
-          for TAG in "${TAGS[@]}"; do
-            echo "Processing tag: $TAG"
-            VERSION=${TAG#v}
+          # Fetch releases (tag_name + body) in as few requests as possible.
+          # `--paginate` follows API pagination automatically.
+          RELEASES_JSON=$(mktemp)
+          gh api --paginate \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+            --jq '[.[] | {tag_name, body, published_at}]' \
+            > "$RELEASES_JSON"
 
-            # Fetch body for each release. `--jq` keeps the output plain text.
-            BODY=$(gh release view "$TAG" --json body --jq '.body // ""')
+          # Some `gh api --paginate --jq` outputs multiple JSON arrays (one per page).
+          # Slurp them into a single array.
+          RELEASES_MERGED=$(mktemp)
+          jq -s --arg re "$TAG_REGEX" 'add | map(select(.tag_name | test($re)))' \
+            "$RELEASES_JSON" > "$RELEASES_MERGED"
 
-            {
-              echo "= ${VERSION} ="
+          # Build changelog in the API order (GitHub returns newest first).
+          jq -r '.[] | "\(.tag_name)\u0000\(.body // \"\")"' "$RELEASES_MERGED" \
+            | while IFS=$'\0' read -r TAG BODY; do
+                VERSION=${TAG#v}
 
-              # Turn each non-empty line into a bullet.
-              # If a line is already a bullet, keep it as-is.
-              echo "$BODY" \
-                | sed -e 's/\r$//' \
-                | awk 'NF { if ($0 ~ /^[[:space:]]*[-*][[:space:]]+/) { print $0 } else { print "- " $0 } }'
+                {
+                  echo "= ${VERSION} ="
 
-              echo
-            } >> "$CHANGELOG"
-          done
+                  # Turn each non-empty line into a bullet.
+                  # If a line is already a bullet, keep it as-is.
+                  echo "$BODY" \
+                    | sed -e 's/\r$//' \
+                    | awk 'NF { if ($0 ~ /^[[:space:]]*[-*][[:space:]]+/) { print $0 } else { print "- " $0 } }'
+
+                  echo
+                } >> "$CHANGELOG"
+              done
 
           # If there are no releases yet, keep changelog non-empty for readme formatting.
           if ! test -s "$CHANGELOG"; then
