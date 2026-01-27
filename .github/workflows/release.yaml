@@ -35,7 +35,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gh
 
-      - name: Fetch stable releases for changelog
+      - name: Fetch releases for changelog
         id: changelog
         shell: bash
         run: |
@@ -44,22 +44,23 @@ jobs:
           # WordPress readme.txt changelog expects headings like:
           # = 1.2.3 =
           # - Change
-          # We'll build this from ALL stable (non-prerelease) GitHub releases.
+          # We'll build this from ALL GitHub releases (including pre-releases).
           #
           # NOTE: Not all `gh` versions support `gh release list --json body`.
           # To stay compatible, we:
-          #  1) List stable tag names
+          #  1) List tag names
           #  2) Fetch each release body with `gh release view`.
 
           CHANGELOG=$(mktemp)
 
-          # Grab stable release tags and keep only semver-ish tags.
+          # Grab release tags and keep only semver-ish tags.
           mapfile -t TAGS < <(
-            gh release list --limit 200 --exclude-pre-releases --json tagName \
+            gh release list --limit 200 --json tagName \
               --jq '.[].tagName | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))'
           )
 
           for TAG in "${TAGS[@]}"; do
+            echo "Processing tag: $TAG"
             VERSION=${TAG#v}
 
             # Fetch body for each release. `--jq` keeps the output plain text.
