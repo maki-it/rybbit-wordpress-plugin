@@ -72,8 +72,13 @@ jobs:
             "$RELEASES_JSON" > "$RELEASES_MERGED"
 
           # Build changelog in the API order (GitHub returns newest first).
-          jq -r '.[] | "\(.tag_name)\u0000\(.body // \"\")"' "$RELEASES_MERGED" \
-            | while IFS=$'\0' read -r TAG BODY; do
+          # We use base64 to safely pass multiline bodies and avoid shell/jq escaping issues.
+          jq -r '.[] | @base64' "$RELEASES_MERGED" \
+            | while IFS= read -r enc; do
+                obj=$(printf '%s' "$enc" | base64 -d)
+                TAG=$(printf '%s' "$obj" | jq -r '.tag_name')
+                BODY=$(printf '%s' "$obj" | jq -r '.body // ""')
+
                 VERSION=${TAG#v}
 
                 {
