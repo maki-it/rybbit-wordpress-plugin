@@ -84,11 +84,22 @@ jobs:
                 {
                   echo "= ${VERSION} ="
 
-                  # Turn each non-empty line into a bullet.
-                  # If a line is already a bullet, keep it as-is.
+                  # Turn each non-empty line into a dash bullet.
+                  # - Drop markdown headings like "## What's Changed".
+                  # - If a line is already a bullet (either '-' or '*'), normalize it to '-'.
                   echo "$BODY" \
                     | sed -e 's/\r$//' \
-                    | awk 'NF { if ($0 ~ /^[[:space:]]*[-*][[:space:]]+/) { print $0 } else { print "- " $0 } }'
+                    | awk 'NF {
+                        # Skip markdown headings (e.g. "## What\x27s Changed")
+                        if ($0 ~ /^[[:space:]]*#{1,6}[[:space:]]+/) next
+
+                        if ($0 ~ /^[[:space:]]*[-*][[:space:]]+/) {
+                          sub(/^[[:space:]]*[-*][[:space:]]+/, "- ");
+                          print
+                        } else {
+                          print "- " $0
+                        }
+                      }'
 
                   echo
                 } >> "$CHANGELOG"
