@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+env:
+  CHANGELOG_LIMIT: 10
+
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
@@ -40,7 +43,6 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHANGELOG_LIMIT: 20
         run: |
           set -euo pipefail
 
