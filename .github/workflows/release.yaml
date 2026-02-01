@@ -155,6 +155,23 @@ jobs:
           = How do I get my Site ID? =
           Find your Site ID in your Rybbit dashboard under tracking settings.
 
+          == External services ==
+          This plugin integrates with the Rybbit analytics service to provide tracking functionality.
+          
+          If you don't host your own Rybbit instance, data collected by this plugin will be sent to the [Rybbit servers](https://app.rybbit.io/) for processing.
+          This includes tracking data such as page views, user interactions, and other analytics information.
+          See the [Rybbit Data Processing Agreement](https://rybbit.com/dpa) to find out more about how Rybbit handles the tracking data.
+          
+          By using this plugin, you agree to Rybbit's [terms of service](https://rybbit.com/terms-and-conditions) and [privacy policy](https://rybbit.com/privacy).
+          
+          == Third-party assets / trademarks ==
+          
+          This is a free and open-source WordPress plugin developed independently for integration with Rybbit.
+          The use of the Rybbit name and logo in this plugin has been explicitly approved by the owner of Rybbit.
+          All Rybbit trademarks, logos, and brand assets remain the property of their respective owner.
+          
+          This plugin is not an official Rybbit product and is not otherwise affiliated with or endorsed by Rybbit.
+          
           == License ==
           GPLv3 or later
           EOF
