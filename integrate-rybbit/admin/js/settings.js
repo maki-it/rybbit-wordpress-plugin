@@ -1,4 +1,4 @@
-/* Rybbit Analytics – Settings page behavior */
+/* Integrate Rybbit – Settings page behavior */
 (function() {
   function ready(fn) {
     if (document.readyState !== 'loading') fn();

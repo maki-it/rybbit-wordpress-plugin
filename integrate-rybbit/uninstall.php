@@ -1,5 +1,5 @@
 <?php
-// Uninstall logic for Rybbit Analytics
+// Uninstall logic for Integrate Rybbit
 if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit();
 }

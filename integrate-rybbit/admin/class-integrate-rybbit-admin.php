@@ -1,9 +1,9 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 /**
- * Admin-specific logic for Rybbit Analytics
+ * Admin-specific logic for Integrate Rybbit
  */
-class Rybbit_Analytics_Admin {
+class Integrate_Rybbit_Admin {
     public function __construct() {
         // Admin hooks
         add_action('admin_menu', array($this, 'add_menu'));
@@ -11,32 +11,32 @@ class Rybbit_Analytics_Admin {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
 
         // Add links on the Plugins page
-        if (defined('RYBBIT_ANALYTICS_PLUGIN_BASENAME')) {
-            add_filter('plugin_action_links_' . RYBBIT_ANALYTICS_PLUGIN_BASENAME, array($this, 'action_links'));
+        if (defined('INTEGRATE_RYBBIT_PLUGIN_BASENAME')) {
+            add_filter('plugin_action_links_' . INTEGRATE_RYBBIT_PLUGIN_BASENAME, array($this, 'action_links'));
         }
     }
     public function add_menu() {
         // Add admin menu
         add_options_page(
-            'Rybbit Analytics Settings',
-            'Rybbit Analytics',
+            'Integrate Rybbit Settings',
+            'Integrate Rybbit',
             'manage_options',
-            'rybbit-analytics',
+            'integrate-rybbit',
             array($this, 'settings_page')
         );
     }
 
     public function register_settings() {
         // Make required fields validate on save.
-        register_setting('rybbit_analytics_settings', 'rybbit_site_id', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_site_id', array(
             'type' => 'string',
             'sanitize_callback' => array($this, 'sanitize_required_site_id'),
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_script_url', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_script_url', array(
             'type' => 'string',
             'sanitize_callback' => array($this, 'sanitize_required_script_url'),
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_do_not_track_admins', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_do_not_track_admins', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 // Checkbox: treat any truthy value as "1".
@@ -46,22 +46,22 @@ class Rybbit_Analytics_Admin {
         ));
 
         // Script attribute settings
-        register_setting('rybbit_analytics_settings', 'rybbit_skip_patterns', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_skip_patterns', array(
             'type' => 'string',
             'sanitize_callback' => array($this, 'sanitize_patterns_newline_list'),
             'default' => '',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_mask_patterns', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_mask_patterns', array(
             'type' => 'string',
             'sanitize_callback' => array($this, 'sanitize_patterns_newline_list'),
             'default' => '',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_debounce', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_debounce', array(
             'type' => 'string',
             'sanitize_callback' => array($this, 'sanitize_debounce_ms'),
             'default' => '500',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_identify_mode', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_identify_mode', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 $allowed = array('disabled', 'pseudonymized', 'full');
@@ -72,7 +72,7 @@ class Rybbit_Analytics_Admin {
         ));
 
         // Uninstall behavior
-        register_setting('rybbit_analytics_settings', 'rybbit_delete_data_on_uninstall', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_delete_data_on_uninstall', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 return ($value === '1' || $value === 1 || $value === true || $value === 'on') ? '1' : '0';
@@ -81,14 +81,14 @@ class Rybbit_Analytics_Admin {
         ));
 
         // Role-based exclusion list (multi-select). Stored as an array of role slugs.
-        register_setting('rybbit_analytics_settings', 'rybbit_excluded_roles', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_excluded_roles', array(
             'type' => 'array',
             'sanitize_callback' => array($this, 'sanitize_roles_array'),
             'default' => array('administrator'),
         ));
 
         // Choose which value is used as the Rybbit userId.
-        register_setting('rybbit_analytics_settings', 'rybbit_identify_userid_strategy', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_identify_userid_strategy', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 $allowed = array('wp_scoped', 'wp_user_id', 'user_login', 'email', 'user_meta');
@@ -99,7 +99,7 @@ class Rybbit_Analytics_Admin {
         ));
 
         // Only used when strategy=user_meta
-        register_setting('rybbit_analytics_settings', 'rybbit_identify_userid_meta_key', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_identify_userid_meta_key', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 $value = sanitize_key((string) $value);
@@ -109,7 +109,7 @@ class Rybbit_Analytics_Admin {
         ));
 
         // Script loading mode: defer (default) or async.
-        register_setting('rybbit_analytics_settings', 'rybbit_script_loading', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_script_loading', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 $value = is_string($value) ? strtolower(trim($value)) : '';
@@ -119,71 +119,71 @@ class Rybbit_Analytics_Admin {
         ));
 
         // Session Replay (rrweb) script attribute settings
-        register_setting('rybbit_analytics_settings', 'rybbit_replay_mask_text_selectors', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_replay_mask_text_selectors', array(
             'type' => 'string',
             'sanitize_callback' => array($this, 'sanitize_selectors_newline_list'),
             'default' => '',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_replay_block_class', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_replay_block_class', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 return $this->sanitize_css_class_with_default($value, 'rr-block');
             },
             'default' => 'rr-block',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_replay_block_selector', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_replay_block_selector', array(
             'type' => 'string',
             'sanitize_callback' => array($this, 'sanitize_css_selector_text'),
             'default' => '',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_replay_ignore_class', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_replay_ignore_class', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 return $this->sanitize_css_class_with_default($value, 'rr-ignore');
             },
             'default' => 'rr-ignore',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_replay_ignore_selector', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_replay_ignore_selector', array(
             'type' => 'string',
             'sanitize_callback' => array($this, 'sanitize_css_selector_text'),
             'default' => '',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_replay_mask_text_class', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_replay_mask_text_class', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 return $this->sanitize_css_class_with_default($value, 'rr-mask');
             },
             'default' => 'rr-mask',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_replay_mask_all_inputs', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_replay_mask_all_inputs', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 return ($value === '1' || $value === 1 || $value === true || $value === 'on') ? '1' : '0';
             },
             'default' => '1',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_replay_mask_input_options', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_replay_mask_input_options', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 return $this->sanitize_json_object_string_or_empty($value, 'rybbit_replay_mask_input_options');
             },
             'default' => '{"password":true,"email":true}',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_replay_collect_fonts', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_replay_collect_fonts', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 return ($value === '1' || $value === 1 || $value === true || $value === 'on') ? '1' : '0';
             },
             'default' => '1',
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_replay_sampling', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_replay_sampling', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 return $this->sanitize_json_object_string_or_empty($value, 'rybbit_replay_sampling');
             },
             'default' => $replay_sampling_default_json_pretty,
         ));
-        register_setting('rybbit_analytics_settings', 'rybbit_replay_slim_dom_options', array(
+        register_setting('integrate_rybbit_settings', 'rybbit_replay_slim_dom_options', array(
             'type' => 'string',
             'sanitize_callback' => function ($value) {
                 return $this->sanitize_slim_dom_options($value);
@@ -338,8 +338,8 @@ class Rybbit_Analytics_Admin {
      * Load admin assets only on the plugin settings page.
      */
     public function enqueue_admin_assets($hook_suffix) {
-        // Our settings page is Settings -> Rybbit Analytics
-        if ($hook_suffix !== 'settings_page_rybbit-analytics') {
+        // Our settings page is Settings -> Integrate Rybbit
+        if ($hook_suffix !== 'settings_page_integrate-rybbit') {
             return;
         }
 
@@ -352,28 +352,28 @@ class Rybbit_Analytics_Admin {
         $settings_js_ver = file_exists($settings_js_path) ? (string) filemtime($settings_js_path) : '1.0.0';
 
         wp_enqueue_style(
-            'rybbit-analytics-admin-settings',
+            'integrate-rybbit-admin-settings',
             plugin_dir_url(__FILE__) . 'css/settings.css',
             array(),
             $settings_css_ver
         );
 
         wp_enqueue_style(
-            'rybbit-analytics-admin-tabs',
+            'integrate-rybbit-admin-tabs',
             plugin_dir_url(__FILE__) . 'css/tabs.css',
-            array('rybbit-analytics-admin-settings'),
+            array('integrate-rybbit-admin-settings'),
             $tabs_css_ver
         );
 
         wp_enqueue_script(
-            'rybbit-analytics-admin-settings',
+            'integrate-rybbit-admin-settings',
             plugin_dir_url(__FILE__) . 'js/settings.js',
             array(),
             $settings_js_ver,
             true
         );
 
-        wp_localize_script('rybbit-analytics-admin-settings', 'rybbitAdmin', array(
+        wp_localize_script('integrate-rybbit-admin-settings', 'rybbitAdmin', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('rybbit_admin_settings'),
         ));
@@ -495,12 +495,12 @@ class Rybbit_Analytics_Admin {
                     ?>
                 </div>
                 <div>
-                    <h1>Rybbit Analytics</h1>
-                    <p class="rybbit-subtitle">Configure tracking and privacy settings for your WordPress site.</p>
+                    <h1>Integrate Rybbit</h1>
+                    <p class="rybbit-subtitle">Configure tracking and privacy settings for the Rybbit tracking script.</p>
                 </div>
             </div>
 
-            <h2 class="nav-tab-wrapper" role="tablist" aria-label="Rybbit Analytics settings">
+            <h2 class="nav-tab-wrapper" role="tablist" aria-label="Integrate Rybbit settings">
                 <a href="#tracking" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="true" data-tab="tracking">Tracking</a>
                 <a href="#privacy" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="privacy">Privacy</a>
                 <a href="#script" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="script">Script Attributes</a>
@@ -512,10 +512,10 @@ class Rybbit_Analytics_Admin {
 
             <div class="rybbit-settings-card">
                 <form method="post" action="options.php">
-                    <?php settings_fields('rybbit_analytics_settings'); ?>
-                    <?php settings_errors('rybbit_analytics_settings'); ?>
+                    <?php settings_fields('integrate_rybbit_settings'); ?>
+                    <?php settings_errors('integrate_rybbit_settings'); ?>
 
-                    <!-- removed do_settings_sections('rybbit_analytics_settings'); since no sections are registered -->
+                    <!-- removed do_settings_sections('integrate_rybbit_settings'); since no sections are registered -->
 
                     <div class="rybbit-tab-panel" data-tab="tracking" role="tabpanel">
                         <table class="form-table" role="presentation">
@@ -1007,7 +1007,7 @@ class Rybbit_Analytics_Admin {
 
                     <div class="rybbit-tab-panel" data-tab="about" role="tabpanel" style="display:none">
                         <?php
-                        $data = get_file_data(plugin_dir_path(__DIR__) . 'rybbit-analytics.php', array('Version' => 'Version'), 'plugin');
+                        $data = get_file_data(plugin_dir_path(__DIR__) . 'integrate-rybbit.php', array('Version' => 'Version'), 'plugin');
                         $version = isset($data['Version']) ? (string) $data['Version'] : '';
                         ?>
                         <table class="form-table" role="presentation">
@@ -1023,6 +1023,9 @@ class Rybbit_Analytics_Admin {
                                 <td>
                                     <p>
                                         <a href="https://github.com/maki-it/rybbit-wordpress-plugin" target="_blank" rel="noopener noreferrer">GitHub repository</a>
+                                    </p>
+                                    <p>
+                                        <a href="https://rybbit.com" target="_blank" rel="noopener noreferrer">Rybbit website</a>
                                     </p>
                                     <p>
                                         <a href="https://rybbit.com/docs" target="_blank" rel="noopener noreferrer">Rybbit documentation</a>
@@ -1053,7 +1056,7 @@ class Rybbit_Analytics_Admin {
      * Add quick links on the Plugins page.
      */
     public function action_links($links) {
-        $settings_link = '<a href="options-general.php?page=rybbit-analytics">Settings</a>';
+        $settings_link = '<a href="options-general.php?page=integrate-rybbit">Settings</a>';
 
         array_unshift($links, $settings_link);
         return $links;

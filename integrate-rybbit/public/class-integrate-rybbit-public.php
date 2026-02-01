@@ -1,9 +1,9 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 /**
- * Public-facing logic for Rybbit Analytics
+ * Public-facing logic for Integrate Rybbit
  */
-class Rybbit_Analytics_Public {
+class Integrate_Rybbit_Public {
     public function __construct() {
         // Frontend hooks
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
@@ -398,19 +398,19 @@ class Rybbit_Analytics_Public {
         $script_tag = "<script\n            " . implode("\n            ", $attr_lines) . "\n        ></script>";
 
         ?>
-        <!-- Rybbit Analytics Tracking -->
+        <!-- Integrate Rybbit -->
         <?php
         // Print the script tag and a newline so the end comment always starts on its own line.
         echo $script_tag . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         ?>
-        <!-- End Rybbit Analytics Tracking -->
+        <!-- End Integrate Rybbit -->
         <?php
 
         // Identify logged-in users (optional; default disabled)
         $identify_mode = get_option('rybbit_identify_mode', 'disabled');
         if ($identify_mode !== 'disabled') {
-            $payload = function_exists('rybbit_analytics_get_identify_payload')
-                ? rybbit_analytics_get_identify_payload($identify_mode)
+            $payload = function_exists('integrate_rybbit_get_identify_payload')
+                ? integrate_rybbit_get_identify_payload($identify_mode)
                 : null;
 
             if (is_array($payload) && !empty($payload['userId'])) {

@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Rybbit Analytics
+Plugin Name: Integrate Rybbit
 Plugin URI: https://github.com/maki-it/rybbit-wordpress-plugin
 Description: Add and manage the Rybbit tracking script.
 Version: 0.0.0
@@ -11,6 +11,8 @@ Author: Maki IT
 Author URI: https://maki-it.de
 License: GPLv3 or later
 License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
+Text Domain: integrate-rybbit
+Domain Path: /languages
 */
 
 // If this file is called directly, abort.
@@ -19,29 +21,29 @@ if (!defined('WPINC')) {
 }
 
 // Plugin basename for hooks like plugin_action_links_{basename}
-if (!defined('RYBBIT_ANALYTICS_PLUGIN_BASENAME')) {
-    define('RYBBIT_ANALYTICS_PLUGIN_BASENAME', plugin_basename(__FILE__));
+if (!defined('INTEGRATE_RYBBIT_PLUGIN_BASENAME')) {
+    define('INTEGRATE_RYBBIT_PLUGIN_BASENAME', plugin_basename(__FILE__));
 }
 
 // Require main class files
-require_once plugin_dir_path(__FILE__) . 'includes/class-rybbit-analytics.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-integrate-rybbit.php';
 require_once plugin_dir_path(__FILE__) . 'includes/functions.php';
-require_once plugin_dir_path(__FILE__) . 'admin/class-rybbit-analytics-admin.php';
-require_once plugin_dir_path(__FILE__) . 'public/class-rybbit-analytics-public.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-rybbit-analytics-admin-ajax.php';
+require_once plugin_dir_path(__FILE__) . 'admin/class-integrate-rybbit-admin.php';
+require_once plugin_dir_path(__FILE__) . 'public/class-integrate-rybbit-public.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-integrate-rybbit-admin-ajax.php';
 
 // Initialize main plugin class
-new Rybbit_Analytics();
+new Integrate_Rybbit();
 
 // Initialize context-specific logic
 if (is_admin()) {
-    new Rybbit_Analytics_Admin();
-    new Rybbit_Analytics_Admin_Ajax();
+    new Integrate_Rybbit_Admin();
+    new Integrate_Rybbit_Admin_Ajax();
 
     // Also load tracking hooks in wp-admin (script injection is still governed by excluded roles).
-    new Rybbit_Analytics_Public();
+    new Integrate_Rybbit_Public();
 } else {
-    new Rybbit_Analytics_Public();
+    new Integrate_Rybbit_Public();
 }
 
 // Set defaults on activation (only if options don't exist yet).

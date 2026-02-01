@@ -2,10 +2,10 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
- * General plugin functions for Rybbit Analytics
+ * General plugin functions for Integrate Rybbit
  */
 
-if ( ! function_exists( 'rybbit_analytics_get_identify_payload' ) ) {
+if ( ! function_exists( 'integrate_rybbit_get_identify_payload' ) ) {
 	/**
 	 * Builds the identify payload for the current logged-in user.
 	 *
@@ -18,7 +18,7 @@ if ( ! function_exists( 'rybbit_analytics_get_identify_payload' ) ) {
 	 *  - null if mode is disabled or user is not logged in
 	 *  - array{userId: string, traits: array<string,mixed>} otherwise
 	 */
-	function rybbit_analytics_get_identify_payload( $mode = 'pseudonymized' ) {
+	function integrate_rybbit_get_identify_payload( $mode = 'pseudonymized' ) {
 		$mode = is_string( $mode ) ? $mode : 'pseudonymized';
 		if ( $mode === 'disabled' ) {
 			return null;

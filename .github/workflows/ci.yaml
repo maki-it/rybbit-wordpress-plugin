@@ -44,4 +44,4 @@ jobs:
         run: |
           set -euo pipefail
           # Lint every PHP file in the plugin folder to catch syntax errors early.
-          find rybbit-analytics -type f -name "*.php" -print0 | xargs -0 -n 1 -I {} php -l {}
+          find integrate-rybbit -type f -name "*.php" -print0 | xargs -0 -n 1 -I {} php -l {}

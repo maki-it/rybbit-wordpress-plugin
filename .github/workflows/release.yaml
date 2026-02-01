@@ -28,10 +28,10 @@ jobs:
           echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
 
           # Replace the whole header line, independent of current version.
-          sed -i -E "s/^Version:[[:space:]]*.*/Version: ${VERSION}/" rybbit-analytics/rybbit-analytics.php
+          sed -i -E "s/^Version:[[:space:]]*.*/Version: ${VERSION}/" integrate-rybbit/integrate-rybbit.php
 
           # Assert it worked.
-          grep -n -E "^Version:[[:space:]]*${VERSION}$" rybbit-analytics/rybbit-analytics.php
+          grep -n -E "^Version:[[:space:]]*${VERSION}$" integrate-rybbit/integrate-rybbit.php
 
       - name: Install GitHub CLI
         run: |
@@ -123,8 +123,8 @@ jobs:
           CHANGELOG: ${{ env.CHANGELOG }}
           VERSION: ${{ env.VERSION }}
         run: |
-          cat > rybbit-analytics/readme.txt <<EOF
-          === Rybbit Analytics ===
+          cat > integrate-rybbit/readme.txt <<EOF
+          === Integrate Rybbit ===
           Contributors: makiit
           Tags: rybbit, analytics, tracking, privacy
           Stable tag: $VERSION
@@ -139,14 +139,14 @@ jobs:
           Add and manage the Rybbit tracking script for WordPress. Configure privacy, role exclusions, and script attributes.
 
           == Installation ==
-          1. Upload and install the Plugin zip archive via the Admin UI or extract the plugin files to the `/wp-content/plugins/rybbit-analytics` directory.
+          1. Upload and install the Plugin zip archive via the Admin UI or extract the plugin files to the `/wp-content/plugins/integrate-rybbit` directory.
           2. Activate the plugin through the 'Plugins' screen in WordPress.
-          3. Configure settings under Settings > Rybbit Analytics.
+          3. Configure settings under Settings > Integrate Rybbit.
 
           == Changelog ==
           EOF
-          echo "$CHANGELOG" >> rybbit-analytics/readme.txt
-          cat >> rybbit-analytics/readme.txt <<'EOF'
+          echo "$CHANGELOG" >> integrate-rybbit/readme.txt
+          cat >> integrate-rybbit/readme.txt <<'EOF'
           
           You can find all releases at: 
           https://github.com/maki-it/rybbit-wordpress-plugin/releases
@@ -178,15 +178,15 @@ jobs:
 
       - name: Prepare plugin folder
         run: |
-          cp LICENSE rybbit-analytics/
+          cp LICENSE integrate-rybbit/
 
       - name: Create plugin zip
         run: |
-          zip -r rybbit-analytics.zip rybbit-analytics
+          zip -r integrate-rybbit.zip integrate-rybbit
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: rybbit-analytics.zip
+          files: integrate-rybbit.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

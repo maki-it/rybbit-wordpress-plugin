@@ -1,2 +1,2 @@
 zip:
-	zip -r rybbit-analytics.zip rybbit-analytics
+	rm integrate-rybbit.zip; zip -r integrate-rybbit.zip integrate-rybbit

@@ -1,9 +1,9 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 /**
- * Admin AJAX handlers for Rybbit Analytics.
+ * Admin AJAX handlers for Integrate Rybbit.
  */
-class Rybbit_Analytics_Admin_Ajax {
+class Integrate_Rybbit_Admin_Ajax {
     public function __construct() {
         add_action('wp_ajax_rybbit_preview_identify_payload', array($this, 'preview_identify_payload'));
     }
@@ -48,8 +48,8 @@ class Rybbit_Analytics_Admin_Ajax {
             return $userid_meta_key;
         });
 
-        $payload = function_exists('rybbit_analytics_get_identify_payload')
-            ? rybbit_analytics_get_identify_payload($identify_mode)
+        $payload = function_exists('integrate_rybbit_get_identify_payload')
+            ? integrate_rybbit_get_identify_payload($identify_mode)
             : null;
 
         // Provide a consistent response shape.
