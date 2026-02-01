@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 /**
- * Public-facing logic for Rybbit Analytics
+ * Public-facing logic for Integrate Rybbit
  */
 class Rybbit_Analytics_Public {
     public function __construct() {
@@ -398,12 +398,12 @@ class Rybbit_Analytics_Public {
         $script_tag = "<script\n            " . implode("\n            ", $attr_lines) . "\n        ></script>";
 
         ?>
-        <!-- Rybbit Analytics Tracking -->
+        <!-- Integrate Rybbit -->
         <?php
         // Print the script tag and a newline so the end comment always starts on its own line.
         echo $script_tag . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         ?>
-        <!-- End Rybbit Analytics Tracking -->
+        <!-- End Integrate Rybbit -->
         <?php
 
         // Identify logged-in users (optional; default disabled)

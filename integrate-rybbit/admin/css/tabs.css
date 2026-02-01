@@ -1,32 +1,32 @@
-/* Rybbit Analytics – Settings tabs */
+/* Integrate Rybbit – Settings tabs */
 
-.settings_page_rybbit-analytics .nav-tab-wrapper {
+.settings_page_integrate-rybbit .nav-tab-wrapper {
   margin: 0 0 12px;
 }
 
-.settings_page_rybbit-analytics .rybbit-tab-panel {
+.settings_page_integrate-rybbit .rybbit-tab-panel {
   margin: 0;
 }
 
 /* Make key inputs wider */
-.settings_page_rybbit-analytics .rybbit-input-wide {
+.settings_page_integrate-rybbit .rybbit-input-wide {
   width: min(760px, 100%);
 }
 
-.settings_page_rybbit-analytics .rybbit-input-url {
+.settings_page_integrate-rybbit .rybbit-input-url {
   width: min(820px, 100%);
 }
 
-.settings_page_rybbit-analytics .rybbit-select-wide {
+.settings_page_integrate-rybbit .rybbit-select-wide {
   width: min(520px, 100%);
 }
 
-.settings_page_rybbit-analytics .rybbit-meta-key-wrap {
+.settings_page_integrate-rybbit .rybbit-meta-key-wrap {
   margin-top: 10px;
   padding-left: 2px;
 }
 
-.settings_page_rybbit-analytics .rybbit-identify-payload {
+.settings_page_integrate-rybbit .rybbit-identify-payload {
   background: #f6f7f7;
   border: 1px solid #dcdcde;
   border-radius: 6px;
@@ -51,10 +51,10 @@
 }
 
 /* Debug tab: wrap long lines so they never push outside the card */
-.settings_page_rybbit-analytics .rybbit-tab-panel[data-tab="debug"] .rybbit-identify-payload {
+.settings_page_integrate-rybbit .rybbit-tab-panel[data-tab="debug"] .rybbit-identify-payload {
   white-space: pre-wrap;
 }
 
-.settings_page_rybbit-analytics .rybbit-refresh-payload {
+.settings_page_integrate-rybbit .rybbit-refresh-payload {
   text-decoration: none;
 }

@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 /**
- * Admin-specific logic for Rybbit Analytics
+ * Admin-specific logic for Integrate Rybbit
  */
 class Rybbit_Analytics_Admin {
     public function __construct() {
@@ -18,10 +18,10 @@ class Rybbit_Analytics_Admin {
     public function add_menu() {
         // Add admin menu
         add_options_page(
-            'Rybbit Analytics Settings',
-            'Rybbit Analytics',
+            'Integrate Rybbit Settings',
+            'Integrate Rybbit',
             'manage_options',
-            'rybbit-analytics',
+            'integrate-rybbit',
             array($this, 'settings_page')
         );
     }
@@ -338,8 +338,8 @@ class Rybbit_Analytics_Admin {
      * Load admin assets only on the plugin settings page.
      */
     public function enqueue_admin_assets($hook_suffix) {
-        // Our settings page is Settings -> Rybbit Analytics
-        if ($hook_suffix !== 'settings_page_rybbit-analytics') {
+        // Our settings page is Settings -> Integrate Rybbit
+        if ($hook_suffix !== 'settings_page_integrate-rybbit') {
             return;
         }
 
@@ -352,28 +352,28 @@ class Rybbit_Analytics_Admin {
         $settings_js_ver = file_exists($settings_js_path) ? (string) filemtime($settings_js_path) : '1.0.0';
 
         wp_enqueue_style(
-            'rybbit-analytics-admin-settings',
+            'integrate-rybbit-admin-settings',
             plugin_dir_url(__FILE__) . 'css/settings.css',
             array(),
             $settings_css_ver
         );
 
         wp_enqueue_style(
-            'rybbit-analytics-admin-tabs',
+            'integrate-rybbit-admin-tabs',
             plugin_dir_url(__FILE__) . 'css/tabs.css',
-            array('rybbit-analytics-admin-settings'),
+            array('integrate-rybbit-admin-settings'),
             $tabs_css_ver
         );
 
         wp_enqueue_script(
-            'rybbit-analytics-admin-settings',
+            'integrate-rybbit-admin-settings',
             plugin_dir_url(__FILE__) . 'js/settings.js',
             array(),
             $settings_js_ver,
             true
         );
 
-        wp_localize_script('rybbit-analytics-admin-settings', 'rybbitAdmin', array(
+        wp_localize_script('integrate-rybbit-admin-settings', 'rybbitAdmin', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('rybbit_admin_settings'),
         ));
@@ -495,12 +495,12 @@ class Rybbit_Analytics_Admin {
                     ?>
                 </div>
                 <div>
-                    <h1>Rybbit Analytics</h1>
+                    <h1>Integrate Rybbit</h1>
                     <p class="rybbit-subtitle">Configure tracking and privacy settings for your WordPress site.</p>
                 </div>
             </div>
 
-            <h2 class="nav-tab-wrapper" role="tablist" aria-label="Rybbit Analytics settings">
+            <h2 class="nav-tab-wrapper" role="tablist" aria-label="Integrate Rybbit settings">
                 <a href="#tracking" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="true" data-tab="tracking">Tracking</a>
                 <a href="#privacy" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="privacy">Privacy</a>
                 <a href="#script" class="nav-tab rybbit-nav-tab" role="tab" aria-selected="false" data-tab="script">Script Attributes</a>
@@ -1007,7 +1007,7 @@ class Rybbit_Analytics_Admin {
 
                     <div class="rybbit-tab-panel" data-tab="about" role="tabpanel" style="display:none">
                         <?php
-                        $data = get_file_data(plugin_dir_path(__DIR__) . 'rybbit-analytics.php', array('Version' => 'Version'), 'plugin');
+                        $data = get_file_data(plugin_dir_path(__DIR__) . 'integrate-rybbit.php', array('Version' => 'Version'), 'plugin');
                         $version = isset($data['Version']) ? (string) $data['Version'] : '';
                         ?>
                         <table class="form-table" role="presentation">
@@ -1053,7 +1053,7 @@ class Rybbit_Analytics_Admin {
      * Add quick links on the Plugins page.
      */
     public function action_links($links) {
-        $settings_link = '<a href="options-general.php?page=rybbit-analytics">Settings</a>';
+        $settings_link = '<a href="options-general.php?page=integrate-rybbit">Settings</a>';
 
         array_unshift($links, $settings_link);
         return $links;

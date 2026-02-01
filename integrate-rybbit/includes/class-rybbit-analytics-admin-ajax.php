@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 /**
- * Admin AJAX handlers for Rybbit Analytics.
+ * Admin AJAX handlers for Integrate Rybbit.
  */
 class Rybbit_Analytics_Admin_Ajax {
     public function __construct() {

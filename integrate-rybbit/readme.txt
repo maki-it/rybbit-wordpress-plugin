@@ -1,4 +1,4 @@
-=== Rybbit Analytics ===
+=== Integrate Rybbit ===
 Contributors: makiit
 Tags: rybbit, analytics, tracking, privacy
 Stable tag: 0.0.0
@@ -7,15 +7,17 @@ Tested up to: 6.9
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
-Add and manage the Rybbit tracking script.
+Add and manage the Rybbit tracking script on your WordPress site.
 
 == Description ==
-Add and manage the Rybbit tracking script for WordPress. Configure privacy, role exclusions, and script attributes.
+Add and manage the Rybbit tracking script on your WordPress site.
+Rybbit is a privacy-focused and GDPR-compliant web analytics platform.
 
 == Installation ==
-1. Upload and install the Plugin zip archive via the Admin UI or extract the plugin files to the `/wp-content/plugins/rybbit-analytics` directory.
+1. Upload and install the Plugin zip archive via the Admin UI or extract the plugin files to the `/wp-content/plugins/integrate-rybbit` directory.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Configure settings under Settings > Rybbit Analytics.
+3. Configure settings under Settings > Integrate Rybbit.
+4. Enter your Rybbit Site ID and save the settings to start tracking.
 
 == Changelog ==
 = 0.0.0 =

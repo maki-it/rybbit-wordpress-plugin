@@ -2,7 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 /**
- * General plugin functions for Rybbit Analytics
+ * General plugin functions for Integrate Rybbit
  */
 
 if ( ! function_exists( 'rybbit_analytics_get_identify_payload' ) ) {

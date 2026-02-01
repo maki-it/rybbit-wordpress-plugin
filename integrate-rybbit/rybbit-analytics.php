@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Rybbit Analytics
+Plugin Name: Integrate Rybbit
 Plugin URI: https://github.com/maki-it/rybbit-wordpress-plugin
 Description: Add and manage the Rybbit tracking script.
 Version: 0.0.0
@@ -24,11 +24,11 @@ if (!defined('RYBBIT_ANALYTICS_PLUGIN_BASENAME')) {
 }
 
 // Require main class files
-require_once plugin_dir_path(__FILE__) . 'includes/class-rybbit-analytics.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-integrate-rybbit.php';
 require_once plugin_dir_path(__FILE__) . 'includes/functions.php';
-require_once plugin_dir_path(__FILE__) . 'admin/class-rybbit-analytics-admin.php';
-require_once plugin_dir_path(__FILE__) . 'public/class-rybbit-analytics-public.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-rybbit-analytics-admin-ajax.php';
+require_once plugin_dir_path(__FILE__) . 'admin/class-integrate-rybbit-admin.php';
+require_once plugin_dir_path(__FILE__) . 'public/class-integrate-rybbit-public.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-integrate-rybbit-admin-ajax.php';
 
 // Initialize main plugin class
 new Rybbit_Analytics();

@@ -1,8 +1,9 @@
-# Rybbit Analytics
+# Integrate Rybbit
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/maki-it/rybbit-wordpress-plugin?style=flat-square)
 
 WordPress Plugin to add and manage the Rybbit tracking script on your sites.
+Rybbit is a privacy-focused and GDPR-compliant web analytics platform.
 
 ## Requirements
 
@@ -17,11 +18,15 @@ WordPress Plugin to add and manage the Rybbit tracking script on your sites.
 4. Click on the `Upload Plugin` button at the top of the page.
 5. Choose the downloaded zip file and click `Install Now`.
 6. After installation, click `Activate Plugin`.
-7. Go to `Settings` > `Rybbit Analytics` to configure the plugin with your Rybbit Site ID and other settings.
+
+## Configuration
+1. Go to `Settings` > `Integrate Rybbit`
+2. Enter your Rybbit Site ID and optionally the url to your own Rybbit instance.
+3. Save the changes.
 
 # Screenshot
 
-![Rybbit Analytics Settings Page](assets/img/tracking.png)
+![Integrate Rybbit Settings Page](assets/img/tracking.png)
 
 # Legal
 
