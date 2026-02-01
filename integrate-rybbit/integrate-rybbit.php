@@ -11,8 +11,6 @@ Author: Maki IT
 Author URI: https://maki-it.de
 License: GPLv3 or later
 License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
-Text Domain: integrate-rybbit
-Domain Path: /languages
 */
 
 // If this file is called directly, abort.
@@ -26,8 +24,8 @@ if (!defined('INTEGRATE_RYBBIT_VERSION')) {
     if (!function_exists('get_plugin_data')) {
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
     }
-    $plugin_data = get_plugin_data(__FILE__, false, false);
-    define('INTEGRATE_RYBBIT_VERSION', $plugin_data['Version']);
+    $integrate_rybbit_plugin_data = get_plugin_data(__FILE__, false, false);
+    define('INTEGRATE_RYBBIT_VERSION', $integrate_rybbit_plugin_data['Version']);
 }
 
 // Plugin basename for hooks like plugin_action_links_{basename}
