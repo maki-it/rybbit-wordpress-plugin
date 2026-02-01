@@ -4,6 +4,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * Public-facing logic for Integrate Rybbit
  */
 class Integrate_Rybbit_Public {
+    /**
+     * Stores tracking script attributes for use in script_loader_tag filter.
+     * @var array|null
+     */
+    private $tracking_script_attributes = null;
+
     public function __construct() {
         // Frontend hooks
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
@@ -60,9 +66,12 @@ class Integrate_Rybbit_Public {
         if ($identify_mode === 'disabled') {
             return;
         }
-        ?>
-        <script>
-        (function() {
+
+        // Enqueue a dummy script handle and attach inline script for clearing user ID.
+        wp_register_script('rybbit-clear-user-logout', false, array(), false, false);
+        wp_enqueue_script('rybbit-clear-user-logout');
+
+        $inline_script = "(function() {
             var attempts = 0;
             var maxAttempts = 20;
             var interval = 100;
@@ -89,9 +98,9 @@ class Integrate_Rybbit_Public {
                     clearInterval(timer);
                 }
             }, interval);
-        })();
-        </script>
-        <?php
+        })();";
+
+        wp_add_inline_script('rybbit-clear-user-logout', $inline_script);
     }
 
     /**
@@ -133,9 +142,12 @@ class Integrate_Rybbit_Public {
 
         // Clear marker cookie early to avoid repeated calls even if JS errors.
         $this->clear_logout_marker_cookie();
-        ?>
-        <script>
-        (function() {
+
+        // Enqueue a dummy script handle and attach inline script for clearing user ID.
+        wp_register_script('rybbit-clear-user-after-logout', false, array(), false, false);
+        wp_enqueue_script('rybbit-clear-user-after-logout');
+
+        $inline_script = "(function() {
             var attempts = 0;
             var maxAttempts = 20;
             var interval = 100;
@@ -162,9 +174,9 @@ class Integrate_Rybbit_Public {
                     clearInterval(timer);
                 }
             }, interval);
-        })();
-        </script>
-        <?php
+        })();";
+
+        wp_add_inline_script('rybbit-clear-user-after-logout', $inline_script);
     }
 
     /**
@@ -197,6 +209,36 @@ class Integrate_Rybbit_Public {
         // In a single-quoted attribute, only single quotes must be escaped.
         $value = str_replace("'", '&#039;', $value);
         return $value;
+    }
+
+    /**
+     * Filter callback to add custom data attributes to the Rybbit tracking script tag.
+     *
+     * @param string $tag    The script tag HTML.
+     * @param string $handle The script handle.
+     * @param string $src    The script source URL.
+     * @return string Modified script tag with data attributes.
+     */
+    public function add_tracking_script_attributes($tag, $handle, $src) {
+        if ($handle !== 'rybbit-tracking-script' || empty($this->tracking_script_attributes)) {
+            return $tag;
+        }
+
+        // Build custom attributes
+        $custom_attrs = array();
+        foreach ($this->tracking_script_attributes as $key => $value) {
+            if ($value !== null) {
+                $custom_attrs[] = $key . '="' . esc_attr($value) . '"';
+            }
+        }
+
+        // Replace the opening <script tag with one that includes our custom attributes
+        if (!empty($custom_attrs)) {
+            $attrs_string = ' ' . implode(' ', $custom_attrs);
+            $tag = preg_replace('/<script /', '<script' . $attrs_string . ' ', $tag, 1);
+        }
+
+        return $tag;
     }
 
     public function add_tracking_script() {
@@ -345,8 +387,6 @@ class Integrate_Rybbit_Public {
 
         // Build the attribute lines explicitly to avoid odd whitespace from PHP templating.
         $attr_lines = array();
-        $attr_lines[] = 'src="' . esc_url($script_url) . '"';
-        $attr_lines[] = ($script_loading === 'async') ? 'async' : 'defer';
         $attr_lines[] = 'data-site-id="' . esc_attr($site_id) . '"';
 
         if ($has_skip_patterns) {
@@ -394,17 +434,38 @@ class Integrate_Rybbit_Public {
             $attr_lines[] = "data-replay-slim-dom-options='" . $replay_slim_dom_options_attr . "'";
         }
 
-        // Render tag as a single string to avoid any trailing indentation before the closing bracket.
-        $script_tag = "<script\n            " . implode("\n            ", $attr_lines) . "\n        ></script>";
+        // Parse attribute lines into an associative array for the filter callback
+        $this->tracking_script_attributes = array();
+        foreach ($attr_lines as $attr_line) {
+            // Match both single-quoted and double-quoted attributes
+            if (preg_match('/^([a-z-]+)=(["\'])(.*)\\2$/s', $attr_line, $matches)) {
+                $attr_name = $matches[1];
+                $attr_value = $matches[3];
+                $this->tracking_script_attributes[$attr_name] = $attr_value;
+            }
+        }
 
-        ?>
-        <!-- Integrate Rybbit -->
-        <?php
-        // Print the script tag and a newline so the end comment always starts on its own line.
-        echo $script_tag . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        ?>
-        <!-- End Integrate Rybbit -->
-        <?php
+        // Enqueue the external tracking script using WordPress's enqueue system
+        // Use 'defer' strategy if WordPress 6.3+ is available, otherwise we'll add it via filter
+        $in_footer = true;
+        $strategy = ($script_loading === 'async') ? 'async' : 'defer';
+
+        // Register and enqueue the script
+        wp_register_script(
+            'rybbit-tracking-script',
+            $script_url,
+            array(),
+            null,  // No version for external script
+            array(
+                'in_footer' => $in_footer,
+                'strategy'  => $strategy
+            )
+        );
+
+        wp_enqueue_script('rybbit-tracking-script');
+
+        // Add filter to inject custom data attributes
+        add_filter('script_loader_tag', array($this, 'add_tracking_script_attributes'), 10, 3);
 
         // Identify logged-in users (optional; default disabled)
         $identify_mode = get_option('rybbit_identify_mode', 'disabled');
@@ -415,65 +476,72 @@ class Integrate_Rybbit_Public {
 
             if (is_array($payload) && !empty($payload['userId'])) {
                 $user_id = (string) $payload['userId'];
-                $traits_json = wp_json_encode(isset($payload['traits']) ? $payload['traits'] : array());
-                ?>
-                <script>
-                (function() {
-                    var userId = <?php echo wp_json_encode($user_id); ?>;
-                    var traits = <?php echo esc_js($traits_json ? $traits_json : '{}'); ?>;
+                $traits = isset($payload['traits']) ? $payload['traits'] : array();
 
-                    // Try for ~2 seconds to wait for the tracker to load.
-                    var attempts = 0;
-                    var maxAttempts = 20;
-                    var interval = 100;
+                // Enqueue a dummy script handle and attach inline script for user identification.
+                wp_register_script('rybbit-identify-user', false, array(), false, false);
+                wp_enqueue_script('rybbit-identify-user');
 
-                    function tryIdentifyOrUpdateTraits() {
-                        attempts++;
-                        try {
-                            if (!window.rybbit) {
-                                return false;
-                            }
+                $inline_script = sprintf(
+                    "(function() {
+                        var userId = %s;
+                        var traits = %s;
 
-                            // Identify once. On later loads, only update traits.
-                            var currentUserId = (typeof window.rybbit.getUserId === 'function') ? window.rybbit.getUserId() : null;
+                        // Try for ~2 seconds to wait for the tracker to load.
+                        var attempts = 0;
+                        var maxAttempts = 20;
+                        var interval = 100;
 
-                            if (currentUserId !== userId) {
+                        function tryIdentifyOrUpdateTraits() {
+                            attempts++;
+                            try {
+                                if (!window.rybbit) {
+                                    return false;
+                                }
+
+                                // Identify once. On later loads, only update traits.
+                                var currentUserId = (typeof window.rybbit.getUserId === 'function') ? window.rybbit.getUserId() : null;
+
+                                if (currentUserId !== userId) {
+                                    if (typeof window.rybbit.identify === 'function') {
+                                        window.rybbit.identify(userId, traits);
+                                        return true;
+                                    }
+                                    return false;
+                                }
+
+                                if (typeof window.rybbit.setTraits === 'function') {
+                                    window.rybbit.setTraits(traits);
+                                    return true;
+                                }
+
+                                // Fallback: if setTraits isn't available, re-identify.
                                 if (typeof window.rybbit.identify === 'function') {
                                     window.rybbit.identify(userId, traits);
                                     return true;
                                 }
-                                return false;
-                            }
-
-                            if (typeof window.rybbit.setTraits === 'function') {
-                                window.rybbit.setTraits(traits);
+                            } catch (e) {
+                                // Ignore
                                 return true;
                             }
+                            return false;
+                        }
 
-                            // Fallback: if setTraits isn't available, re-identify.
-                            if (typeof window.rybbit.identify === 'function') {
-                                window.rybbit.identify(userId, traits);
-                                return true;
+                        if (tryIdentifyOrUpdateTraits()) {
+                            return;
+                        }
+
+                        var timer = setInterval(function() {
+                            if (tryIdentifyOrUpdateTraits() || attempts >= maxAttempts) {
+                                clearInterval(timer);
                             }
-                        } catch (e) {
-                            // Ignore
-                            return true;
-                        }
-                        return false;
-                    }
+                        }, interval);
+                    })();",
+                    wp_json_encode($user_id),
+                    wp_json_encode($traits)
+                );
 
-                    if (tryIdentifyOrUpdateTraits()) {
-                        return;
-                    }
-
-                    var timer = setInterval(function() {
-                        if (tryIdentifyOrUpdateTraits() || attempts >= maxAttempts) {
-                            clearInterval(timer);
-                        }
-                    }, interval);
-                })();
-                </script>
-                <?php
+                wp_add_inline_script('rybbit-identify-user', $inline_script);
             }
         }
     }
