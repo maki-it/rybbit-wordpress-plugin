@@ -1025,6 +1025,9 @@ class Integrate_Rybbit_Admin {
                                         <a href="https://github.com/maki-it/rybbit-wordpress-plugin" target="_blank" rel="noopener noreferrer">GitHub repository</a>
                                     </p>
                                     <p>
+                                        <a href="https://rybbit.com" target="_blank" rel="noopener noreferrer">Rybbit website</a>
+                                    </p>
+                                    <p>
                                         <a href="https://rybbit.com/docs" target="_blank" rel="noopener noreferrer">Rybbit documentation</a>
                                     </p>
                                 </td>
