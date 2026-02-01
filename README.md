@@ -28,6 +28,11 @@ Rybbit is a privacy-focused and GDPR-compliant web analytics platform.
 
 ![Integrate Rybbit Settings Page](assets/img/tracking.png)
 
+## Migration from Rybbit Analytics
+
+If you previously used this plugin under the name "Rybbit Analytics", you can safely uninstall that version after activating this new plugin.
+You need to re-enter your Site ID in the new plugin settings, as the configuration does not carry over automatically.
+
 # Legal
 
 This is a free and open-source WordPress plugin developed independently for integration with Rybbit 
