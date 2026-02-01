@@ -496,7 +496,7 @@ class Integrate_Rybbit_Admin {
                 </div>
                 <div>
                     <h1>Integrate Rybbit</h1>
-                    <p class="rybbit-subtitle">Configure tracking and privacy settings for your WordPress site.</p>
+                    <p class="rybbit-subtitle">Configure tracking and privacy settings for the Rybbit tracking script.</p>
                 </div>
             </div>
 
