@@ -68,7 +68,7 @@ class Integrate_Rybbit_Public {
         }
 
         // Enqueue a dummy script handle and attach inline script for clearing user ID.
-        wp_register_script('rybbit-clear-user-logout', false, array(), false, false);
+        wp_register_script('rybbit-clear-user-logout', false, array(), INTEGRATE_RYBBIT_VERSION, false);
         wp_enqueue_script('rybbit-clear-user-logout');
 
         $inline_script = "(function() {
@@ -144,7 +144,7 @@ class Integrate_Rybbit_Public {
         $this->clear_logout_marker_cookie();
 
         // Enqueue a dummy script handle and attach inline script for clearing user ID.
-        wp_register_script('rybbit-clear-user-after-logout', false, array(), false, false);
+        wp_register_script('rybbit-clear-user-after-logout', false, array(), INTEGRATE_RYBBIT_VERSION, false);
         wp_enqueue_script('rybbit-clear-user-after-logout');
 
         $inline_script = "(function() {
@@ -455,7 +455,7 @@ class Integrate_Rybbit_Public {
             'rybbit-tracking-script',
             $script_url,
             array(),
-            null,  // No version for external script
+            INTEGRATE_RYBBIT_VERSION,  // Use plugin version for cache busting
             array(
                 'in_footer' => $in_footer,
                 'strategy'  => $strategy
@@ -479,7 +479,7 @@ class Integrate_Rybbit_Public {
                 $traits = isset($payload['traits']) ? $payload['traits'] : array();
 
                 // Enqueue a dummy script handle and attach inline script for user identification.
-                wp_register_script('rybbit-identify-user', false, array(), false, false);
+                wp_register_script('rybbit-identify-user', false, array(), INTEGRATE_RYBBIT_VERSION, false);
                 wp_enqueue_script('rybbit-identify-user');
 
                 $inline_script = sprintf(

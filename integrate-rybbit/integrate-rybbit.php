@@ -20,6 +20,16 @@ if (!defined('WPINC')) {
     die;
 }
 
+// Define plugin version from plugin header
+if (!defined('INTEGRATE_RYBBIT_VERSION')) {
+    // Get version from plugin header (single source of truth)
+    if (!function_exists('get_plugin_data')) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+    $plugin_data = get_plugin_data(__FILE__, false, false);
+    define('INTEGRATE_RYBBIT_VERSION', $plugin_data['Version']);
+}
+
 // Plugin basename for hooks like plugin_action_links_{basename}
 if (!defined('INTEGRATE_RYBBIT_PLUGIN_BASENAME')) {
     define('INTEGRATE_RYBBIT_PLUGIN_BASENAME', plugin_basename(__FILE__));
