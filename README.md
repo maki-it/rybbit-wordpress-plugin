@@ -22,3 +22,13 @@ WordPress Plugin to add and manage the Rybbit tracking script on your sites.
 # Screenshot
 
 ![Rybbit Analytics Settings Page](assets/img/tracking.png)
+
+# Legal
+
+This is a free and open-source WordPress plugin developed independently for integration with Rybbit 
+and licensed under the GNU General Public License v3 or later.
+
+The use of the Rybbit name and logo in this plugin has been explicitly approved by the owner of Rybbit.
+All Rybbit trademarks, logos, and brand assets remain the property of their respective owner.
+
+This plugin is not an official Rybbit product and is not otherwise affiliated with or endorsed by Rybbit.
