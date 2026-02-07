@@ -181,7 +181,7 @@ jobs:
           cp LICENSE integrate-rybbit/
 
       - name: Deploy to WordPress.org
-        uses: 10up/action-wordpress-plugin-deploy@stable
+        uses: 10up/action-wordpress-plugin-deploy@2.3.0
         id: deploy
         with:
           generate-zip: true
