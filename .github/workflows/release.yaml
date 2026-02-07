@@ -194,6 +194,11 @@ jobs:
           BUILD_DIR: integrate-rybbit/
           ASSETS_DIR: assets/
 
+      - shell: bash
+        run: |
+          echo "Zip path: ${{ steps.deploy.outputs.zip_path }}"
+          ls -l "${{ github.workspace }}/${{ steps.deploy.outputs.zip_path }}"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
