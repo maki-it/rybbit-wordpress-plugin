@@ -180,13 +180,23 @@ jobs:
         run: |
           cp LICENSE integrate-rybbit/
 
-      - name: Create plugin zip
-        run: |
-          zip -r integrate-rybbit.zip integrate-rybbit
+      - name: Deploy to WordPress.org
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        id: deploy
+        with:
+          generate-zip: true
+          dry-run: true
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: integrate-rybbit
+          VERSION: ${{ env.VERSION }}
+          BUILD_DIR: integrate-rybbit/
+          ASSETS_DIR: assets/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: integrate-rybbit.zip
+          files: ${{ github.workspace }}/${{ steps.deploy.outputs.zip_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

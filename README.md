@@ -26,7 +26,7 @@ Rybbit is a privacy-focused and GDPR-compliant web analytics platform.
 
 # Screenshot
 
-![Integrate Rybbit Settings Page](assets/img/tracking.png)
+![Integrate Rybbit Settings Page](assets/screenshot-1.png)
 
 ## Migration from Rybbit Analytics
 
