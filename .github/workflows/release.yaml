@@ -185,7 +185,7 @@ jobs:
         id: deploy
         with:
           generate-zip: true
-          dry-run: true
+          dry-run: false
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
