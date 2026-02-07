@@ -139,7 +139,7 @@ jobs:
           Add and manage the Rybbit tracking script for WordPress. Configure privacy, role exclusions, and script attributes.
 
           == Installation ==
-          1. Upload and install the Plugin zip archive via the Admin UI or extract the plugin files to the `/wp-content/plugins/integrate-rybbit` directory.
+          1. Upload and install the Plugin zip archive via the Admin UI or extract the plugin files to the \`/wp-content/plugins/integrate-rybbit\` directory.
           2. Activate the plugin through the 'Plugins' screen in WordPress.
           3. Configure settings under Settings > Integrate Rybbit.
 
