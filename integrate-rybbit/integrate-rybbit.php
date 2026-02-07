@@ -73,11 +73,3 @@ register_activation_hook(__FILE__, function () {
         add_option('rybbit_delete_data_on_uninstall', '1');
     }
 });
-
-// Enable automatic updates for this plugin
-add_filter('auto_update_plugin', function ($update, $item) {
-    if (isset($item->plugin) && $item->plugin === INTEGRATE_RYBBIT_PLUGIN_BASENAME) {
-        return true;
-    }
-    return $update;
-}, 10, 2);
