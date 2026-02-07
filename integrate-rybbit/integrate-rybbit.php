@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Integrate Rybbit
-Plugin URI: https://github.com/maki-it/rybbit-wordpress-plugin
+Plugin URI: https://wordpress.org/plugins/integrate-rybbit/
 Description: Add and manage the Rybbit tracking script.
 Version: 0.0.0
 Tested up to: 6.9
@@ -43,17 +43,6 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-integrate-rybbit-admin-
 // Initialize main plugin class
 new Integrate_Rybbit();
 
-// Enable auto-updates toggle for WordPress.org plugins (WordPress 5.5+)
-// This allows users to enable/disable automatic updates via the Plugins page
-add_filter('auto_update_plugin', function($update, $item) {
-    if (isset($item->plugin) && $item->plugin === INTEGRATE_RYBBIT_PLUGIN_BASENAME) {
-        // Return true to enable auto-updates, false to disable
-        // null means let WordPress use the default/user preference
-        return $update;
-    }
-    return $update;
-}, 10, 2);
-
 // Initialize context-specific logic
 if (is_admin()) {
     new Integrate_Rybbit_Admin();
@@ -84,3 +73,11 @@ register_activation_hook(__FILE__, function () {
         add_option('rybbit_delete_data_on_uninstall', '1');
     }
 });
+
+// Enable automatic updates for this plugin
+add_filter('auto_update_plugin', function ($update, $item) {
+    if (isset($item->plugin) && $item->plugin === INTEGRATE_RYBBIT_PLUGIN_BASENAME) {
+        return true;
+    }
+    return $update;
+}, 10, 2);
