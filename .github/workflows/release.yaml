@@ -195,7 +195,7 @@ jobs:
           ASSETS_DIR: assets/
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ github.workspace }}/integrate-rybbit.zip
         env:
