@@ -1,1 +1,8 @@
 integrate-rybbit.zip
+*.zip
+build/
+vendor/
+node_modules/
+.DS_Store
+.idea/
+integrate-rybbit/LICENSE

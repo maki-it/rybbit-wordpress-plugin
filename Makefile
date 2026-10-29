@@ -1,2 +1,86 @@
-zip:
-	rm integrate-rybbit.zip; zip -r integrate-rybbit.zip integrate-rybbit
+# Development tasks for Integrate Rybbit.
+# All PHP and WordPress tools run in Docker. Only Docker, make and zip are needed on the host.
+
+PLUGIN        := integrate-rybbit
+PHP_VERSIONS  ?= 7.4 8.0 8.1 8.2 8.3 8.4 8.5
+TOOLS_IMAGE   ?= integrate-rybbit-tools
+PLAYWRIGHT_VERSION ?= 1.64.1
+WP_PORT       ?= 8080
+WP_URL        ?= http://localhost:$(WP_PORT)
+DOCKER_USER   := $(shell id -u):$(shell id -g)
+
+COMPOSE := WP_PORT=$(WP_PORT) docker compose --progress quiet -f tools/compose.yaml
+WPCLI   := $(COMPOSE) run --rm --no-deps wpcli
+
+.DEFAULT_GOAL := help
+
+.PHONY: help check lint tools phpcs phpcbf dev plugin-check pot screenshots logs down clean zip
+
+help: ## Show the available targets.
+	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+check: lint phpcs plugin-check ## Run all checks (lint, phpcs, plugin-check).
+
+lint: ## Check the PHP syntax with every supported PHP version.
+	@set -e; for v in $(PHP_VERSIONS); do \
+		echo "==> php -l (PHP $$v)"; \
+		docker run --rm -v "$(CURDIR)/$(PLUGIN)":/app:ro -w /app php:$$v-cli-alpine \
+			sh -c 'rc=0; for f in $$(find . -name "*.php"); do out=$$(php -l "$$f" 2>&1) || { echo "$$out"; rc=1; }; done; exit $$rc'; \
+	done
+
+tools: ## Build the Docker image with PHPCS, WPCS and PHPCompatibilityWP.
+	@docker build -q -t $(TOOLS_IMAGE) tools > /dev/null
+
+phpcs: tools ## Check the coding standards (phpcs.xml.dist).
+	docker run --rm -u "$(DOCKER_USER)" -v "$(CURDIR)":/app -w /app $(TOOLS_IMAGE) phpcs
+
+phpcbf: tools ## Fix coding standard issues that can be fixed automatically.
+	docker run --rm -u "$(DOCKER_USER)" -v "$(CURDIR)":/app -w /app $(TOOLS_IMAGE) phpcbf || [ $$? -eq 1 ]
+
+dev: ## Start WordPress (port 8080) with the plugin active (admin / admin).
+	@$(COMPOSE) up -d --wait
+	@$(WPCLI) wp core is-installed 2>/dev/null || $(WPCLI) wp core install \
+		--url="$(WP_URL)" --title="Rybbit Dev" \
+		--admin_user=admin --admin_password=admin --admin_email=admin@example.com --skip-email
+	@$(WPCLI) wp plugin activate $(PLUGIN) --quiet
+	@echo "WordPress: $(WP_URL)/wp-admin/options-general.php?page=$(PLUGIN) (admin / admin)"
+
+# wp plugin check always exits with 0. The target fails if the output has ERROR or WARNING rows.
+plugin-check: dev ## Run the official Plugin Check against the plugin.
+	@$(WPCLI) wp plugin is-installed plugin-check || $(WPCLI) wp plugin install plugin-check
+	@$(WPCLI) wp plugin activate plugin-check --quiet
+	@out="$$($(WPCLI) wp plugin check $(PLUGIN) --format=table 2>&1)"; \
+		printf '%s\n' "$$out"; \
+		if printf '%s\n' "$$out" | awk -F '\t' '$$3 == "ERROR" || $$3 == "WARNING" { found = 1 } END { exit !found }'; then \
+			echo "Plugin Check found problems."; exit 1; \
+		fi
+
+pot: ## Generate build/integrate-rybbit.pot to review the translatable strings.
+	@mkdir -p build
+	docker run --rm -u "$(DOCKER_USER)" -e HOME=/tmp -v "$(CURDIR)":/app -w /app wordpress:cli \
+		wp i18n make-pot $(PLUGIN) build/$(PLUGIN).pot --slug=$(PLUGIN) --domain=$(PLUGIN)
+
+# The script fills the settings with example values and saves them. Use it only with the dev WordPress.
+screenshots: dev ## Retake the screenshots in assets/ with a headless browser.
+	docker run --rm --ipc=host -u "$(DOCKER_USER)" -e HOME=/tmp -e WP_PORT=$(WP_PORT) \
+		--network integrate-rybbit_default \
+		-v "$(CURDIR)/tools/screenshots.cjs":/screenshots.cjs:ro -v "$(CURDIR)/assets":/out \
+		mcr.microsoft.com/playwright:v$(PLAYWRIGHT_VERSION)-noble \
+		sh -c 'mkdir -p /tmp/pw && cd /tmp/pw && npm init -y > /dev/null && npm i --silent playwright@$(PLAYWRIGHT_VERSION) && NODE_PATH=/tmp/pw/node_modules node /screenshots.cjs'
+
+logs: ## Show the WordPress debug log.
+	$(COMPOSE) exec wordpress sh -c 'cat wp-content/debug.log 2>/dev/null || echo "No debug.log yet."'
+
+down: ## Stop the development environment.
+	$(COMPOSE) --profile cli down
+
+clean: ## Stop the development environment and delete all data and build files.
+	$(COMPOSE) --profile cli down -v
+	-docker image rm $(TOOLS_IMAGE) 2>/dev/null
+	rm -rf build $(PLUGIN).zip
+
+zip: ## Build integrate-rybbit.zip for a manual upload.
+	rm -f $(PLUGIN).zip
+	cp LICENSE $(PLUGIN)/LICENSE
+	zip -rq $(PLUGIN).zip $(PLUGIN) -x '*.DS_Store'
+	rm -f $(PLUGIN)/LICENSE

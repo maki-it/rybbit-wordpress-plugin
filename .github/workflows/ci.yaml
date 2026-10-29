@@ -4,44 +4,73 @@ on:
   push:
     branches: ["**"]
     tags-ignore: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+# All checks run in Docker through the Makefile, the same way as on a local machine.
+# Pull requests from this repository already run on push. Only pull requests from forks run again.
+
 jobs:
-  php-matrix:
-    name: PHP ${{ matrix.php }}
+  lint:
+    name: PHP ${{ matrix.php }} syntax
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        php: ["7.4", "8.0", "8.1", "8.2", "8.3", "8.4"]
-
+        php: ["7.4", "8.0", "8.1", "8.2", "8.3", "8.4", "8.5"]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          tools: composer, cs2pr
-          coverage: none
+      - name: Check PHP syntax
+        run: make lint PHP_VERSIONS=${{ matrix.php }}
 
-      - name: Get Composer cache directory
-        id: composer-cache
-        shell: bash
+  phpcs:
+    name: Coding standards
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Run PHPCS (WPCS and PHPCompatibilityWP)
+        run: make phpcs
+
+  plugin-check:
+    name: Plugin Check
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Run Plugin Check
+        run: make plugin-check
+
+      - name: Show the WordPress debug log
+        if: always()
+        run: make logs || true
+
+  # Use this job as the only required status check in the branch protection.
+  # It fails when a check fails or is cancelled. It has the same "if" as the checks, so only one run per commit counts.
+  ci-success:
+    name: CI success
+    if: always() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository)
+    needs: [lint, phpcs, plugin-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the results of all jobs
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
         run: |
-          set -euo pipefail
-          echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
-
-      - name: Show PHP version
-        run: php -v
-
-      - name: PHP syntax check (all plugin files)
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Lint every PHP file in the plugin folder to catch syntax errors early.
-          find integrate-rybbit -type f -name "*.php" -print0 | xargs -0 -n 1 -I {} php -l {}
+          echo "Results: ${RESULTS}"
+          case " ${RESULTS} " in
+            *" failure "*|*" cancelled "*|*" skipped "*) exit 1 ;;
+          esac
