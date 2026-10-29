@@ -10,7 +10,8 @@ WP_URL        ?= http://localhost:$(WP_PORT)
 DOCKER_USER   := $(shell id -u):$(shell id -g)
 
 COMPOSE := WP_PORT=$(WP_PORT) docker compose --progress quiet -f tools/compose.yaml
-WPCLI   := $(COMPOSE) run --rm --no-deps wpcli
+# -T turns off the TTY. With a TTY, "2>/dev/null" does not hide the errors of WP-CLI.
+WPCLI   := $(COMPOSE) run --rm --no-deps -T wpcli
 
 .DEFAULT_GOAL := help
 
