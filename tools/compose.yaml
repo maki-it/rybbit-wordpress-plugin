@@ -31,7 +31,7 @@ services:
 
   # Fake Rybbit Stats API with fixed demo data for the dashboard. See tools/mock-rybbit/server.js.
   mock-rybbit:
-    image: node:22.23.4-alpine
+    image: node:26.12.1-alpine
     command: ["node", "/app/server.js"]
     ports:
       - "127.0.0.1:${MOCK_PORT:-3001}:3000"
