@@ -57,3 +57,20 @@ jobs:
       - name: Show the WordPress debug log
         if: always()
         run: make logs || true
+
+  # Use this job as the only required status check in the branch protection.
+  # It fails when a check fails or is cancelled. It has the same "if" as the checks, so only one run per commit counts.
+  ci-success:
+    name: CI success
+    if: always() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository)
+    needs: [lint, phpcs, plugin-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the results of all jobs
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Results: ${RESULTS}"
+          case " ${RESULTS} " in
+            *" failure "*|*" cancelled "*|*" skipped "*) exit 1 ;;
+          esac
