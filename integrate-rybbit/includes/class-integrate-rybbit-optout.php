@@ -75,7 +75,7 @@ final class Integrate_Rybbit_Optout {
 			INTEGRATE_RYBBIT_VERSION,
 			array( 'in_footer' => true )
 		);
-		wp_set_script_translations( self::EDITOR_HANDLE, 'integrate-rybbit' );
+		wp_set_script_translations( self::EDITOR_HANDLE, 'integrate-rybbit', INTEGRATE_RYBBIT_DIR . 'languages' );
 		wp_add_inline_script(
 			self::EDITOR_HANDLE,
 			'window.integrateRybbitOptout = ' . wp_json_encode( self::get_defaults(), JSON_HEX_TAG | JSON_HEX_AMP ) . ';',

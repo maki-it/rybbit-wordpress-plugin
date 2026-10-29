@@ -156,6 +156,7 @@ make down          # Stop WordPress.
 | `make test-dashboard` | Tests the analytics dashboard backend against the mock Rybbit API.                 |
 | `make test-optout`  | Tests the opt-out shortcode and block, with a headless browser in Docker.           |
 | `make pot`          | Generates `build/integrate-rybbit.pot` to review the translatable strings.          |
+| `make translations` | Compiles the `.po` files in `integrate-rybbit/languages/` to `.mo` and JSON files.   |
 | `make screenshots`  | Retakes the screenshots in `assets/` with a headless browser in Docker.             |
 | `make logs`         | Shows the WordPress debug log.                                                       |
 | `make down`         | Stops the development environment.                                                   |
@@ -168,6 +169,9 @@ Notes:
 - Use `WP_PORT=8081 make dev` if port 8080 is in use.
 - Use `WP_IMAGE_TAG=6.5 make dev` to test with an older WordPress version.
   Start with `make clean` when you change the WordPress version.
+- To update a translation: run `make pot`, merge the new strings with
+  `msgmerge --no-fuzzy-matching --backup=none -U integrate-rybbit/languages/integrate-rybbit-de_DE.po build/integrate-rybbit.pot`,
+  translate the new entries and run `make translations`. Commit the `.po`, `.mo` and `.json` files.
 - `make screenshots` overwrites the plugin settings of the development site with example values.
 - `make dev` also starts a mock of the Rybbit API (`tools/mock-rybbit`) with fixed demo data
   and connects the development site to it (API key `demo-key`). It is available at http://localhost:3001.

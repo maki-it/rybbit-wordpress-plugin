@@ -11,13 +11,13 @@
 	var SVG_NS = 'http://www.w3.org/2000/svg';
 	var locale = document.documentElement.lang || undefined;
 
-	function __(text) {
-		return i18n ? i18n.__(text, 'integrate-rybbit') : text;
+	function __(text, domain) {
+		return i18n ? i18n.__(text, domain) : text;
 	}
 
-	function _n(single, plural, number) {
+	function _n(single, plural, number, domain) {
 		if (i18n && i18n._n) {
-			return i18n._n(single, plural, number, 'integrate-rybbit');
+			return i18n._n(single, plural, number, domain);
 		}
 		return number === 1 ? single : plural;
 	}
@@ -178,22 +178,23 @@
 			}
 			var body = result.body || {};
 			var data = body.data || {};
-			var message = body.message || sprintf(__('The request failed (HTTP %s).'), result.status);
+			/* translators: %s: HTTP status code. */
+			var message = body.message || sprintf(__('The request failed (HTTP %s).', 'integrate-rybbit'), result.status);
 			if (body.code === 'rest_cookie_invalid_nonce' || result.status === 401 || result.status === 403) {
-				message = __('Your session has expired. Reload the page and try again.');
+				message = __('Your session has expired. Reload the page and try again.', 'integrate-rybbit');
 			}
 			throw { message: message, code: body.code || '', retryAfter: data.retry_after || 0 };
 		}, function () {
-			throw { message: __('The request failed. Check your network connection.'), code: 'network', retryAfter: 0 };
+			throw { message: __('The request failed. Check your network connection.', 'integrate-rybbit'), code: 'network', retryAfter: 0 };
 		});
 	}
 
 	function renderKpis(overview) {
 		var items = [
-			{ label: __('Visitors'), value: formatNumber(overview.users) },
-			{ label: __('Pageviews'), value: formatNumber(overview.pageviews) },
-			{ label: __('Bounce rate'), value: formatPercent(overview.bounce_rate) },
-			{ label: __('Avg. visit duration'), value: formatDuration(overview.session_duration) }
+			{ label: __('Visitors', 'integrate-rybbit'), value: formatNumber(overview.users) },
+			{ label: __('Pageviews', 'integrate-rybbit'), value: formatNumber(overview.pageviews) },
+			{ label: __('Bounce rate', 'integrate-rybbit'), value: formatPercent(overview.bounce_rate) },
+			{ label: __('Avg. visit duration', 'integrate-rybbit'), value: formatDuration(overview.session_duration) }
 		];
 		var list = el('div', 'rybbit-kpis');
 		items.forEach(function (item) {
@@ -207,10 +208,10 @@
 
 	function renderDataTable(series, hourly) {
 		var details = el('details', 'rybbit-chart__table');
-		details.appendChild(el('summary', '', __('Show data as table')));
+		details.appendChild(el('summary', '', __('Show data as table', 'integrate-rybbit')));
 		var table = el('table', 'widefat striped');
 		var head = el('tr');
-		[__('Time'), __('Visitors'), __('Pageviews')].forEach(function (label) {
+		[__('Time', 'integrate-rybbit'), __('Visitors', 'integrate-rybbit'), __('Pageviews', 'integrate-rybbit')].forEach(function (label) {
 			head.appendChild(el('th', '', label));
 		});
 		var thead = el('thead');
@@ -239,7 +240,7 @@
 		var top = niceCeil(max);
 
 		var legend = el('ul', 'rybbit-chart__legend');
-		[['rybbit-chart__swatch--visitors', __('Visitors')], ['rybbit-chart__swatch--pageviews', __('Pageviews')]].forEach(function (item) {
+		[['rybbit-chart__swatch--visitors', __('Visitors', 'integrate-rybbit')], ['rybbit-chart__swatch--pageviews', __('Pageviews', 'integrate-rybbit')]].forEach(function (item) {
 			var li = el('li');
 			li.appendChild(el('span', 'rybbit-chart__swatch ' + item[0]));
 			li.appendChild(document.createTextNode(item[1]));
@@ -257,7 +258,7 @@
 		var plot = el('div', 'rybbit-chart__plot');
 		plot.tabIndex = 0;
 		plot.setAttribute('role', 'group');
-		plot.setAttribute('aria-label', __('Chart of visitors and pageviews. Use the left and right arrow keys to read single values.'));
+		plot.setAttribute('aria-label', __('Chart of visitors and pageviews. Use the left and right arrow keys to read single values.', 'integrate-rybbit'));
 
 		var width = 600;
 		var height = 180;
@@ -318,8 +319,8 @@
 			marker.setAttribute('x2', xAt(active));
 			marker.style.display = '';
 			tipTime.textContent = formatTime(point.time, hourly);
-			tipVisitors.textContent = __('Visitors') + ': ' + formatNumber(point.users);
-			tipPageviews.textContent = __('Pageviews') + ': ' + formatNumber(point.pageviews);
+			tipVisitors.textContent = __('Visitors', 'integrate-rybbit') + ': ' + formatNumber(point.users);
+			tipPageviews.textContent = __('Pageviews', 'integrate-rybbit') + ': ' + formatNumber(point.pageviews);
 			tip.style.left = (fraction * 100) + '%';
 			tip.classList.toggle('is-flipped', fraction > 0.6);
 			tip.hidden = false;
@@ -356,21 +357,21 @@
 	}
 
 	var TOP_TITLES = {
-		pages: function () { return __('Top pages'); },
-		referrers: function () { return __('Top referrers'); },
-		countries: function () { return __('Countries'); },
-		devices: function () { return __('Devices'); },
-		browsers: function () { return __('Browsers'); }
+		pages: function () { return __('Top pages', 'integrate-rybbit'); },
+		referrers: function () { return __('Top referrers', 'integrate-rybbit'); },
+		countries: function () { return __('Countries', 'integrate-rybbit'); },
+		devices: function () { return __('Devices', 'integrate-rybbit'); },
+		browsers: function () { return __('Browsers', 'integrate-rybbit'); }
 	};
 
 	function topLabel(name, value) {
 		if (name === 'referrers' && value === '') {
-			return __('Direct or unknown');
+			return __('Direct or unknown', 'integrate-rybbit');
 		}
 		if (name === 'countries') {
 			return countryName(value);
 		}
-		return value === '' ? __('Unknown') : value;
+		return value === '' ? __('Unknown', 'integrate-rybbit') : value;
 	}
 
 	function renderTopList(name, rows, failed) {
@@ -378,11 +379,11 @@
 		card.appendChild(el('h3', 'rybbit-top__title', TOP_TITLES[name]()));
 
 		if (failed) {
-			card.appendChild(el('p', 'rybbit-top__empty', __('Could not load this list.')));
+			card.appendChild(el('p', 'rybbit-top__empty', __('Could not load this list.', 'integrate-rybbit')));
 			return card;
 		}
 		if (!rows || !rows.length) {
-			card.appendChild(el('p', 'rybbit-top__empty', __('No data yet.')));
+			card.appendChild(el('p', 'rybbit-top__empty', __('No data yet.', 'integrate-rybbit')));
 			return card;
 		}
 
@@ -406,7 +407,8 @@
 	}
 
 	function liveText(count) {
-		return sprintf(_n('%s visitor online', '%s visitors online', count), formatNumber(count));
+		/* translators: %s: Number of visitors. */
+		return sprintf(_n('%s visitor online', '%s visitors online', count, 'integrate-rybbit'), formatNumber(count));
 	}
 
 	function initDashboard(root) {
@@ -472,14 +474,15 @@
 			notice.appendChild(el('p', '', error.message));
 			if (error.retryAfter) {
 				var minutes = Math.max(1, Math.ceil(error.retryAfter / 60));
-				notice.appendChild(el('p', '', sprintf(_n('Try again in about %s minute.', 'Try again in about %s minutes.', minutes), formatNumber(minutes))));
+				/* translators: %s: Number of minutes. */
+				notice.appendChild(el('p', '', sprintf(_n('Try again in about %s minute.', 'Try again in about %s minutes.', minutes, 'integrate-rybbit'), formatNumber(minutes))));
 			}
 			var actions = el('p');
-			var retry = el('button', 'button', __('Try again'));
+			var retry = el('button', 'button', __('Try again', 'integrate-rybbit'));
 			retry.type = 'button';
 			retry.addEventListener('click', load);
 			actions.appendChild(retry);
-			var link = el('a', '', __('Check API settings'));
+			var link = el('a', '', __('Check API settings', 'integrate-rybbit'));
 			link.href = config.settingsUrl;
 			link.className = 'rybbit-dash__settings-link';
 			actions.appendChild(link);
@@ -508,11 +511,11 @@
 			if (series.length > 1 && hasData) {
 				body.appendChild(renderChart(series, hourly));
 			} else if (!hasData && !(overview.pageviews > 0)) {
-				body.appendChild(el('p', 'rybbit-dash__status', __('No visits in this period yet.')));
+				body.appendChild(el('p', 'rybbit-dash__status', __('No visits in this period yet.', 'integrate-rybbit')));
 			}
 
 			if (data.warnings && data.warnings.length) {
-				body.appendChild(el('p', 'rybbit-dash__warning', __('Some data could not be loaded. Try again later.')));
+				body.appendChild(el('p', 'rybbit-dash__warning', __('Some data could not be loaded. Try again later.', 'integrate-rybbit')));
 			}
 
 			/* The link starts at the Rybbit home page. Now the exact site URL is known. */
@@ -534,7 +537,8 @@
 
 			if (note) {
 				var minutes = parseInt(config.cacheMinutes, 10) || 10;
-				note.textContent = sprintf(_n('Data is cached for up to %s minute.', 'Data is cached for up to %s minutes.', minutes), formatNumber(minutes));
+				/* translators: %s: Number of minutes. */
+				note.textContent = sprintf(_n('Data is cached for up to %s minute.', 'Data is cached for up to %s minutes.', minutes, 'integrate-rybbit'), formatNumber(minutes));
 			}
 			scheduleLive();
 		}
@@ -546,7 +550,7 @@
 			if (refresh) {
 				refresh.disabled = true;
 			}
-			showStatus(__('Loading analytics…'));
+			showStatus(__('Loading analytics…', 'integrate-rybbit'));
 
 			fetchStats(range, view).then(function (data) {
 				if (current === requestId) {

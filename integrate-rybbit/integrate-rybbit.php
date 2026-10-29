@@ -11,6 +11,7 @@
  * License:           GPLv3 or later
  * License URI:       https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
  * Text Domain:       integrate-rybbit
+ * Domain Path:       /languages
  *
  * @package Integrate_Rybbit
  */
@@ -43,6 +44,9 @@ register_activation_hook( __FILE__, array( 'Integrate_Rybbit_Options', 'maybe_up
 
 // Updates do not run the activation hook. Check the schema version on every load.
 add_action( 'plugins_loaded', array( 'Integrate_Rybbit_Options', 'maybe_upgrade' ) );
+
+// Load the bundled translations before other init callbacks call __().
+add_action( 'init', 'integrate_rybbit_load_textdomain', 0 );
 
 Integrate_Rybbit_Api::register_hooks();
 

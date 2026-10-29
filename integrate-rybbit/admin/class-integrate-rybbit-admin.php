@@ -448,7 +448,7 @@ final class Integrate_Rybbit_Admin {
 				'strategy'  => 'defer',
 			)
 		);
-		wp_set_script_translations( self::SCRIPT_HANDLE, 'integrate-rybbit' );
+		wp_set_script_translations( self::SCRIPT_HANDLE, 'integrate-rybbit', INTEGRATE_RYBBIT_DIR . 'languages' );
 		wp_localize_script(
 			self::SCRIPT_HANDLE,
 			'rybbitAdmin',
