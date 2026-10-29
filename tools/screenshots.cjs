@@ -73,6 +73,11 @@ const DASHBOARD_SHOTS = [
 	{ file: 'screenshot-6.png', url: '/wp-admin/index.php', root: '#integrate_rybbit_widget', ready: '#integrate_rybbit_widget .rybbit-kpis', maxHeight: 700 },
 ];
 
+// Shot of the opt-out switch on a public page. It uses a visitor without login, so there is no admin bar.
+const FRONTEND_SHOTS = [
+	{ file: 'screenshot-8.png', url: '/?pagename=rybbit-privacy-demo', root: 'main', ready: '.integrate-rybbit-optout__button:not([hidden])', maxHeight: 560 },
+];
+
 function startProxy() {
 	return new Promise((resolve) => {
 		const server = net.createServer((client) => {
@@ -145,6 +150,30 @@ async function main() {
 			await page.screenshot({ path: `${OUT}/${shot.file}`, clip, fullPage: true });
 			console.log(`${shot.file}: ${Math.round(clip.width)}x${Math.round(clip.height)}`);
 		}
+
+		const visitor = await browser.newContext({
+			viewport: { width: 1280, height: 900 },
+			deviceScaleFactor: 1,
+			locale: 'en-US',
+		});
+		// The page loads the Rybbit script from the internet. The shot does not need it.
+		await visitor.route((url) => url.hostname !== 'localhost', (route) => route.abort());
+		const visitorPage = await visitor.newPage();
+		for (const shot of FRONTEND_SHOTS) {
+			await visitorPage.goto(`${BASE}${shot.url}`);
+			await visitorPage.waitForSelector(shot.ready, { timeout: 15000 });
+			await visitorPage.mouse.move(0, 0);
+			const box = await visitorPage.locator(shot.root).first().boundingBox();
+			const clip = {
+				x: Math.max(box.x, 0),
+				y: Math.max(box.y, 0),
+				width: box.width,
+				height: Math.min(box.height, shot.maxHeight),
+			};
+			await visitorPage.screenshot({ path: `${OUT}/${shot.file}`, clip, fullPage: true });
+			console.log(`${shot.file}: ${Math.round(clip.width)}x${Math.round(clip.height)}`);
+		}
+		await visitor.close();
 
 		await page.goto(`${BASE}/wp-admin/options-general.php?page=integrate-rybbit`);
 		await fillDemoData(page);

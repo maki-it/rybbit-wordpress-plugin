@@ -30,6 +30,7 @@ require_once INTEGRATE_RYBBIT_DIR . 'includes/class-integrate-rybbit-options.php
 require_once INTEGRATE_RYBBIT_DIR . 'includes/functions.php';
 require_once INTEGRATE_RYBBIT_DIR . 'includes/class-integrate-rybbit-api.php';
 require_once INTEGRATE_RYBBIT_DIR . 'includes/class-integrate-rybbit-rest.php';
+require_once INTEGRATE_RYBBIT_DIR . 'includes/class-integrate-rybbit-optout.php';
 require_once INTEGRATE_RYBBIT_DIR . 'public/class-integrate-rybbit-public.php';
 
 if ( is_admin() ) {
@@ -47,6 +48,7 @@ Integrate_Rybbit_Api::register_hooks();
 
 new Integrate_Rybbit_Public();
 new Integrate_Rybbit_Rest();
+new Integrate_Rybbit_Optout();
 
 if ( is_admin() ) {
 	new Integrate_Rybbit_Admin();

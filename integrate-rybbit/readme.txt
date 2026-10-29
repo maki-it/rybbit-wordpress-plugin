@@ -39,12 +39,34 @@ You can also see your analytics inside WordPress. For this, add an API key in th
   * User ID strategies: WordPress scoped ID, keyed hash (HMAC), user ID, login, email or a user meta field.
 * Session replay privacy settings: block, ignore and mask elements, mask inputs, sampling and DOM slimming.
 * Custom events: send an event to Rybbit when a visitor clicks an element. You set a CSS selector, an event name and optional properties on the Custom Events tab. You do not need to write JavaScript.
+* Opt-out for visitors: add the shortcode `[rybbit_optout]` or the block "Rybbit Opt-out" to a page, for example your privacy policy. Visitors can turn the analytics off and on again.
 * Debug tab with the effective settings and the generated script attributes.
 * Accessible settings page with keyboard support for the tabs.
 * Developer filters to change the behavior from code.
 
+= Opt-out shortcode and block =
+
+Add the shortcode to any page or post:
+
+`[rybbit_optout]`
+
+In the block editor, you can also use the block "Rybbit Opt-out". The block has a "Texts" panel in the sidebar.
+
+The shortcode has these optional attributes:
+
+* `optout_label`: text of the button that turns the analytics off.
+* `optin_label`: text of the button that turns the analytics on again.
+* `tracked_text`: status text while the analytics is on.
+* `untracked_text`: status text while the analytics is off.
+* `class`: extra CSS classes for the wrapper element.
+
+Example:
+
+`[rybbit_optout optout_label="Stop tracking me" tracked_text="We count your visit." class="my-style"]`
+
 = Developer filters =
 
+* `integrate_rybbit_optout_html` (string): Change the HTML of the opt-out shortcode and block. The second argument is the array of texts.
 * `integrate_rybbit_should_track` (bool): Load the tracking script on the current request or not.
 * `integrate_rybbit_script_attributes` (array): Change the `data-*` attributes of the script tag. Use it for Rybbit options without a setting, for example `data-namespace`.
 * `integrate_rybbit_identify_user_id` (string): Change the user ID that is sent to Rybbit.
@@ -115,13 +137,21 @@ User identification is off by default. If you turn it on, Rybbit receives a user
 
 Go to the Custom Events tab and click "Add event rule". Enter a CSS selector, for example `.buy-button`, and an event name, for example `buy_click`. Optionally add properties, one `key=value` pair per line. When a visitor clicks the element, or an element inside it, the plugin sends the event to Rybbit. Properties are sent as text. You can add up to 50 rules. Visitors with an excluded role do not send events. You can also use the `data-rybbit-event` and `data-rybbit-prop-*` attributes in your HTML. Rybbit reads them without this plugin.
 
+= How can visitors turn the tracking off? =
+
+Add the shortcode `[rybbit_optout]` or the block "Rybbit Opt-out" to a page, for example your privacy policy. The visitor sees a status text and a button. A click turns the analytics off for this browser. Another click turns it on again. The choice is saved in the local storage of the browser under the key `disable-rybbit`. It applies to this website and this browser only. It takes effect on the next page load. The shortcode needs a Site ID. Without a Site ID, only administrators see a notice.
+
+= Does the opt-out work with every Rybbit script? =
+
+The opt-out uses a feature of the Rybbit tracking script (version 1.1.0 or newer). Rybbit Cloud has this feature. Old self-hosted instances may not have it. Update your instance if the opt-out has no effect. If you set `data-namespace` with the `integrate_rybbit_script_attributes` filter, the plugin uses the same namespace for the storage key (`disable-<namespace>`). A visitor who clears the browser data also clears the opt-out.
+
 = What happens to my settings when I delete the plugin? =
 
 The settings stay in the database by default. To remove them, enable "Delete all plugin data on uninstall" on the Maintenance tab before you delete the plugin.
 
 = Does the plugin set cookies? =
 
-The plugin sets one technical cookie (`rybbit_clear_user_id`) when a user logs out. The next page view clears the Rybbit user ID and deletes the cookie. If user identification is active, the plugin also stores a small value in the local storage of the browser. This prevents duplicate identify requests. For the data that the Rybbit script stores in the browser, see the [Rybbit documentation](https://rybbit.com/docs).
+The plugin sets one technical cookie (`rybbit_clear_user_id`) when a user logs out. The next page view clears the Rybbit user ID and deletes the cookie. If user identification is active, the plugin also stores a small value in the local storage of the browser. This prevents duplicate identify requests. If a visitor turns the analytics off with the opt-out button, the plugin stores the key `disable-rybbit` in the local storage of the browser. For the data that the Rybbit script stores in the browser, see the [Rybbit documentation](https://rybbit.com/docs).
 
 == Screenshots ==
 
@@ -132,6 +162,7 @@ The plugin sets one technical cookie (`rybbit_clear_user_id`) when a user logs o
 5. Analytics page at Dashboard > Rybbit Analytics.
 6. Analytics widget on the WordPress dashboard.
 7. Dashboard tab: API key, API URL, time range and cache.
+8. Opt-out block on a privacy policy page.
 
 == Changelog ==
 

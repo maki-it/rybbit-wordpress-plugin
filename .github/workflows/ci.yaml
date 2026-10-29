@@ -73,12 +73,27 @@ jobs:
         if: always()
         run: make logs || true
 
+  optout-test:
+    name: Opt-out test
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Test the opt-out shortcode and block (PHP checks and browser test)
+        run: make test-optout
+
+      - name: Show the WordPress debug log
+        if: always()
+        run: make logs || true
+
   # Use this job as the only required status check in the branch protection.
   # It fails when a check fails or is cancelled. It has the same "if" as the checks, so only one run per commit counts.
   ci-success:
     name: CI success
     if: always() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository)
-    needs: [lint, phpcs, plugin-check, dashboard-test]
+    needs: [lint, phpcs, plugin-check, dashboard-test, optout-test]
     runs-on: ubuntu-latest
     steps:
       - name: Check the results of all jobs
