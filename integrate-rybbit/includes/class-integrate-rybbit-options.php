@@ -58,6 +58,27 @@ final class Integrate_Rybbit_Options {
 	const LEGACY_OPTIONS = array( 'rybbit_do_not_track_admins' );
 
 	/**
+	 * Name of the constant that can hold the API key (wp-config.php).
+	 */
+	const API_KEY_CONSTANT = 'INTEGRATE_RYBBIT_API_KEY';
+
+	/**
+	 * Internal counter. A new value makes all cached API responses invalid.
+	 */
+	const API_CACHE_VERSION_OPTION = 'rybbit_api_cache_version';
+
+	/**
+	 * Time ranges of the dashboard.
+	 */
+	const DASHBOARD_RANGES = array( '24h', '7d', '30d', '90d' );
+
+	/**
+	 * Allowed cache duration of API responses in minutes.
+	 */
+	const CACHE_MINUTES_MIN = 1;
+	const CACHE_MINUTES_MAX = 1440;
+
+	/**
 	 * Documented defaults of the JSON based session replay options.
 	 *
 	 * @return array<string, array<string, mixed>>
@@ -132,6 +153,10 @@ final class Integrate_Rybbit_Options {
 			'rybbit_replay_collect_fonts'       => '1',
 			'rybbit_replay_sampling'            => self::encode_json( $json['rybbit_replay_sampling'] ),
 			'rybbit_replay_slim_dom_options'    => self::encode_json( $json['rybbit_replay_slim_dom_options'] ),
+			'rybbit_api_key'                    => '',
+			'rybbit_api_url'                    => '',
+			'rybbit_dashboard_cache'            => '10',
+			'rybbit_dashboard_range'            => '7d',
 			'rybbit_delete_data_on_uninstall'   => '0',
 		);
 	}
@@ -166,7 +191,7 @@ final class Integrate_Rybbit_Options {
 		return array_merge(
 			array_keys( self::defaults() ),
 			self::LEGACY_OPTIONS,
-			array( self::DB_VERSION_OPTION )
+			array( self::DB_VERSION_OPTION, self::API_CACHE_VERSION_OPTION )
 		);
 	}
 
@@ -423,6 +448,163 @@ final class Integrate_Rybbit_Options {
 	public static function is_configured() {
 		return '' !== trim( (string) self::get( 'rybbit_site_id' ) )
 			&& '' !== trim( (string) self::get( 'rybbit_script_url' ) );
+	}
+
+	/**
+	 * Where the API key comes from: "constant", "option" or "none".
+	 *
+	 * @return string
+	 */
+	public static function api_key_source() {
+		if ( defined( self::API_KEY_CONSTANT ) && '' !== trim( (string) constant( self::API_KEY_CONSTANT ) ) ) {
+			return 'constant';
+		}
+
+		return '' !== trim( (string) get_option( 'rybbit_api_key', '' ) ) ? 'option' : 'none';
+	}
+
+	/**
+	 * API key for the Rybbit Stats API. The constant wins over the option.
+	 *
+	 * Never print this value. It stays on the server.
+	 *
+	 * @return string Empty string if no key is set.
+	 */
+	public static function get_api_key() {
+		if ( 'constant' === self::api_key_source() ) {
+			return trim( (string) constant( self::API_KEY_CONSTANT ) );
+		}
+
+		return trim( (string) get_option( 'rybbit_api_key', '' ) );
+	}
+
+	/**
+	 * Check if an API URL may be used.
+	 *
+	 * The API key is sent to this URL. So it must use HTTPS. HTTP is allowed
+	 * only for local hosts and for host names without a dot (for example
+	 * Docker service names).
+	 *
+	 * @param string $url URL to check.
+	 * @return bool
+	 */
+	public static function is_allowed_api_url( $url ) {
+		$scheme = wp_parse_url( (string) $url, PHP_URL_SCHEME );
+		$host   = wp_parse_url( (string) $url, PHP_URL_HOST );
+
+		if ( ! is_string( $scheme ) || ! is_string( $host ) || '' === $host ) {
+			return false;
+		}
+
+		if ( 'https' === $scheme ) {
+			return true;
+		}
+
+		if ( 'http' !== $scheme ) {
+			return false;
+		}
+
+		$host = strtolower( trim( $host, '[]' ) );
+		return in_array( $host, array( 'localhost', '127.0.0.1', '::1' ), true ) || false === strpos( $host, '.' );
+	}
+
+	/**
+	 * Base URL of the Rybbit instance without a trailing slash.
+	 *
+	 * Uses the API URL option. If it is empty, the origin of the script URL is used.
+	 *
+	 * @return string Empty string if no valid URL is available.
+	 */
+	public static function get_api_base_url() {
+		$url = trim( (string) self::get( 'rybbit_api_url' ) );
+
+		if ( '' === $url ) {
+			$script = trim( (string) self::get( 'rybbit_script_url' ) );
+			$scheme = wp_parse_url( $script, PHP_URL_SCHEME );
+			$host   = wp_parse_url( $script, PHP_URL_HOST );
+			$port   = wp_parse_url( $script, PHP_URL_PORT );
+
+			if ( ! is_string( $scheme ) || ! is_string( $host ) || '' === $host ) {
+				return '';
+			}
+
+			$url = $scheme . '://' . $host . ( $port ? ':' . (int) $port : '' );
+		}
+
+		$url = untrailingslashit( $url );
+		return self::is_allowed_api_url( $url ) ? $url : '';
+	}
+
+	/**
+	 * Time range of the dashboard. Invalid values fall back to the default.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public static function sanitize_dashboard_range( $value ) {
+		$value = is_string( $value ) ? $value : '';
+		return in_array( $value, self::DASHBOARD_RANGES, true ) ? $value : (string) self::default_value( 'rybbit_dashboard_range' );
+	}
+
+	/**
+	 * Cache duration in minutes. The value is kept between the allowed limits.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public static function sanitize_cache_minutes( $value ) {
+		$value = trim( (string) $value );
+		if ( '' === $value || ! preg_match( '/^\d+$/', $value ) ) {
+			return (string) self::default_value( 'rybbit_dashboard_cache' );
+		}
+
+		return (string) min( self::CACHE_MINUTES_MAX, max( self::CACHE_MINUTES_MIN, absint( $value ) ) );
+	}
+
+	/**
+	 * Default range of the dashboard.
+	 *
+	 * @return string
+	 */
+	public static function get_dashboard_range() {
+		return self::sanitize_dashboard_range( self::get( 'rybbit_dashboard_range' ) );
+	}
+
+	/**
+	 * Cache duration of API responses in seconds.
+	 *
+	 * @return int
+	 */
+	public static function get_cache_seconds() {
+		return (int) self::sanitize_cache_minutes( self::get( 'rybbit_dashboard_cache' ) ) * MINUTE_IN_SECONDS;
+	}
+
+	/**
+	 * Capability that is needed to see the dashboard.
+	 *
+	 * @return string
+	 */
+	public static function get_dashboard_capability() {
+		/**
+		 * Filter the capability that is needed to see the analytics dashboard.
+		 *
+		 * The dashboard shows visitor data. Give this capability only to people
+		 * who may see the analytics of the site.
+		 *
+		 * @param string $capability Capability. Default is "manage_options".
+		 */
+		$capability = apply_filters( 'integrate_rybbit_dashboard_capability', 'manage_options' );
+
+		return is_string( $capability ) && '' !== $capability ? $capability : 'manage_options';
+	}
+
+	/**
+	 * The dashboard needs an API key and a site ID.
+	 *
+	 * @return bool
+	 */
+	public static function is_dashboard_enabled() {
+		return '' !== self::get_api_key() && '' !== trim( (string) self::get( 'rybbit_site_id' ) );
 	}
 
 	/**

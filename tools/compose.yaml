@@ -29,10 +29,26 @@ services:
       timeout: 5s
       retries: 20
 
+  # Fake Rybbit Stats API with fixed demo data for the dashboard. See tools/mock-rybbit/server.js.
+  mock-rybbit:
+    image: node:22-alpine
+    command: ["node", "/app/server.js"]
+    ports:
+      - "127.0.0.1:${MOCK_PORT:-3001}:3000"
+    volumes:
+      - ./mock-rybbit/server.js:/app/server.js:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/health"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
   wordpress:
     image: wordpress:${WP_IMAGE_TAG:-latest}
     depends_on:
       db:
+        condition: service_healthy
+      mock-rybbit:
         condition: service_healthy
     ports:
       - "${WP_PORT:-8080}:80"
@@ -60,6 +76,7 @@ services:
     volumes:
       - wordpress:/var/www/html
       - ../integrate-rybbit:/var/www/html/wp-content/plugins/integrate-rybbit:ro
+      - ./tests:/tests:ro
 
 volumes:
   db:

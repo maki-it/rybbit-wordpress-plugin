@@ -2,6 +2,7 @@
  * Takes the WordPress.org screenshots from the local dev WordPress.
  *
  * Run it with "make screenshots". The script runs in the Playwright Docker image.
+ * The analytics shots use the demo data of the mock Rybbit API (see tools/mock-rybbit).
  * The dev WordPress uses http://localhost:<WP_PORT> as its site URL.
  * A small proxy inside the container forwards that address to the WordPress container.
  */
@@ -46,6 +47,30 @@ const SHOTS = [
 	{ file: 'screenshot-2.png', tab: 'privacy', withHeader: true, maxHeight: 930 },
 	{ file: 'screenshot-3.png', tab: 'script', withHeader: false, maxHeight: 930 },
 	{ file: 'screenshot-4.png', tab: 'replay', withHeader: false, maxHeight: 1300, endField: 'rybbit_replay_mask_input_options' },
+	{
+		file: 'screenshot-7.png',
+		tab: 'dashboard',
+		withHeader: false,
+		maxHeight: 1100,
+		prepare: async (page) => {
+			await page.click('#rybbit-test-api');
+			await page.waitForSelector('#rybbit-api-result.rybbit-api-result--ok');
+			// The new value is only shown. The form is not saved again.
+			await page.fill('#rybbit_api_url', 'https://rybbit.example.com');
+			await page.evaluate(() => {
+				const hint = document.querySelector('#rybbit_api_url_description code');
+				if (hint) {
+					hint.textContent = 'https://rybbit.example.com';
+				}
+			});
+		},
+	},
+];
+
+// Shots of the analytics dashboard. "make dev" connects the dev site to the mock API.
+const DASHBOARD_SHOTS = [
+	{ file: 'screenshot-5.png', url: '/wp-admin/index.php?page=integrate-rybbit-dashboard', root: '#wpbody-content .wrap', ready: '.rybbit-dash--page .rybbit-top', maxHeight: 1250 },
+	{ file: 'screenshot-6.png', url: '/wp-admin/index.php', root: '#integrate_rybbit_widget', ready: '#integrate_rybbit_widget .rybbit-kpis', maxHeight: 700 },
 ];
 
 function startProxy() {
@@ -91,11 +116,35 @@ async function main() {
 			locale: 'en-US',
 		});
 
+		const problems = [];
+		page.on('pageerror', (error) => problems.push(`page error: ${error.message}`));
+		page.on('console', (message) => {
+			if (message.type() === 'error') {
+				problems.push(`console error: ${message.text()}`);
+			}
+		});
+
 		await page.goto(`${BASE}/wp-login.php`);
 		await page.fill('#user_login', 'admin');
 		await page.fill('#user_pass', 'admin');
 		await page.click('#wp-submit');
 		await page.waitForURL(/wp-admin/);
+
+		for (const shot of DASHBOARD_SHOTS) {
+			await page.goto(`${BASE}${shot.url}`);
+			await page.addStyleTag({ content: '.notice:not(.rybbit-dash__error), .update-nag { display: none !important; }' });
+			await page.waitForSelector(shot.ready, { timeout: 15000 });
+			await page.mouse.move(0, 0);
+			const box = await page.locator(shot.root).boundingBox();
+			const clip = {
+				x: Math.max(box.x - 16, 0),
+				y: Math.max(box.y - 10, 0),
+				width: box.width + 32,
+				height: Math.min(box.height + 20, shot.maxHeight),
+			};
+			await page.screenshot({ path: `${OUT}/${shot.file}`, clip, fullPage: true });
+			console.log(`${shot.file}: ${Math.round(clip.width)}x${Math.round(clip.height)}`);
+		}
 
 		await page.goto(`${BASE}/wp-admin/options-general.php?page=integrate-rybbit`);
 		await fillDemoData(page);
@@ -103,6 +152,9 @@ async function main() {
 
 		for (const shot of SHOTS) {
 			await page.click(`#rybbit-tab-${shot.tab}`);
+			if (shot.prepare) {
+				await shot.prepare(page);
+			}
 			await page.evaluate(() => document.activeElement && document.activeElement.blur());
 			await page.mouse.move(0, 0);
 
@@ -125,6 +177,11 @@ async function main() {
 
 			await page.screenshot({ path: `${OUT}/${shot.file}`, clip, fullPage: true });
 			console.log(`${shot.file}: ${Math.round(clip.width)}x${Math.round(clip.height)}`);
+		}
+
+		if (problems.length) {
+			console.error(problems.join('\n'));
+			process.exitCode = 1;
 		}
 	} finally {
 		await browser.close();
