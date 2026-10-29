@@ -8,6 +8,8 @@
  *   demo-key       Valid. Returns data.
  *   bad-key        Returns 401.
  *   forbidden-key  Returns 403.
+ *   no-scope-key   Returns 403 with the missing permission "analytics:read".
+ *   no-sites-key   Works, but the site settings route returns 403 ("sites:read").
  *   slow-key       Returns 429 with a Retry-After header.
  *
  * Site ID "missing" returns 404. Any other site ID works.
@@ -182,11 +184,14 @@ function handleApi(req, res, url) {
 	if (key === 'forbidden-key') {
 		return sendJson(res, 403, { error: 'Forbidden' });
 	}
-	if (key !== VALID_KEY) {
+	if (key === 'no-scope-key') {
+		return sendJson(res, 403, { error: 'Insufficient scope', required: 'analytics:read' });
+	}
+	if (key !== VALID_KEY && key !== 'no-sites-key') {
 		return sendJson(res, 401, { error: 'Unauthorized' });
 	}
 
-	const match = /^\/api\/sites\/([^/]+)(\/.*)$/.exec(url.pathname);
+	const match = /^\/api\/sites\/([^/]+)(\/.*)?$/.exec(url.pathname);
 	if (!match) {
 		return sendJson(res, 404, { error: 'Not found' });
 	}
@@ -194,8 +199,16 @@ function handleApi(req, res, url) {
 		return sendJson(res, 404, { error: 'Site not found' });
 	}
 
-	const path = match[2];
+	const path = match[2] || '';
 	const query = url.searchParams;
+
+	/* The site settings. Rybbit needs "sites:read" for them. The mock site has the number 29. */
+	if (path === '') {
+		if (key === 'no-sites-key') {
+			return sendJson(res, 403, { error: 'Insufficient scope', required: 'sites:read' });
+		}
+		return sendJson(res, 200, { id: decodeURIComponent(match[1]), siteId: 29, name: 'Demo site' });
+	}
 
 	if (path === '/has-data') {
 		return sendJson(res, 200, { hasData: true });
