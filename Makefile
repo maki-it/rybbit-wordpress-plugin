@@ -14,7 +14,7 @@ WPCLI   := $(COMPOSE) run --rm --no-deps wpcli
 
 .DEFAULT_GOAL := help
 
-.PHONY: help check lint tools phpcs phpcbf dev plugin-check pot screenshots logs down clean zip
+.PHONY: help check lint tools phpcs phpcbf dev plugin-check test-dashboard pot screenshots logs down clean zip
 
 help: ## Show the available targets.
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -43,7 +43,12 @@ dev: ## Start WordPress (port 8080) with the plugin active (admin / admin).
 		--url="$(WP_URL)" --title="Rybbit Dev" \
 		--admin_user=admin --admin_password=admin --admin_email=admin@example.com --skip-email
 	@$(WPCLI) wp plugin activate $(PLUGIN) --quiet
+	@# Settings for the mock Rybbit API. "option add" does nothing if the option already exists.
+	@$(WPCLI) wp option add rybbit_site_id demo-site 2>/dev/null || true
+	@$(WPCLI) wp option add rybbit_api_url http://mock-rybbit:3000 2>/dev/null || true
+	@$(WPCLI) wp option add rybbit_api_key demo-key 2>/dev/null || true
 	@echo "WordPress: $(WP_URL)/wp-admin/options-general.php?page=$(PLUGIN) (admin / admin)"
+	@echo "Analytics: $(WP_URL)/wp-admin/index.php?page=integrate-rybbit-dashboard (mock API)"
 
 # wp plugin check always exits with 0. The target fails if the output has ERROR or WARNING rows.
 plugin-check: dev ## Run the official Plugin Check against the plugin.
@@ -54,6 +59,10 @@ plugin-check: dev ## Run the official Plugin Check against the plugin.
 		if printf '%s\n' "$$out" | awk -F '\t' '$$3 == "ERROR" || $$3 == "WARNING" { found = 1 } END { exit !found }'; then \
 			echo "Plugin Check found problems."; exit 1; \
 		fi
+
+# The test resets the Rybbit settings of the dev site to the mock API values.
+test-dashboard: dev ## Test the dashboard backend against the mock Rybbit API.
+	@$(WPCLI) wp eval-file /tests/dashboard.php
 
 pot: ## Generate build/integrate-rybbit.pot to review the translatable strings.
 	@mkdir -p build
