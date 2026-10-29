@@ -14,6 +14,9 @@ Get the plugin from the [WordPress.org plugin directory](https://wordpress.org/p
 ## Features
 
 - Works with Rybbit Cloud and with self-hosted Rybbit instances.
+- Analytics dashboard in wp-admin (optional, needs a Rybbit API key): a widget on the WordPress dashboard and a page at
+  `Dashboard` > `Rybbit Analytics`. It shows visitors, pageviews, bounce rate, visit duration, visitors online,
+  a chart and the top pages, referrers, countries, devices and browsers.
 - Do not track selected user roles. Administrators are excluded by default.
 - Optional tracking inside wp-admin. It is off by default.
 - Load the script with `defer` (recommended) or `async`.
@@ -24,7 +27,8 @@ Get the plugin from the [WordPress.org plugin directory](https://wordpress.org/p
 - Session replay privacy settings: block, ignore and mask elements, mask inputs, sampling and DOM slimming.
 - Debug tab with the effective settings and the generated script attributes.
 - Developer filters: `integrate_rybbit_should_track`, `integrate_rybbit_script_attributes`,
-  `integrate_rybbit_identify_user_id` and `integrate_rybbit_identify_traits`.
+  `integrate_rybbit_identify_user_id`, `integrate_rybbit_identify_traits`,
+  `integrate_rybbit_dashboard_capability` and `integrate_rybbit_api_http_args`.
   See [readme.txt](integrate-rybbit/readme.txt) for details and an example.
 
 ## Requirements
@@ -54,9 +58,28 @@ To install a release from GitHub:
 
 All other settings are optional.
 
+### Analytics dashboard
+
+The dashboard reads the numbers from the Rybbit API. It needs an API key.
+
+1. In Rybbit, go to `Organization settings` > `API keys` and create a key.
+2. In WordPress, go to `Settings` > `Integrate Rybbit` > `Dashboard`, enter the key and save.
+3. Click `Test connection`. After this, the widget and the page `Dashboard` > `Rybbit Analytics` are available.
+
+Notes:
+
+- Rybbit Cloud offers API keys on the Standard plan and above. Self-hosted instances have no such limit.
+  The tracking works on every plan.
+- You can define the key in `wp-config.php` instead of the database. This key replaces the saved key:
+  `define( 'INTEGRATE_RYBBIT_API_KEY', 'your-key' );`
+- The key stays on the server. The browser only talks to a REST route of your site (`integrate-rybbit/v1/stats`).
+- The plugin caches the API answers (10 minutes by default) to save API requests.
+- Only users with the capability `manage_options` see the dashboard. Change it with the filter `integrate_rybbit_dashboard_capability`.
+
 ## Screenshots
 
 ![Tracking tab](assets/screenshot-1.png)
+![Analytics page](assets/screenshot-5.png)
 
 More screenshots are in the [assets](assets/) folder.
 
@@ -84,6 +107,7 @@ make down          # Stop WordPress.
 | `make phpcbf`       | Fixes coding standard issues that can be fixed automatically.                        |
 | `make dev`          | Starts WordPress at http://localhost:8080 with the plugin active (`admin` / `admin`). |
 | `make plugin-check` | Runs the official [Plugin Check](https://wordpress.org/plugins/plugin-check/).       |
+| `make test-dashboard` | Tests the analytics dashboard backend against the mock Rybbit API.                 |
 | `make pot`          | Generates `build/integrate-rybbit.pot` to review the translatable strings.          |
 | `make screenshots`  | Retakes the screenshots in `assets/` with a headless browser in Docker.             |
 | `make logs`         | Shows the WordPress debug log.                                                       |
@@ -98,6 +122,9 @@ Notes:
 - Use `WP_IMAGE_TAG=6.5 make dev` to test with an older WordPress version.
   Start with `make clean` when you change the WordPress version.
 - `make screenshots` overwrites the plugin settings of the development site with example values.
+- `make dev` also starts a mock of the Rybbit API (`tools/mock-rybbit`) with fixed demo data
+  and connects the development site to it (API key `demo-key`). It is available at http://localhost:3001.
+  These keys trigger errors: `bad-key` (401), `forbidden-key` (403) and `slow-key` (429).
 - The settings are stored with the option prefix `rybbit_`.
   The plugin migrates old settings on update (option `integrate_rybbit_db_version`).
 
@@ -107,6 +134,8 @@ Notes:
 integrate-rybbit/        The plugin. Only this folder is deployed to WordPress.org.
 assets/                  Icons and screenshots for WordPress.org.
 tools/                   Docker setup for the checks and the development environment.
+tools/mock-rybbit/       Mock of the Rybbit Stats API for the dashboard tests and the screenshots.
+tools/tests/             Tests that run inside the development WordPress.
 phpcs.xml.dist           PHPCS rules.
 .github/workflows/       CI and release workflows.
 ```

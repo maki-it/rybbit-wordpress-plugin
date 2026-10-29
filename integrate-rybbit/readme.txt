@@ -8,7 +8,7 @@ Stable tag: 0.0.0
 License: GPLv3 or later
 License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
 
-Add the Rybbit Analytics tracking script to WordPress. Exclude roles, mask URLs, identify users and tune session replay privacy.
+Add Rybbit Analytics to WordPress. See your stats in wp-admin, exclude roles, mask URLs, identify users and tune session replay privacy.
 
 == Description ==
 
@@ -16,10 +16,16 @@ Integrate Rybbit adds the [Rybbit](https://rybbit.com) tracking script to your W
 Rybbit is an open source and privacy-focused web analytics platform.
 
 Enter your Site ID and the plugin does the rest. All other settings are optional.
+You can also see your analytics inside WordPress. For this, add an API key in the Dashboard tab.
 
 = Features =
 
 * Works with Rybbit Cloud and with self-hosted Rybbit instances.
+* Analytics dashboard in wp-admin: a widget on the WordPress dashboard and a page at Dashboard > Rybbit Analytics.
+  * Visitors, pageviews, bounce rate, visit duration and visitors online now.
+  * Chart of the visitors and pageviews for the last 24 hours, 7, 30 or 90 days.
+  * Top pages, top referrers, countries, devices and browsers.
+  * The data is cached. The API key stays on the server and is never sent to a browser.
 * Do not track selected user roles. Administrators are excluded by default.
 * Optional tracking inside wp-admin. It is off by default.
 * Load the script with `defer` (recommended) or `async`.
@@ -42,6 +48,8 @@ Enter your Site ID and the plugin does the rest. All other settings are optional
 * `integrate_rybbit_script_attributes` (array): Change the `data-*` attributes of the script tag. Use it for Rybbit options without a setting, for example `data-namespace`.
 * `integrate_rybbit_identify_user_id` (string): Change the user ID that is sent to Rybbit.
 * `integrate_rybbit_identify_traits` (array): Change the user traits that are sent to Rybbit.
+* `integrate_rybbit_dashboard_capability` (string): Change the capability that is needed to see the analytics dashboard. The default is `manage_options`.
+* `integrate_rybbit_api_http_args` (array): Change the HTTP arguments of the requests to the Rybbit API, for example the timeout.
 
 Example:
 
@@ -57,6 +65,7 @@ Example:
 3. Go to Settings > Integrate Rybbit.
 4. Enter your Rybbit Site ID and save the settings. Tracking starts immediately.
 5. If you host Rybbit yourself, change the Script URL to `https://your-rybbit-domain/api/script.js`.
+6. Optional: to see your analytics in WordPress, create an API key in Rybbit and enter it on the Dashboard tab.
 
 == Frequently Asked Questions ==
 
@@ -67,6 +76,26 @@ Open your Rybbit dashboard. The Site ID is in the tracking settings of your site
 = Can I use a self-hosted Rybbit instance? =
 
 Yes. Set the Script URL on the Tracking tab to the `script.js` URL of your instance, for example `https://analytics.example.com/api/script.js`.
+
+= How do I see my analytics in WordPress? =
+
+Create an API key in Rybbit (Organization settings, API keys). Enter it on the Dashboard tab of the plugin settings and save. Use "Test connection" to check the key. After this, a widget appears on the WordPress dashboard and a new page at Dashboard > Rybbit Analytics.
+
+= Which Rybbit plan do I need for the dashboard? =
+
+Rybbit Cloud offers API keys on the Standard plan and above. The Free and Basic plans have no API keys. Self-hosted instances have no such limit. The tracking works on every plan. Only the dashboard needs an API key.
+
+= Is my API key safe? =
+
+The plugin sends the key only from your server to the Rybbit API. It never sends the key to a browser, and it does not show the saved key again. For more safety, define the key in `wp-config.php`: `define( 'INTEGRATE_RYBBIT_API_KEY', 'your-key' );`. This key replaces the key from the settings.
+
+= Why is the dashboard data not up to date? =
+
+The plugin keeps the API answers for 10 minutes by default. This saves API requests, which matters on plans with request limits. Change the time on the Dashboard tab, or use "Clear cache". The count of visitors online is cached for one minute at most.
+
+= Who can see the dashboard? =
+
+Only users who can manage the plugin settings (`manage_options`). Use the `integrate_rybbit_dashboard_capability` filter to change this.
 
 = Why do I not see my own visits? =
 
@@ -94,6 +123,9 @@ The plugin sets one technical cookie (`rybbit_clear_user_id`) when a user logs o
 2. Privacy tab: user identification settings.
 3. Script attributes tab: skip patterns, mask patterns and debounce.
 4. Session replay tab: privacy settings for session recordings.
+5. Analytics page at Dashboard > Rybbit Analytics.
+6. Analytics widget on the WordPress dashboard.
+7. Dashboard tab: API key, API URL, time range and cache.
 
 == Changelog ==
 
@@ -110,6 +142,11 @@ If session replay is active in Rybbit, the script also sends recordings of the p
 
 If you don't host your own Rybbit instance, data collected by this plugin will be sent to the [Rybbit servers](https://app.rybbit.io/) for processing.
 See the [Rybbit Data Processing Agreement](https://rybbit.com/dpa) to find out more about how Rybbit handles the tracking data.
+
+If you enter an API key on the Dashboard tab, the plugin also reads statistics from the Rybbit API.
+The plugin sends the API key, the Site ID and the chosen time range from your server to the Rybbit instance (by default `https://app.rybbit.io`). It does not send visitor data.
+The requests start when a user with the needed capability opens the WordPress dashboard or the analytics page, and when you test the connection.
+The plugin keeps the answers in a cache. The address of the instance is the origin of your Script URL, unless you set a different API URL.
 
 By using this plugin, you agree to Rybbit's [terms of service](https://rybbit.com/terms-and-conditions) and [privacy policy](https://rybbit.com/privacy).
 
