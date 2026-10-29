@@ -3,9 +3,9 @@
 	"description": "Code quality tools for Integrate Rybbit. Installed only inside the tools Docker image.",
 	"license": "GPL-3.0-or-later",
 	"require": {
-		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.2.1",
 		"phpcompatibility/phpcompatibility-wp": "^2.1.8",
-		"wp-coding-standards/wpcs": "^3.1"
+		"wp-coding-standards/wpcs": "^3.4.1"
 	},
 	"config": {
 		"allow-plugins": {

@@ -1,6 +1,6 @@
 # Code quality tools for Integrate Rybbit.
 # The repository is mounted at /app. Nothing is installed on the host.
-FROM php:8.4-cli-alpine
+FROM php:8.5-cli-alpine
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
