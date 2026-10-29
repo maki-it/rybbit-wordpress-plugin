@@ -95,6 +95,10 @@ final class Integrate_Rybbit_Admin {
 			'rybbit_replay_collect_fonts'       => array( 'Integrate_Rybbit_Options', 'sanitize_checkbox' ),
 			'rybbit_replay_sampling'            => array( $this, 'sanitize_sampling' ),
 			'rybbit_replay_slim_dom_options'    => array( $this, 'sanitize_slim_dom_options' ),
+			'rybbit_api_key'                    => array( $this, 'sanitize_api_key' ),
+			'rybbit_api_url'                    => array( $this, 'sanitize_api_url' ),
+			'rybbit_dashboard_cache'            => array( 'Integrate_Rybbit_Options', 'sanitize_cache_minutes' ),
+			'rybbit_dashboard_range'            => array( 'Integrate_Rybbit_Options', 'sanitize_dashboard_range' ),
 			'rybbit_delete_data_on_uninstall'   => array( 'Integrate_Rybbit_Options', 'sanitize_checkbox' ),
 		);
 
@@ -204,6 +208,67 @@ final class Integrate_Rybbit_Admin {
 				__( 'Script URL must use HTTPS.', 'integrate-rybbit' )
 			);
 			return $old;
+		}
+
+		return $url;
+	}
+
+	/**
+	 * Sanitize the API key.
+	 *
+	 * The field never shows the saved key. An empty field keeps the saved key.
+	 * The "Remove key" checkbox deletes it. A key from wp-config.php is not
+	 * saved here.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public function sanitize_api_key( $value ) {
+		$old = (string) get_option( 'rybbit_api_key', '' );
+
+		// WordPress checks the settings nonce in options.php before it calls this method.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing
+		if ( ! empty( $_POST['rybbit_api_key_remove'] ) ) {
+			return '';
+		}
+
+		$value = is_string( $value ) ? trim( $value ) : '';
+		if ( '' === $value ) {
+			return $old;
+		}
+
+		if ( 1 !== preg_match( '/^[A-Za-z0-9_\-.~+\/=]{8,512}$/', $value ) ) {
+			$this->add_error(
+				'rybbit_api_key',
+				'rybbit_api_key_invalid',
+				__( 'The API key has invalid characters or a wrong length. It was not saved.', 'integrate-rybbit' )
+			);
+			return $old;
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Sanitize the API URL. It must use HTTPS because the API key is sent to it.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public function sanitize_api_url( $value ) {
+		$value = trim( is_string( $value ) ? $value : '' );
+		if ( '' === $value ) {
+			return '';
+		}
+
+		$url = untrailingslashit( esc_url_raw( $value, array( 'https', 'http' ) ) );
+		if ( '' === $url || ! Integrate_Rybbit_Options::is_allowed_api_url( $url ) ) {
+			$this->add_error(
+				'rybbit_api_url',
+				'rybbit_api_url_invalid',
+				__( 'The API URL must be a valid HTTPS URL. HTTP works only for local hosts. It was not saved.', 'integrate-rybbit' )
+			);
+			return (string) $this->old_value( 'rybbit_api_url' );
 		}
 
 		return $url;
@@ -371,6 +436,7 @@ final class Integrate_Rybbit_Admin {
 			'privacy'     => __( 'Privacy', 'integrate-rybbit' ),
 			'script'      => __( 'Script Attributes', 'integrate-rybbit' ),
 			'replay'      => __( 'Session Replay', 'integrate-rybbit' ),
+			'dashboard'   => __( 'Dashboard', 'integrate-rybbit' ),
 			'maintenance' => __( 'Maintenance', 'integrate-rybbit' ),
 			'debug'       => __( 'Debug', 'integrate-rybbit' ),
 			'about'       => __( 'About', 'integrate-rybbit' ),
@@ -1025,6 +1091,127 @@ final class Integrate_Rybbit_Admin {
 	}
 
 	/**
+	 * Print the "Dashboard" tab.
+	 */
+	private function render_tab_dashboard() {
+		$source   = Integrate_Rybbit_Options::api_key_source();
+		$base_url = Integrate_Rybbit_Options::get_api_base_url();
+		$ranges   = array(
+			'24h' => __( 'Last 24 hours', 'integrate-rybbit' ),
+			'7d'  => __( 'Last 7 days', 'integrate-rybbit' ),
+			'30d' => __( 'Last 30 days', 'integrate-rybbit' ),
+			'90d' => __( 'Last 90 days', 'integrate-rybbit' ),
+		);
+		$range    = Integrate_Rybbit_Options::get_dashboard_range();
+		?>
+		<p class="description rybbit-description-wide">
+			<?php esc_html_e( 'Show your Rybbit analytics in the WordPress dashboard. The plugin reads the numbers from the Rybbit API with an API key. The browser of a visitor never sees the key.', 'integrate-rybbit' ); ?>
+			<?php esc_html_e( 'Rybbit Cloud offers API keys on the Standard plan and above. Self-hosted instances have no such limit.', 'integrate-rybbit' ); ?>
+		</p>
+		<table class="form-table" role="presentation">
+			<tr>
+				<th scope="row"><label for="rybbit_api_key"><?php esc_html_e( 'API key', 'integrate-rybbit' ); ?></label></th>
+				<td>
+					<?php if ( 'constant' === $source ) : ?>
+						<div class="notice notice-info inline"><p>
+							<?php
+							printf(
+								/* translators: %s: PHP constant name. */
+								esc_html__( 'The API key is set with the constant %s in wp-config.php. This key is used instead of the field below.', 'integrate-rybbit' ),
+								'<code>' . esc_html( Integrate_Rybbit_Options::API_KEY_CONSTANT ) . '</code>'
+							);
+							?>
+						</p></div>
+					<?php endif; ?>
+					<input type="password" id="rybbit_api_key" name="rybbit_api_key" value="" class="regular-text rybbit-input-wide" autocomplete="new-password" spellcheck="false" aria-describedby="rybbit_api_key_description"
+						placeholder="<?php echo 'option' === $source ? esc_attr__( 'A key is saved. Enter a new key to replace it.', 'integrate-rybbit' ) : ''; ?>" />
+					<p class="description" id="rybbit_api_key_description"><?php esc_html_e( 'Create the key in Rybbit under Organization settings, API keys. The plugin only needs read access. The saved key is never shown again.', 'integrate-rybbit' ); ?></p>
+					<?php if ( '' !== (string) get_option( 'rybbit_api_key', '' ) ) : ?>
+						<p>
+							<label for="rybbit_api_key_remove">
+								<input type="checkbox" id="rybbit_api_key_remove" name="rybbit_api_key_remove" value="1" />
+								<?php esc_html_e( 'Remove the saved API key', 'integrate-rybbit' ); ?>
+							</label>
+						</p>
+					<?php endif; ?>
+					<p class="description"><?php esc_html_e( 'For more safety, you can define the key in wp-config.php instead.', 'integrate-rybbit' ); ?> <code>define( 'INTEGRATE_RYBBIT_API_KEY', '…' );</code></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="rybbit_api_url"><?php esc_html_e( 'API URL', 'integrate-rybbit' ); ?></label></th>
+				<td>
+					<?php
+					$this->render_input(
+						'rybbit_api_url',
+						array(
+							'type'        => 'url',
+							'class'       => 'regular-text rybbit-input-url',
+							'placeholder' => '' !== $base_url ? $base_url : 'https://app.rybbit.io',
+							'describedby' => 'rybbit_api_url_description',
+						)
+					);
+					?>
+					<p class="description" id="rybbit_api_url_description">
+						<?php
+						if ( '' !== $base_url ) {
+							printf(
+								/* translators: %s: URL. */
+								esc_html__( 'Leave this empty to use the address of your Script URL. Now used: %s', 'integrate-rybbit' ),
+								'<code>' . esc_html( $base_url ) . '</code>'
+							);
+						} else {
+							esc_html_e( 'Leave this empty to use the address of your Script URL. Set it only if the API runs on another address.', 'integrate-rybbit' );
+						}
+						?>
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="rybbit_dashboard_range"><?php esc_html_e( 'Default time range', 'integrate-rybbit' ); ?></label></th>
+				<td>
+					<select id="rybbit_dashboard_range" name="rybbit_dashboard_range">
+						<?php foreach ( $ranges as $value => $label ) : ?>
+							<option value="<?php echo esc_attr( $value ); ?>" <?php selected( $range, $value ); ?>><?php echo esc_html( $label ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="rybbit_dashboard_cache"><?php esc_html_e( 'Cache time (minutes)', 'integrate-rybbit' ); ?></label></th>
+				<td>
+					<?php
+					$this->render_input(
+						'rybbit_dashboard_cache',
+						array(
+							'type'        => 'number',
+							'class'       => 'small-text',
+							'min'         => Integrate_Rybbit_Options::CACHE_MINUTES_MIN,
+							'describedby' => 'rybbit_dashboard_cache_description',
+						)
+					);
+					?>
+					<p class="description" id="rybbit_dashboard_cache_description"><?php esc_html_e( 'The plugin keeps API answers for this time. A longer time saves API requests. This matters on plans with request limits.', 'integrate-rybbit' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Connection', 'integrate-rybbit' ); ?></th>
+				<td>
+					<div class="rybbit-button-row">
+						<button type="button" class="button" id="rybbit-test-api"><?php esc_html_e( 'Test connection', 'integrate-rybbit' ); ?></button>
+						<button type="button" class="button" id="rybbit-clear-api-cache"><?php esc_html_e( 'Clear cache', 'integrate-rybbit' ); ?></button>
+					</div>
+					<p class="rybbit-api-result" id="rybbit-api-result" role="status" aria-live="polite"></p>
+					<p class="description"><?php esc_html_e( 'The test uses the saved settings. Save your changes first.', 'integrate-rybbit' ); ?></p>
+					<?php if ( Integrate_Rybbit_Options::is_dashboard_enabled() && current_user_can( Integrate_Rybbit_Options::get_dashboard_capability() ) ) : ?>
+						<p><a href="<?php echo esc_url( admin_url( 'index.php?page=' . Integrate_Rybbit_Dashboard::PAGE_SLUG ) ); ?>"><?php esc_html_e( 'Open the analytics page', 'integrate-rybbit' ); ?></a></p>
+					<?php endif; ?>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	/**
 	 * Print the "Maintenance" tab.
 	 */
 	private function render_tab_maintenance() {
@@ -1049,6 +1236,8 @@ final class Integrate_Rybbit_Admin {
 		foreach ( array_keys( Integrate_Rybbit_Options::defaults() ) as $name ) {
 			$settings[ $name ] = Integrate_Rybbit_Options::get( $name );
 		}
+		// The debug output must never show the secret key. It shows where the key comes from.
+		$settings['rybbit_api_key'] = Integrate_Rybbit_Options::api_key_source();
 
 		$user     = wp_get_current_user();
 		$excluded = Integrate_Rybbit_Options::is_user_excluded();

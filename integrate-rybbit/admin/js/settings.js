@@ -233,6 +233,68 @@
 		refresh();
 	}
 
+	/*
+	 * Buttons of the Dashboard tab. They call the saved API settings.
+	 * The text of the answer goes in with textContent.
+	 */
+	function initApiTools() {
+		var result = document.getElementById('rybbit-api-result');
+		var config = window.rybbitAdmin || {};
+		var buttons = [
+			{ id: 'rybbit-test-api', action: 'rybbit_test_api_connection', busy: __('Testing…') },
+			{ id: 'rybbit-clear-api-cache', action: 'rybbit_clear_api_cache', busy: __('Clearing…') }
+		];
+
+		if (!result) {
+			return;
+		}
+
+		function show(text, isError) {
+			result.textContent = text;
+			result.classList.toggle('rybbit-api-result--error', !!isError);
+			result.classList.toggle('rybbit-api-result--ok', !isError);
+		}
+
+		buttons.forEach(function (item) {
+			var button = document.getElementById(item.id);
+			if (!button) {
+				return;
+			}
+
+			button.addEventListener('click', function () {
+				if (!config.ajaxUrl || !config.nonce || !window.fetch || !window.FormData) {
+					show(__('This action is not available.'), true);
+					return;
+				}
+
+				var body = new FormData();
+				body.append('action', item.action);
+				body.append('nonce', config.nonce);
+
+				button.disabled = true;
+				show(item.busy, false);
+
+				window
+					.fetch(config.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body })
+					.then(function (res) {
+						return res.json().catch(function () {
+							throw new Error('HTTP ' + res.status);
+						});
+					})
+					.then(function (json) {
+						var message = json && json.data && json.data.message ? String(json.data.message) : __('Unknown error');
+						show(message, !json || json.success !== true);
+					})
+					.catch(function (err) {
+						show(err && err.message ? err.message : __('Unknown error'), true);
+					})
+					.then(function () {
+						button.disabled = false;
+					});
+			});
+		});
+	}
+
 	function decodeBase64Utf8(b64) {
 		try {
 			var binary = window.atob(b64);
@@ -375,6 +437,7 @@
 		initTabs();
 		initUserMetaKeyToggle();
 		initIdentifyPreview();
+		initApiTools();
 		initResetButtons();
 		initJsonValidation();
 	});

@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Preview of the identify payload on the settings page.
+ * AJAX handlers of the settings page.
  */
 final class Integrate_Rybbit_Admin_Ajax {
 
@@ -19,6 +19,21 @@ final class Integrate_Rybbit_Admin_Ajax {
 	 */
 	public function __construct() {
 		add_action( 'wp_ajax_rybbit_preview_identify_payload', array( $this, 'preview_identify_payload' ) );
+		add_action( 'wp_ajax_rybbit_test_api_connection', array( $this, 'test_api_connection' ) );
+		add_action( 'wp_ajax_rybbit_clear_api_cache', array( $this, 'clear_api_cache' ) );
+	}
+
+	/**
+	 * Stop the request unless the user may change the settings and the nonce is valid.
+	 */
+	private function authorize() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'You are not allowed to do this.', 'integrate-rybbit' ) ), 403 );
+		}
+
+		if ( ! check_ajax_referer( 'rybbit_admin_settings', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid security token. Please reload the page.', 'integrate-rybbit' ) ), 403 );
+		}
 	}
 
 	/**
@@ -69,5 +84,36 @@ final class Integrate_Rybbit_Admin_Ajax {
 				'payload' => integrate_rybbit_get_identify_payload( $identify_mode ),
 			)
 		);
+	}
+
+	/**
+	 * Check the saved API settings with a request to the Rybbit API.
+	 */
+	public function test_api_connection() {
+		$this->authorize();
+
+		$result = Integrate_Rybbit_Api::test_connection();
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		wp_send_json_success(
+			array(
+				'message' => $result['has_data']
+					? __( 'Connection works. The site has data.', 'integrate-rybbit' )
+					: __( 'Connection works. The site has no data yet.', 'integrate-rybbit' ),
+			)
+		);
+	}
+
+	/**
+	 * Delete the cached API answers.
+	 */
+	public function clear_api_cache() {
+		$this->authorize();
+
+		Integrate_Rybbit_Api::clear_cache();
+
+		wp_send_json_success( array( 'message' => __( 'The cache is cleared.', 'integrate-rybbit' ) ) );
 	}
 }

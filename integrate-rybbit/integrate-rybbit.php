@@ -28,10 +28,13 @@ define( 'INTEGRATE_RYBBIT_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 
 require_once INTEGRATE_RYBBIT_DIR . 'includes/class-integrate-rybbit-options.php';
 require_once INTEGRATE_RYBBIT_DIR . 'includes/functions.php';
+require_once INTEGRATE_RYBBIT_DIR . 'includes/class-integrate-rybbit-api.php';
+require_once INTEGRATE_RYBBIT_DIR . 'includes/class-integrate-rybbit-rest.php';
 require_once INTEGRATE_RYBBIT_DIR . 'public/class-integrate-rybbit-public.php';
 
 if ( is_admin() ) {
 	require_once INTEGRATE_RYBBIT_DIR . 'admin/class-integrate-rybbit-admin.php';
+	require_once INTEGRATE_RYBBIT_DIR . 'admin/class-integrate-rybbit-dashboard.php';
 	require_once INTEGRATE_RYBBIT_DIR . 'includes/class-integrate-rybbit-admin-ajax.php';
 }
 
@@ -40,9 +43,13 @@ register_activation_hook( __FILE__, array( 'Integrate_Rybbit_Options', 'maybe_up
 // Updates do not run the activation hook. Check the schema version on every load.
 add_action( 'plugins_loaded', array( 'Integrate_Rybbit_Options', 'maybe_upgrade' ) );
 
+Integrate_Rybbit_Api::register_hooks();
+
 new Integrate_Rybbit_Public();
+new Integrate_Rybbit_Rest();
 
 if ( is_admin() ) {
 	new Integrate_Rybbit_Admin();
+	new Integrate_Rybbit_Dashboard();
 	new Integrate_Rybbit_Admin_Ajax();
 }
