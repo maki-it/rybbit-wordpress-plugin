@@ -109,6 +109,31 @@ check(
 );
 check( 'top countries: first is DE', isset( $r['data']['top']['countries'][0] ) && 'DE' === $r['data']['top']['countries'][0]['value'] );
 check( 'all five lists exist', isset( $r['data']['top'] ) && 5 === count( $r['data']['top'] ) );
+check( 'full has the URL of the site in Rybbit', MOCK . '/29' === ( $r['data']['site_url'] ?? '' ), (string) ( $r['data']['site_url'] ?? '' ) );
+
+// The admin classes load only on admin requests. This script runs on the command line.
+if ( ! class_exists( 'Integrate_Rybbit_Dashboard' ) ) {
+	require_once WP_PLUGIN_DIR . '/integrate-rybbit/admin/class-integrate-rybbit-dashboard.php';
+}
+ob_start();
+( new Integrate_Rybbit_Dashboard() )->render_page();
+$page_html = ob_get_clean();
+check( 'the page link starts at the Rybbit home page', false !== strpos( $page_html, 'href="' . MOCK . '" data-rybbit-open' ) );
+
+// A new range needs 7 requests: overview, time series and 5 top lists. The live count and the site number come from the cache.
+stats( array( 'view' => 'full' ) );
+$after_full = mock_requests();
+stats( array( 'view' => 'full', 'range' => '30d' ) );
+check( 'the site number is cached', 29 === Integrate_Rybbit_Api::get_site_number() && mock_requests() === $after_full + 7, mock_requests() . ' vs ' . $after_full );
+
+configure( 'no-sites-key' );
+$r = stats( array( 'view' => 'full' ) );
+check( 'a key without "sites:read" still loads the dashboard', 200 === $r['status'] && ! empty( $r['data']['overview'] ), $r['status'] . ' ' . $r['code'] );
+check( 'without "sites:read" there is no site URL', ! isset( $r['data']['site_url'] ) );
+$after_full = mock_requests();
+stats( array( 'view' => 'full', 'range' => '30d' ) );
+check( 'a failed site lookup is not repeated', mock_requests() === $after_full + 7, mock_requests() . ' vs ' . $after_full );
+configure( 'demo-key' );
 
 $r = stats( array( 'view' => 'live' ) );
 check( 'live view returns only the live count', 200 === $r['status'] && array( 'live', 'generated' ) === array_keys( $r['data'] ) );
@@ -171,6 +196,11 @@ configure( 'forbidden-key' );
 $r = stats( array( 'view' => 'summary' ) );
 check( '403 from the API becomes rybbit_forbidden', 'rybbit_forbidden' === $r['code'], $r['code'] );
 
+configure( 'no-scope-key' );
+$r = stats( array( 'view' => 'summary' ) );
+check( '403 with a missing scope becomes rybbit_forbidden', 'rybbit_forbidden' === $r['code'], $r['code'] );
+check( 'the message names the missing permission', false !== strpos( wp_json_encode( $r['data'] ), 'analytics:read' ), wp_json_encode( $r['data'] ) );
+
 configure( 'demo-key', 'missing' );
 $r = stats( array( 'view' => 'summary' ) );
 check( '404 from the API becomes rybbit_not_found', 'rybbit_not_found' === $r['code'], $r['code'] );
@@ -211,7 +241,7 @@ check( 'saving a new key removes the block', 200 === $r['status'], $r['status'] 
 WP_CLI::log( 'Connection test' );
 configure( 'demo-key' );
 $r = Integrate_Rybbit_Api::test_connection();
-check( 'test_connection() works with a valid key', is_array( $r ) && true === $r['has_data'] );
+check( 'test_connection() works with a valid key', is_array( $r ) && 3 === $r['live'] );
 configure( 'bad-key' );
 $r = Integrate_Rybbit_Api::test_connection();
 check( 'test_connection() reports a bad key', is_wp_error( $r ) && 'rybbit_unauthorized' === $r->get_error_code() );

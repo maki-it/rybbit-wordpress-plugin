@@ -164,7 +164,7 @@ final class Integrate_Rybbit_Dashboard {
 		<div class="wrap rybbit-dash-page">
 			<h1 class="wp-heading-inline"><?php esc_html_e( 'Rybbit Analytics', 'integrate-rybbit' ); ?></h1>
 			<?php if ( '' !== $base && '' !== $site ) : ?>
-				<a class="page-title-action" href="<?php echo esc_url( $base . '/' . rawurlencode( $site ) ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open Rybbit', 'integrate-rybbit' ); ?></a>
+				<a class="page-title-action" href="<?php echo esc_url( $base ); ?>" data-rybbit-open target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open Rybbit', 'integrate-rybbit' ); ?></a>
 			<?php endif; ?>
 			<hr class="wp-header-end">
 

@@ -74,6 +74,11 @@ Notes:
 
 - Rybbit Cloud offers API keys on the Standard plan and above. Self-hosted instances have no such limit.
   The tracking works on every plan.
+- The key only needs read access to `Analytics`. A key without restrictions also works. If you restrict the key to
+  some resources, select `Analytics` with `read`. Otherwise Rybbit answers with `403` and the plugin shows the
+  missing permission.
+- The "Open Rybbit" button needs the number of the site (for example `/29`). The plugin reads it from the site
+  settings, which needs `Sites` with `read`. Without it, the button opens the start page of Rybbit.
 - You can define the key in `wp-config.php` instead of the database. This key replaces the saved key:
   `define( 'INTEGRATE_RYBBIT_API_KEY', 'your-key' );`
 - The key stays on the server. The browser only talks to a REST route of your site (`integrate-rybbit/v1/stats`).

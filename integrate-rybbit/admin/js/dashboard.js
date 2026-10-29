@@ -515,6 +515,14 @@
 				body.appendChild(el('p', 'rybbit-dash__warning', __('Some data could not be loaded. Try again later.')));
 			}
 
+			/* The link starts at the Rybbit home page. Now the exact site URL is known. */
+			if (view === 'full' && typeof data.site_url === 'string' && /^https?:\/\//i.test(data.site_url)) {
+				var openLink = document.querySelector('[data-rybbit-open]');
+				if (openLink) {
+					openLink.href = data.site_url;
+				}
+			}
+
 			if (view === 'full' && data.top) {
 				var grid = el('div', 'rybbit-tops');
 				Object.keys(TOP_TITLES).forEach(function (name) {
