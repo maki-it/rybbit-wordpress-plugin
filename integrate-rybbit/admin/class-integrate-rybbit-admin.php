@@ -1281,7 +1281,7 @@ final class Integrate_Rybbit_Admin {
 					<?php endif; ?>
 					<input type="password" id="rybbit_api_key" name="rybbit_api_key" value="" class="regular-text rybbit-input-wide" autocomplete="new-password" spellcheck="false" aria-describedby="rybbit_api_key_description"
 						placeholder="<?php echo 'option' === $source ? esc_attr__( 'A key is saved. Enter a new key to replace it.', 'integrate-rybbit' ) : ''; ?>" />
-					<p class="description" id="rybbit_api_key_description"><?php esc_html_e( 'Create the key in Rybbit under Organization settings, API keys. The plugin only needs read access. The saved key is never shown again.', 'integrate-rybbit' ); ?></p>
+					<p class="description" id="rybbit_api_key_description"><?php esc_html_e( 'Create the key in Rybbit under Organization settings, API keys. The plugin only needs read access. If you restrict the key, allow the resource "Analytics" with "read". Add "Sites" with "read" if the button "Open Rybbit" should open your exact site. The saved key is never shown again.', 'integrate-rybbit' ); ?></p>
 					<?php if ( '' !== (string) get_option( 'rybbit_api_key', '' ) ) : ?>
 						<p>
 							<label for="rybbit_api_key_remove">

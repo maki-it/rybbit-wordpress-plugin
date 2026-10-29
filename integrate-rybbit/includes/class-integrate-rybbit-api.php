@@ -47,6 +47,11 @@ final class Integrate_Rybbit_Api {
 	const MAX_LOCK_SECONDS = 3600;
 
 	/**
+	 * Time in seconds before the plugin asks again for the site number after a failed request.
+	 */
+	const SITE_NUMBER_RETRY = HOUR_IN_SECONDS;
+
+	/**
 	 * Number of rows of each top list.
 	 */
 	const TOP_LIMIT = 8;
@@ -137,19 +142,21 @@ final class Integrate_Rybbit_Api {
 	}
 
 	/**
-	 * Check the connection. Asks if the site has any data.
+	 * Check the connection. Asks for the live visitor count.
 	 *
-	 * This request skips the cache and the rate limit block.
+	 * This request needs the same key permission as the dashboard ("analytics:read").
+	 * The "has-data" route would need the extra permission "sites:read".
+	 * The request skips the cache and the rate limit block.
 	 *
-	 * @return array{has_data: bool}|WP_Error
+	 * @return array{live: int}|WP_Error
 	 */
 	public static function test_connection() {
-		$body = self::request( '/has-data', array(), 0, true );
+		$body = self::request( '/live-user-count', array( 'minutes' => 5 ), 0, true );
 		if ( is_wp_error( $body ) ) {
 			return $body;
 		}
 
-		return array( 'has_data' => ! empty( $body['hasData'] ) );
+		return array( 'live' => (int) self::number( $body, 'count' ) );
 	}
 
 	/**
@@ -206,9 +213,50 @@ final class Integrate_Rybbit_Api {
 				}
 				$result['top'][ $name ] = $rows;
 			}
+
+			$number = self::get_site_number();
+			if ( $number > 0 ) {
+				$result['site_url'] = Integrate_Rybbit_Options::get_api_base_url() . '/' . $number;
+			}
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Number of the site in Rybbit. The Rybbit web app uses it in its URLs, for example "/29".
+	 *
+	 * The Site ID of the tracking script is a different value. The number comes from the site settings.
+	 * This needs the key permission "sites:read". Without it, the result is 0.
+	 *
+	 * @return int
+	 */
+	public static function get_site_number() {
+		$cache_key = self::cache_key(
+			Integrate_Rybbit_Options::get_api_base_url(),
+			trim( (string) Integrate_Rybbit_Options::get( 'rybbit_site_id' ) ),
+			'#site-number',
+			array()
+		);
+
+		$cached = get_transient( $cache_key );
+		if ( false !== $cached ) {
+			return (int) $cached;
+		}
+
+		$body = self::request( '', array(), 0 );
+		if ( is_wp_error( $body ) ) {
+			// Do not ask again for a while if the key is not allowed to read the site settings.
+			if ( in_array( $body->get_error_code(), array( 'rybbit_forbidden', 'rybbit_not_found' ), true ) ) {
+				set_transient( $cache_key, 0, self::SITE_NUMBER_RETRY );
+			}
+			return 0;
+		}
+
+		$number = isset( $body['siteId'] ) && is_numeric( $body['siteId'] ) ? max( 0, (int) $body['siteId'] ) : 0;
+		set_transient( $cache_key, $number, $number > 0 ? DAY_IN_SECONDS : self::SITE_NUMBER_RETRY );
+
+		return $number;
 	}
 
 	/**
@@ -366,7 +414,7 @@ final class Integrate_Rybbit_Api {
 	/**
 	 * Send a GET request to the API and return the decoded JSON body.
 	 *
-	 * @param string               $path      Path below "/api/sites/{site}".
+	 * @param string               $path      Path below "/api/sites/{site}". An empty path asks for the site itself.
 	 * @param array<string, mixed> $query     Query parameters.
 	 * @param int                  $ttl       Cache time in seconds. 0 turns the cache off.
 	 * @param bool                 $bypass    Skip the cache and the rate limit block.
@@ -500,6 +548,19 @@ final class Integrate_Rybbit_Api {
 				return new WP_Error( 'rybbit_unauthorized', __( 'The API key was rejected. Check the key.', 'integrate-rybbit' ), array( 'status' => 502 ) );
 
 			case 403:
+				// Rybbit names the missing key permission, for example "analytics:read".
+				if ( isset( $body['required'] ) && is_string( $body['required'] ) && preg_match( '/^[a-z_]{2,20}:[a-z_]{2,20}$/', $body['required'] ) ) {
+					return new WP_Error(
+						'rybbit_forbidden',
+						sprintf(
+							/* translators: %s: Name of a Rybbit API key permission, for example "analytics:read". */
+							__( 'The API key is missing the permission "%s". Allow it in the key settings in Rybbit.', 'integrate-rybbit' ),
+							$body['required']
+						),
+						array( 'status' => 502 )
+					);
+				}
+
 				return new WP_Error(
 					'rybbit_forbidden',
 					__( 'The API key has no access to this site. Check the key permissions and your Rybbit plan.', 'integrate-rybbit' ),

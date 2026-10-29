@@ -97,13 +97,7 @@ final class Integrate_Rybbit_Admin_Ajax {
 			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
 		}
 
-		wp_send_json_success(
-			array(
-				'message' => $result['has_data']
-					? __( 'Connection works. The site has data.', 'integrate-rybbit' )
-					: __( 'Connection works. The site has no data yet.', 'integrate-rybbit' ),
-			)
-		);
+		wp_send_json_success( array( 'message' => __( 'Connection works. The API key can read the analytics of this site.', 'integrate-rybbit' ) ) );
 	}
 
 	/**

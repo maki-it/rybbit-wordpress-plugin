@@ -109,6 +109,12 @@ Create an API key in Rybbit (Organization settings, API keys). Enter it on the D
 
 Rybbit Cloud offers API keys on the Standard plan and above. The Free and Basic plans have no API keys. Self-hosted instances have no such limit. The tracking works on every plan. Only the dashboard needs an API key.
 
+= Which permissions does the API key need? =
+
+Read access to "Analytics". If you create the key without restrictions, it works too. If you restrict the key to some resources, select "Analytics" with "read". Without it, Rybbit rejects the requests and the plugin shows the missing permission.
+
+The "Open Rybbit" button on the analytics page also needs "Sites" with "read". The plugin reads the number of your site from the site settings. Without this permission, the button opens the start page of Rybbit.
+
 = Is my API key safe? =
 
 The plugin sends the key only from your server to the Rybbit API. It never sends the key to a browser, and it does not show the saved key again. For more safety, define the key in `wp-config.php`: `define( 'INTEGRATE_RYBBIT_API_KEY', 'your-key' );`. This key replaces the key from the settings.
