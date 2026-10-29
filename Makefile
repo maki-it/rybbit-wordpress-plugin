@@ -15,7 +15,7 @@ WPCLI   := $(COMPOSE) run --rm --no-deps -T wpcli
 
 .DEFAULT_GOAL := help
 
-.PHONY: help check lint tools phpcs phpcbf dev plugin-check test-dashboard pot screenshots logs down clean zip
+.PHONY: help check lint tools phpcs phpcbf dev plugin-check test-dashboard test-optout pot screenshots logs down clean zip
 
 help: ## Show the available targets.
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -65,6 +65,16 @@ plugin-check: dev ## Run the official Plugin Check against the plugin.
 test-dashboard: dev ## Test the dashboard backend against the mock Rybbit API.
 	@$(WPCLI) wp eval-file /tests/dashboard.php
 
+# The PHP test restores the Rybbit settings of the dev site. The browser test needs the page that optout-pages.php creates.
+test-optout: dev ## Test the opt-out shortcode and block (PHP checks and browser test).
+	@$(WPCLI) wp eval-file /tests/optout.php
+	@$(WPCLI) wp eval-file /tests/optout-pages.php
+	docker run --rm --ipc=host -u "$(DOCKER_USER)" -e HOME=/tmp -e WP_PORT=$(WP_PORT) \
+		--network integrate-rybbit_default \
+		-v "$(CURDIR)/tools/tests/optout.cjs":/optout.cjs:ro \
+		mcr.microsoft.com/playwright:v$(PLAYWRIGHT_VERSION)-noble \
+		sh -c 'mkdir -p /tmp/pw && cd /tmp/pw && npm init -y > /dev/null && npm i --silent playwright@$(PLAYWRIGHT_VERSION) && NODE_PATH=/tmp/pw/node_modules node /optout.cjs'
+
 pot: ## Generate build/integrate-rybbit.pot to review the translatable strings.
 	@mkdir -p build
 	docker run --rm -u "$(DOCKER_USER)" -e HOME=/tmp -v "$(CURDIR)":/app -w /app wordpress:cli \
@@ -72,6 +82,7 @@ pot: ## Generate build/integrate-rybbit.pot to review the translatable strings.
 
 # The script fills the settings with example values and saves them. Use it only with the dev WordPress.
 screenshots: dev ## Retake the screenshots in assets/ with a headless browser.
+	@$(WPCLI) wp eval-file /tests/optout-pages.php > /dev/null
 	docker run --rm --ipc=host -u "$(DOCKER_USER)" -e HOME=/tmp -e WP_PORT=$(WP_PORT) \
 		--network integrate-rybbit_default \
 		-v "$(CURDIR)/tools/screenshots.cjs":/screenshots.cjs:ro -v "$(CURDIR)/assets":/out \

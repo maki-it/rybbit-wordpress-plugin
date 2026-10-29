@@ -841,6 +841,30 @@ final class Integrate_Rybbit_Admin {
 					</p>
 				</td>
 			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Visitor opt-out', 'integrate-rybbit' ); ?></th>
+				<td>
+					<p>
+						<?php
+						printf(
+							/* translators: 1: Shortcode, 2: Block name. */
+							esc_html__( 'Let visitors turn the tracking off. Add the shortcode %1$s or the block %2$s to a page, for example your privacy policy.', 'integrate-rybbit' ),
+							'<code>[' . esc_html( Integrate_Rybbit_Optout::SHORTCODE ) . ']</code>',
+							'<strong>' . esc_html__( 'Rybbit Opt-out', 'integrate-rybbit' ) . '</strong>'
+						);
+						?>
+					</p>
+					<p class="description rybbit-description-wide">
+						<?php
+						printf(
+							/* translators: %s: Name of the storage entry, for example "disable-rybbit". */
+							esc_html__( 'The choice is saved in the browser of the visitor under %s. It applies to this website and this browser only.', 'integrate-rybbit' ),
+							'<code>disable-' . esc_html( Integrate_Rybbit_Optout::get_namespace() ) . '</code>'
+						);
+						?>
+					</p>
+				</td>
+			</tr>
 		</table>
 		<?php
 	}

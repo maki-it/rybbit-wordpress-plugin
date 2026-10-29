@@ -1,0 +1,11 @@
+.integrate-rybbit-optout [hidden] {
+	display: none !important;
+}
+
+.integrate-rybbit-optout__status {
+	margin: 0 0 0.75em;
+}
+
+.integrate-rybbit-optout__button {
+	cursor: pointer;
+}

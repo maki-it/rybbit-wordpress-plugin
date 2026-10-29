@@ -1,0 +1,21 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "integrate-rybbit/optout",
+	"title": "Rybbit Opt-out",
+	"category": "widgets",
+	"icon": "privacy",
+	"description": "A switch that lets visitors turn the Rybbit tracking off and on in their browser.",
+	"keywords": [ "rybbit", "analytics", "opt-out", "privacy", "tracking" ],
+	"textdomain": "integrate-rybbit",
+	"attributes": {
+		"optout_label": { "type": "string", "default": "" },
+		"optin_label": { "type": "string", "default": "" },
+		"tracked_text": { "type": "string", "default": "" },
+		"untracked_text": { "type": "string", "default": "" }
+	},
+	"supports": {
+		"html": false
+	},
+	"editorScript": "integrate-rybbit-optout-block"
+}

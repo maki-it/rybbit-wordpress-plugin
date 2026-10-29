@@ -28,9 +28,11 @@ Get the plugin from the [WordPress.org plugin directory](https://wordpress.org/p
 - Custom events: send an event to Rybbit when a visitor clicks an element. You set a CSS selector, an event name and
   optional properties on the `Custom Events` tab. You do not need to write JavaScript.
 - Debug tab with the effective settings and the generated script attributes.
+- Opt-out for visitors: the shortcode `[rybbit_optout]` and the block `Rybbit Opt-out` show a button. A visitor can
+  turn the analytics off and on again. See [Visitor opt-out](#visitor-opt-out).
 - Developer filters: `integrate_rybbit_should_track`, `integrate_rybbit_script_attributes`,
   `integrate_rybbit_identify_user_id`, `integrate_rybbit_identify_traits`, `integrate_rybbit_custom_events`,
-  `integrate_rybbit_dashboard_capability` and `integrate_rybbit_api_http_args`.
+  `integrate_rybbit_dashboard_capability`, `integrate_rybbit_api_http_args` and `integrate_rybbit_optout_html`.
   See [readme.txt](integrate-rybbit/readme.txt) for details and an example.
 
 ## Requirements
@@ -78,6 +80,43 @@ Notes:
 - The plugin caches the API answers (10 minutes by default) to save API requests.
 - Only users with the capability `manage_options` see the dashboard. Change it with the filter `integrate_rybbit_dashboard_capability`.
 
+### Visitor opt-out
+
+Visitors can turn the analytics off for their browser. Add the shortcode to a page, for example your privacy policy:
+
+```
+[rybbit_optout]
+```
+
+In the block editor, use the block `Rybbit Opt-out`. The block has a `Texts` panel in the sidebar.
+
+| Attribute        | Description                                    |
+|------------------|------------------------------------------------|
+| `optout_label`   | Text of the button that turns the analytics off. |
+| `optin_label`    | Text of the button that turns the analytics on.  |
+| `tracked_text`   | Status text while the analytics is on.           |
+| `untracked_text` | Status text while the analytics is off.          |
+| `class`          | Extra CSS classes for the wrapper element.       |
+
+Example:
+
+```
+[rybbit_optout optout_label="Stop tracking me" tracked_text="We count your visit." class="my-style"]
+```
+
+Notes:
+
+- The choice is saved in the local storage of the browser under the key `disable-rybbit`. It applies to this website
+  and this browser only. A visitor who clears the browser data also clears the opt-out.
+- The choice takes effect on the next page load. The Rybbit script reads it once at start.
+- The opt-out needs the Rybbit script v1.1.0 or newer. Old self-hosted instances may ignore it.
+- If you set `data-namespace` with the filter `integrate_rybbit_script_attributes`, the key is `disable-<namespace>`.
+  The plugin uses the same namespace automatically.
+- Without a Site ID, only administrators see a notice instead of the button.
+- Use the filter `integrate_rybbit_optout_html` to change the HTML. The second argument is the array of texts.
+
+![Opt-out block on a privacy policy page](assets/screenshot-8.png)
+
 ## Screenshots
 
 ![Tracking tab](assets/screenshot-1.png)
@@ -110,6 +149,7 @@ make down          # Stop WordPress.
 | `make dev`          | Starts WordPress at http://localhost:8080 with the plugin active (`admin` / `admin`). |
 | `make plugin-check` | Runs the official [Plugin Check](https://wordpress.org/plugins/plugin-check/).       |
 | `make test-dashboard` | Tests the analytics dashboard backend against the mock Rybbit API.                 |
+| `make test-optout`  | Tests the opt-out shortcode and block, with a headless browser in Docker.           |
 | `make pot`          | Generates `build/integrate-rybbit.pot` to review the translatable strings.          |
 | `make screenshots`  | Retakes the screenshots in `assets/` with a headless browser in Docker.             |
 | `make logs`         | Shows the WordPress debug log.                                                       |
