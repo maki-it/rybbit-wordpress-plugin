@@ -1,370 +1,381 @@
-/* Integrate Rybbit – Settings page behavior */
-(function() {
-  function ready(fn) {
-    if (document.readyState !== 'loading') fn();
-    else document.addEventListener('DOMContentLoaded', fn);
-  }
+/* Integrate Rybbit: settings page behavior. */
+(function () {
+	'use strict';
 
-  function getQueryParam(name) {
-    try {
-      var params = new URLSearchParams(window.location.search || '');
-      return params.get(name);
-    } catch (e) {
-      return null;
-    }
-  }
+	var i18n = window.wp && window.wp.i18n ? window.wp.i18n : null;
 
-  function setActiveTab(tabId) {
-    var tabs = document.querySelectorAll('.rybbit-nav-tab');
-    var panels = document.querySelectorAll('.rybbit-tab-panel');
+	function __(text) {
+		return i18n ? i18n.__(text, 'integrate-rybbit') : text;
+	}
 
-    tabs.forEach(function(t) {
-      var isActive = t.getAttribute('data-tab') === tabId;
-      t.classList.toggle('nav-tab-active', isActive);
-      t.setAttribute('aria-selected', isActive ? 'true' : 'false');
-    });
+	function sprintf(format) {
+		var args = Array.prototype.slice.call(arguments, 1);
+		if (i18n && i18n.sprintf) {
+			return i18n.sprintf.apply(null, [format].concat(args));
+		}
+		var index = 0;
+		return String(format).replace(/%s/g, function () {
+			return String(args[index++]);
+		});
+	}
 
-    panels.forEach(function(p) {
-      var isActive = p.getAttribute('data-tab') === tabId;
-      p.style.display = isActive ? '' : 'none';
-    });
+	function ready(fn) {
+		if (document.readyState !== 'loading') {
+			fn();
+		} else {
+			document.addEventListener('DOMContentLoaded', fn);
+		}
+	}
 
-    try {
-      window.sessionStorage.setItem('rybbitActiveTab', tabId);
-    } catch (e) {
-      // ignore
-    }
-  }
+	function forEach(list, fn) {
+		Array.prototype.forEach.call(list, fn);
+	}
 
-  function initTabs() {
-    var tabs = document.querySelectorAll('.rybbit-nav-tab');
-    if (!tabs.length) return;
+	function getQueryParam(name) {
+		try {
+			return new URLSearchParams(window.location.search || '').get(name);
+		} catch (e) {
+			return null;
+		}
+	}
 
-    tabs.forEach(function(t) {
-      t.addEventListener('click', function(e) {
-        e.preventDefault();
-        var tab = t.getAttribute('data-tab');
+	/*
+	 * Tabs follow the WAI-ARIA tabs pattern.
+	 * Only the active tab is in the tab order. Arrow keys, Home and End move between tabs.
+	 */
+	function initTabs() {
+		var tabs = document.querySelectorAll('.rybbit-nav-tab');
+		var panels = document.querySelectorAll('.rybbit-tab-panel');
+		if (!tabs.length) {
+			return;
+		}
 
-        setActiveTab(tab);
-      });
-    });
+		function setActiveTab(tabId, focus) {
+			forEach(tabs, function (tab) {
+				var active = tab.getAttribute('data-tab') === tabId;
+				tab.classList.toggle('nav-tab-active', active);
+				tab.setAttribute('aria-selected', active ? 'true' : 'false');
+				tab.setAttribute('tabindex', active ? '0' : '-1');
+				if (active && focus) {
+					tab.focus();
+				}
+			});
 
-    var initial = 'tracking';
+			forEach(panels, function (panel) {
+				panel.hidden = panel.getAttribute('data-tab') !== tabId;
+			});
 
-    // Prefer explicit querystring (?tab=privacy), then hash (#privacy), then sessionStorage.
-    var fromQuery = getQueryParam('tab');
-    if (fromQuery) {
-      initial = fromQuery.trim();
-    } else if (window.location.hash) {
-      var fromHash = window.location.hash.replace('#', '').trim();
-      if (fromHash) initial = fromHash;
-    } else {
-      try {
-        var stored = window.sessionStorage.getItem('rybbitActiveTab');
-        if (stored) initial = stored;
-      } catch (e) {
-        // ignore
-      }
-    }
+			try {
+				window.sessionStorage.setItem('rybbitActiveTab', tabId);
+			} catch (e) {
+				// Session storage can be unavailable. The tab still works.
+			}
+		}
 
-    // Fallback if unknown
-    var known = Array.prototype.some.call(tabs, function(t) {
-      return t.getAttribute('data-tab') === initial;
-    });
-    if (!known) initial = tabs[0].getAttribute('data-tab');
+		function isKnown(tabId) {
+			return Array.prototype.some.call(tabs, function (tab) {
+				return tab.getAttribute('data-tab') === tabId;
+			});
+		}
 
-    setActiveTab(initial);
-  }
+		forEach(tabs, function (tab, index) {
+			tab.addEventListener('click', function (e) {
+				e.preventDefault();
+				setActiveTab(tab.getAttribute('data-tab'), false);
+			});
 
-  function initUserMetaKeyToggle() {
-    var strategy = document.getElementById('rybbit_identify_userid_strategy');
-    var wrap = document.querySelector('[data-rybbit-user-meta-key]');
-    if (!strategy || !wrap) return;
+			tab.addEventListener('keydown', function (e) {
+				var target = null;
+				switch (e.key) {
+					case 'ArrowRight':
+						target = tabs[(index + 1) % tabs.length];
+						break;
+					case 'ArrowLeft':
+						target = tabs[(index - 1 + tabs.length) % tabs.length];
+						break;
+					case 'Home':
+						target = tabs[0];
+						break;
+					case 'End':
+						target = tabs[tabs.length - 1];
+						break;
+				}
+				if (target) {
+					e.preventDefault();
+					setActiveTab(target.getAttribute('data-tab'), true);
+				}
+			});
+		});
 
-    function update() {
-      var show = strategy.value === 'user_meta';
-      wrap.style.display = show ? '' : 'none';
-    }
+		// Priority: ?tab=privacy, then #privacy, then the last tab of this browser session.
+		var initial = getQueryParam('tab');
+		if (!initial && window.location.hash) {
+			initial = window.location.hash.replace('#', '');
+		}
+		if (!initial) {
+			try {
+				initial = window.sessionStorage.getItem('rybbitActiveTab');
+			} catch (e) {
+				initial = null;
+			}
+		}
+		initial = initial ? String(initial).trim() : '';
+		if (!isKnown(initial)) {
+			initial = tabs[0].getAttribute('data-tab');
+		}
+		setActiveTab(initial, false);
 
-    strategy.addEventListener('change', update);
-    update();
-  }
+		// The browser cannot show a validation message for a field in a hidden panel.
+		// Open the panel of the first invalid field so that the user sees the message.
+		var form = document.querySelector('.rybbit-settings-card form');
+		if (form) {
+			form.addEventListener(
+				'invalid',
+				function (e) {
+					var panel = e.target.closest ? e.target.closest('.rybbit-tab-panel') : null;
+					if (panel && panel.hidden) {
+						setActiveTab(panel.getAttribute('data-tab'), false);
+					}
+				},
+				true
+			);
+		}
+	}
 
-  function initIdentifyPreview() {
-    var pre = document.getElementById('rybbit_identify_payload');
-    if (!pre) return;
+	function initUserMetaKeyToggle() {
+		var strategy = document.getElementById('rybbit_identify_userid_strategy');
+		var wrap = document.querySelector('[data-rybbit-user-meta-key]');
+		if (!strategy || !wrap) {
+			return;
+		}
 
-    var modeEl = document.getElementById('rybbit_identify_mode');
-    var strategyEl = document.getElementById('rybbit_identify_userid_strategy');
-    var metaKeyEl = document.getElementById('rybbit_identify_userid_meta_key');
+		function update() {
+			wrap.hidden = strategy.value !== 'user_meta';
+		}
 
-    if (!modeEl || !strategyEl) return;
+		strategy.addEventListener('change', update);
+		update();
+	}
 
-    var refreshLink = document.querySelector('.rybbit-refresh-payload');
+	function initIdentifyPreview() {
+		var pre = document.getElementById('rybbit_identify_payload');
+		var modeEl = document.getElementById('rybbit_identify_mode');
+		var strategyEl = document.getElementById('rybbit_identify_userid_strategy');
+		var metaKeyEl = document.getElementById('rybbit_identify_userid_meta_key');
+		var refreshLink = document.querySelector('.rybbit-refresh-payload');
+		var config = window.rybbitAdmin || {};
+		var timer = null;
 
-    var timer = null;
+		if (!pre || !modeEl || !strategyEl) {
+			return;
+		}
 
-    function setText(text) {
-      pre.textContent = text;
-    }
+		function setText(text) {
+			pre.textContent = text;
+		}
 
-    function schedule() {
-      if (timer) window.clearTimeout(timer);
-      timer = window.setTimeout(refresh, 250);
-    }
+		function refresh(e) {
+			if (e && typeof e.preventDefault === 'function') {
+				e.preventDefault();
+			}
 
-    function refresh(e) {
-      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+			if (!config.ajaxUrl || !config.nonce || !window.fetch || !window.FormData) {
+				setText(__('Preview is not available.'));
+				return;
+			}
 
-      if (!window.rybbitAdmin || !window.rybbitAdmin.ajaxUrl || !window.rybbitAdmin.nonce) {
-        setText('Preview unavailable (missing ajaxUrl/nonce).');
-        return;
-      }
+			setText(__('Loading preview...'));
 
-      setText('Loading preview…');
+			var body = new FormData();
+			body.append('action', 'rybbit_preview_identify_payload');
+			body.append('nonce', config.nonce);
+			body.append('identify_mode', modeEl.value);
+			body.append('userid_strategy', strategyEl.value);
+			body.append('userid_meta_key', metaKeyEl ? metaKeyEl.value : '');
 
-      var form = new FormData();
-      form.append('action', 'rybbit_preview_identify_payload');
-      form.append('nonce', window.rybbitAdmin.nonce);
-      form.append('identify_mode', modeEl.value);
-      form.append('userid_strategy', strategyEl.value);
-      form.append('userid_meta_key', metaKeyEl ? metaKeyEl.value : '');
+			window
+				.fetch(config.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body })
+				.then(function (res) {
+					return res.json().catch(function () {
+						throw new Error('HTTP ' + res.status);
+					});
+				})
+				.then(function (json) {
+					if (!json || json.success !== true) {
+						var message = json && json.data && json.data.message ? String(json.data.message) : __('Unknown error');
+						/* translators: %s: Error message. */
+						setText(sprintf(__('No preview available: %s'), message));
+						return;
+					}
+					var payload = json.data ? json.data.payload : null;
+					setText(payload ? JSON.stringify(payload, null, 2) : __('Nothing is sent with the current settings.'));
+				})
+				.catch(function (err) {
+					/* translators: %s: Error message. */
+					setText(sprintf(__('Preview error: %s'), err && err.message ? err.message : __('Unknown error')));
+				});
+		}
 
-      fetch(window.rybbitAdmin.ajaxUrl, {
-        method: 'POST',
-        credentials: 'same-origin',
-        body: form
-      })
-        .then(function(res) {
-          if (!res.ok) {
-            throw new Error('HTTP ' + res.status);
-          }
-          return res.json();
-        })
-        .then(function(json) {
-          if (!json || json.success !== true) {
-            var msg = (json && json.data && json.data.message) ? String(json.data.message) : 'Unknown error';
-            setText('No preview available. ' + msg);
-            return;
-          }
-          var payload = json.data ? json.data.payload : null;
-          if (!payload) {
-            setText('null');
-            return;
-          }
-          setText(JSON.stringify(payload, null, 2));
-        })
-        .catch(function(err) {
-          setText('Preview error: ' + (err && err.message ? err.message : 'unknown'));
-        });
-    }
+		function schedule() {
+			window.clearTimeout(timer);
+			timer = window.setTimeout(refresh, 250);
+		}
 
-    modeEl.addEventListener('change', schedule);
-    strategyEl.addEventListener('change', schedule);
-    if (metaKeyEl) metaKeyEl.addEventListener('input', schedule);
+		modeEl.addEventListener('change', schedule);
+		strategyEl.addEventListener('change', schedule);
+		if (metaKeyEl) {
+			metaKeyEl.addEventListener('input', schedule);
+		}
+		if (refreshLink) {
+			refreshLink.addEventListener('click', refresh);
+		}
 
-    if (refreshLink) {
-      refreshLink.addEventListener('click', refresh);
-    }
+		refresh();
+	}
 
-    // Initial render
-    refresh();
-  }
+	function decodeBase64Utf8(b64) {
+		try {
+			var binary = window.atob(b64);
+			var escaped = Array.prototype.map
+				.call(binary, function (ch) {
+					return '%' + ('00' + ch.charCodeAt(0).toString(16)).slice(-2);
+				})
+				.join('');
+			return decodeURIComponent(escaped);
+		} catch (e) {
+			return '';
+		}
+	}
 
-  function initJsonResetButtons() {
-    var buttons = document.querySelectorAll('.rybbit-reset-json');
-    if (!buttons.length) return;
+	function initResetButtons() {
+		forEach(document.querySelectorAll('.rybbit-reset-json'), function (button) {
+			button.addEventListener('click', function (e) {
+				e.preventDefault();
 
-    function decodeBase64Utf8(b64) {
-      if (!b64) return '';
-      try {
-        // atob gives a binary string; decodeURIComponent trick restores UTF-8.
-        var binary = window.atob(b64);
-        var bytes = Array.prototype.map.call(binary, function(ch) {
-          return '%' + ('00' + ch.charCodeAt(0).toString(16)).slice(-2);
-        }).join('');
-        return decodeURIComponent(bytes);
-      } catch (e) {
-        try {
-          return window.atob(b64);
-        } catch (e2) {
-          return '';
-        }
-      }
-    }
+				var target = document.querySelector(button.getAttribute('data-rybbit-reset-target') || '');
+				if (!target) {
+					return;
+				}
 
-    buttons.forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
-        e.preventDefault();
+				var value = decodeBase64Utf8(button.getAttribute('data-rybbit-reset-value-b64') || '');
+				if ((target.value || '').trim() && !window.confirm(__('Replace the current value with the default?'))) {
+					return;
+				}
 
-        var targetSel = btn.getAttribute('data-rybbit-reset-target');
-        if (!targetSel) return;
+				target.value = value;
+				target.dispatchEvent(new Event('input', { bubbles: true }));
+				target.focus();
+			});
+		});
+	}
 
-        var target = document.querySelector(targetSel);
-        if (!target) return;
+	function initJsonValidation() {
+		var form = document.querySelector('.rybbit-settings-card form');
+		if (!form) {
+			return;
+		}
 
-        // Prefer base64 (safe for multiline JSON). Fallback to legacy plain value.
-        var valueB64 = btn.getAttribute('data-rybbit-reset-value-b64');
-        var value = valueB64 ? decodeBase64Utf8(valueB64) : btn.getAttribute('data-rybbit-reset-value');
+		var fields = [
+			{ id: 'rybbit_replay_mask_input_options', allowBoolean: false },
+			{ id: 'rybbit_replay_sampling', allowBoolean: false },
+			{ id: 'rybbit_replay_slim_dom_options', allowBoolean: true }
+		];
 
-        if (value == null) value = '';
+		function errorElement(field) {
+			var id = field.id + '-json-error';
+			var el = document.getElementById(id);
+			if (el) {
+				return el;
+			}
 
-        // Confirm if field already has content.
-        var existing = (target.value || '').trim();
-        if (existing) {
-          var ok = window.confirm('Replace the current value with the documented default?');
-          if (!ok) return;
-        }
+			el = document.createElement('p');
+			el.id = id;
+			el.className = 'description rybbit-json-error';
+			el.hidden = true;
+			field.insertAdjacentElement('afterend', el);
 
-        target.value = value;
+			var describedBy = field.getAttribute('aria-describedby');
+			field.setAttribute('aria-describedby', describedBy ? describedBy + ' ' + id : id);
+			return el;
+		}
 
-        try {
-          target.dispatchEvent(new Event('input', { bubbles: true }));
-          target.dispatchEvent(new Event('change', { bubbles: true }));
-        } catch (err) {
-          // ignore
-        }
+		function setError(field, message) {
+			var el = errorElement(field);
+			el.textContent = message;
+			el.hidden = !message;
+			field.classList.toggle('rybbit-json-invalid', !!message);
+			if (message) {
+				field.setAttribute('aria-invalid', 'true');
+			} else {
+				field.removeAttribute('aria-invalid');
+			}
+			return !message;
+		}
 
-        target.focus();
-      });
-    });
-  }
+		function validate(field, cfg) {
+			var raw = (field.value || '').trim();
+			if (!raw) {
+				return setError(field, '');
+			}
+			if (cfg.allowBoolean && /^(true|false)$/i.test(raw)) {
+				return setError(field, '');
+			}
 
-  function initJsonValidation() {
-    var form = document.querySelector('form[action="options.php"]');
-    if (!form) return;
+			var parsed;
+			try {
+				parsed = JSON.parse(raw);
+			} catch (e) {
+				return setError(field, __('This value must be valid JSON.'));
+			}
 
-    var fieldConfigs = [
-      {
-        id: 'rybbit_replay_mask_input_options',
-        label: 'Mask input options',
-        allowEmpty: true,
-        allowBoolean: false,
-        expect: 'object'
-      },
-      {
-        id: 'rybbit_replay_sampling',
-        label: 'Sampling',
-        allowEmpty: true,
-        allowBoolean: false,
-        expect: 'object'
-      },
-      {
-        id: 'rybbit_replay_slim_dom_options',
-        label: 'SlimDOM options',
-        allowEmpty: true,
-        allowBoolean: true,
-        expect: 'object'
-      }
-    ];
+			if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+				return setError(field, __('This value must be a JSON object, for example {"key": true}.'));
+			}
 
-    function ensureErrorEl(field) {
-      var existing = field.parentElement && field.parentElement.querySelector('.rybbit-json-error');
-      if (existing) return existing;
+			return setError(field, '');
+		}
 
-      var el = document.createElement('p');
-      el.className = 'description rybbit-json-error';
-      el.style.color = '#b32d2e';
-      el.style.marginTop = '6px';
-      el.style.display = 'none';
-      field.insertAdjacentElement('afterend', el);
-      return el;
-    }
+		var active = [];
+		fields.forEach(function (cfg) {
+			var field = document.getElementById(cfg.id);
+			if (!field) {
+				return;
+			}
+			active.push({ field: field, cfg: cfg });
+			field.addEventListener('input', function () {
+				validate(field, cfg);
+			});
+			field.addEventListener('blur', function () {
+				validate(field, cfg);
+			});
+			validate(field, cfg);
+		});
 
-    function parseAndValidate(field, cfg) {
-      var errEl = ensureErrorEl(field);
-      var raw = (field.value || '').trim();
+		form.addEventListener('submit', function (e) {
+			var firstInvalid = null;
+			active.forEach(function (item) {
+				if (!validate(item.field, item.cfg) && !firstInvalid) {
+					firstInvalid = item.field;
+				}
+			});
 
-      // reset
-      field.classList.remove('rybbit-json-invalid');
-      field.removeAttribute('aria-invalid');
-      errEl.style.display = 'none';
-      errEl.textContent = '';
+			if (firstInvalid) {
+				e.preventDefault();
+				var panel = firstInvalid.closest('.rybbit-tab-panel');
+				var tab = panel ? document.getElementById(panel.getAttribute('aria-labelledby')) : null;
+				if (tab && panel.hidden) {
+					tab.click();
+				}
+				firstInvalid.focus();
+			}
+		});
+	}
 
-      if (!raw) {
-        if (cfg.allowEmpty) return true;
-        errEl.textContent = cfg.label + ' is required.';
-        errEl.style.display = '';
-        field.classList.add('rybbit-json-invalid');
-        field.setAttribute('aria-invalid', 'true');
-        return false;
-      }
-
-      var lower = raw.toLowerCase();
-      if (cfg.allowBoolean && (lower === 'true' || lower === 'false')) {
-        return true;
-      }
-
-      var parsed;
-      try {
-        parsed = JSON.parse(raw);
-      } catch (e) {
-        errEl.textContent = cfg.label + ' must be valid JSON.';
-        errEl.style.display = '';
-        field.classList.add('rybbit-json-invalid');
-        field.setAttribute('aria-invalid', 'true');
-        return false;
-      }
-
-      if (cfg.expect === 'object') {
-        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-          errEl.textContent = cfg.label + ' must be a JSON object (e.g. {"key": true}).';
-          errEl.style.display = '';
-          field.classList.add('rybbit-json-invalid');
-          field.setAttribute('aria-invalid', 'true');
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    function validateAll() {
-      var allOk = true;
-      fieldConfigs.forEach(function(cfg) {
-        var field = document.getElementById(cfg.id);
-        if (!field) return;
-        var ok = parseAndValidate(field, cfg);
-        if (!ok) allOk = false;
-      });
-      return allOk;
-    }
-
-    // Live validation
-    fieldConfigs.forEach(function(cfg) {
-      var field = document.getElementById(cfg.id);
-      if (!field) return;
-      field.addEventListener('input', function() {
-        parseAndValidate(field, cfg);
-      });
-      field.addEventListener('blur', function() {
-        parseAndValidate(field, cfg);
-      });
-
-      // Initial state
-      parseAndValidate(field, cfg);
-    });
-
-    // Gate submit
-    form.addEventListener('submit', function(e) {
-      if (!validateAll()) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        // Focus the first invalid field
-        var firstInvalid = form.querySelector('.rybbit-json-invalid');
-        if (firstInvalid && typeof firstInvalid.focus === 'function') {
-          firstInvalid.focus();
-        }
-      }
-    });
-  }
-
-  ready(function() {
-    initTabs();
-    initUserMetaKeyToggle();
-    initIdentifyPreview();
-    initJsonResetButtons();
-    initJsonValidation();
-  });
+	ready(function () {
+		initTabs();
+		initUserMetaKeyToggle();
+		initIdentifyPreview();
+		initResetButtons();
+		initJsonValidation();
+	});
 })();

@@ -1,40 +1,55 @@
 <?php
-// Uninstall logic for Integrate Rybbit
-if (!defined('WP_UNINSTALL_PLUGIN')) {
-    exit();
+/**
+ * Uninstall routine of Integrate Rybbit.
+ *
+ * Settings are removed only if the site owner opted in under
+ * Settings > Integrate Rybbit > Maintenance.
+ *
+ * @package Integrate_Rybbit
+ */
+
+if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+	exit;
 }
 
-// Only delete data if the site owner explicitly opted in.
-// On multisite, allow opting in either per-site (option) or network-wide (site option).
-$rybbit_delete_all = get_option('rybbit_delete_data_on_uninstall', '0');
-if ($rybbit_delete_all !== '1' && (!is_multisite() || get_site_option('rybbit_delete_data_on_uninstall', '0') !== '1')) {
-    return;
+require_once __DIR__ . '/includes/class-integrate-rybbit-options.php';
+
+/**
+ * Delete the plugin options of the current site if the site opted in.
+ *
+ * @param bool $force Delete the options even if the site did not opt in.
+ */
+function integrate_rybbit_uninstall_site( $force ) {
+	if ( ! $force && '1' !== get_option( 'rybbit_delete_data_on_uninstall', '0' ) ) {
+		return;
+	}
+
+	foreach ( Integrate_Rybbit_Options::all_option_names() as $integrate_rybbit_option ) {
+		delete_option( $integrate_rybbit_option );
+	}
 }
 
-// Delete plugin options.
-$rybbit_option_names = array(
-    'rybbit_site_id',
-    'rybbit_script_url',
-    'rybbit_script_loading',
-    'rybbit_do_not_track_admins',
-    'rybbit_excluded_roles',
-    'rybbit_skip_patterns',
-    'rybbit_mask_patterns',
-    'rybbit_debounce',
-    'rybbit_identify_mode',
-    'rybbit_identify_userid_strategy',
-    'rybbit_identify_userid_meta_key',
-    'rybbit_delete_data_on_uninstall',
-);
-
-foreach ($rybbit_option_names as $rybbit_name) {
-    // Remove per-site setting.
-    delete_option($rybbit_name);
+if ( ! is_multisite() ) {
+	integrate_rybbit_uninstall_site( false );
+	return;
 }
 
-// Multisite: also remove network-level options if they were ever stored there.
-if (is_multisite()) {
-    foreach ($rybbit_option_names as $rybbit_name) {
-        delete_site_option($rybbit_name);
-    }
+// Older versions could read a network-wide opt-in. Keep that behavior.
+$integrate_rybbit_network_opt_in = '1' === get_site_option( 'rybbit_delete_data_on_uninstall', '0' );
+
+foreach ( get_sites(
+	array(
+		'fields' => 'ids',
+		'number' => 0,
+	)
+) as $integrate_rybbit_site_id ) {
+	switch_to_blog( $integrate_rybbit_site_id );
+	integrate_rybbit_uninstall_site( $integrate_rybbit_network_opt_in );
+	restore_current_blog();
+}
+
+if ( $integrate_rybbit_network_opt_in ) {
+	foreach ( Integrate_Rybbit_Options::all_option_names() as $integrate_rybbit_option ) {
+		delete_site_option( $integrate_rybbit_option );
+	}
 }

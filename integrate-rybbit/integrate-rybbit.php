@@ -1,75 +1,48 @@
 <?php
-/*
-Plugin Name: Integrate Rybbit
-Plugin URI: https://wordpress.org/plugins/integrate-rybbit/
-Description: Add and manage the Rybbit tracking script.
-Version: 0.0.0
-Tested up to: 6.9
-Requires at least: 5.8
-Requires PHP: 7.4
-Author: Maki IT
-Author URI: https://maki-it.de
-License: GPLv3 or later
-License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
-*/
+/**
+ * Plugin Name:       Integrate Rybbit
+ * Plugin URI:        https://wordpress.org/plugins/integrate-rybbit/
+ * Description:       Add and manage the Rybbit Analytics tracking script.
+ * Version:           0.0.0
+ * Requires at least: 6.5
+ * Requires PHP:      7.4
+ * Author:            Maki IT
+ * Author URI:        https://maki-it.de
+ * License:           GPLv3 or later
+ * License URI:       https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
+ * Text Domain:       integrate-rybbit
+ *
+ * @package Integrate_Rybbit
+ */
 
-// If this file is called directly, abort.
-if (!defined('WPINC')) {
-    die;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
-// Define plugin version from plugin header
-if (!defined('INTEGRATE_RYBBIT_VERSION')) {
-    // Get version from plugin header (single source of truth)
-    if (!function_exists('get_plugin_data')) {
-        require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    }
-    $integrate_rybbit_plugin_data = get_plugin_data(__FILE__, false, false);
-    define('INTEGRATE_RYBBIT_VERSION', $integrate_rybbit_plugin_data['Version']);
+// The release workflow replaces this value with the tag version.
+define( 'INTEGRATE_RYBBIT_VERSION', '0.0.0' );
+define( 'INTEGRATE_RYBBIT_FILE', __FILE__ );
+define( 'INTEGRATE_RYBBIT_DIR', plugin_dir_path( __FILE__ ) );
+define( 'INTEGRATE_RYBBIT_URL', plugin_dir_url( __FILE__ ) );
+define( 'INTEGRATE_RYBBIT_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+
+require_once INTEGRATE_RYBBIT_DIR . 'includes/class-integrate-rybbit-options.php';
+require_once INTEGRATE_RYBBIT_DIR . 'includes/functions.php';
+require_once INTEGRATE_RYBBIT_DIR . 'public/class-integrate-rybbit-public.php';
+
+if ( is_admin() ) {
+	require_once INTEGRATE_RYBBIT_DIR . 'admin/class-integrate-rybbit-admin.php';
+	require_once INTEGRATE_RYBBIT_DIR . 'includes/class-integrate-rybbit-admin-ajax.php';
 }
 
-// Plugin basename for hooks like plugin_action_links_{basename}
-if (!defined('INTEGRATE_RYBBIT_PLUGIN_BASENAME')) {
-    define('INTEGRATE_RYBBIT_PLUGIN_BASENAME', plugin_basename(__FILE__));
+register_activation_hook( __FILE__, array( 'Integrate_Rybbit_Options', 'maybe_upgrade' ) );
+
+// Updates do not run the activation hook. Check the schema version on every load.
+add_action( 'plugins_loaded', array( 'Integrate_Rybbit_Options', 'maybe_upgrade' ) );
+
+new Integrate_Rybbit_Public();
+
+if ( is_admin() ) {
+	new Integrate_Rybbit_Admin();
+	new Integrate_Rybbit_Admin_Ajax();
 }
-
-// Require main class files
-require_once plugin_dir_path(__FILE__) . 'includes/class-integrate-rybbit.php';
-require_once plugin_dir_path(__FILE__) . 'includes/functions.php';
-require_once plugin_dir_path(__FILE__) . 'admin/class-integrate-rybbit-admin.php';
-require_once plugin_dir_path(__FILE__) . 'public/class-integrate-rybbit-public.php';
-require_once plugin_dir_path(__FILE__) . 'includes/class-integrate-rybbit-admin-ajax.php';
-
-// Initialize main plugin class
-new Integrate_Rybbit();
-
-// Initialize context-specific logic
-if (is_admin()) {
-    new Integrate_Rybbit_Admin();
-    new Integrate_Rybbit_Admin_Ajax();
-
-    // Also load tracking hooks in wp-admin (script injection is still governed by excluded roles).
-    new Integrate_Rybbit_Public();
-} else {
-    new Integrate_Rybbit_Public();
-}
-
-// Set defaults on activation (only if options don't exist yet).
-register_activation_hook(__FILE__, function () {
-    if (get_option('rybbit_do_not_track_admins', null) === null) {
-        add_option('rybbit_do_not_track_admins', '1');
-    }
-
-    // Default: do not track administrators.
-    if (get_option('rybbit_excluded_roles', null) === null) {
-        add_option('rybbit_excluded_roles', array('administrator'));
-    }
-
-    if (get_option('rybbit_identify_mode', null) === null) {
-        add_option('rybbit_identify_mode', 'disabled');
-    }
-
-    if (get_option('rybbit_delete_data_on_uninstall', null) === null) {
-        add_option('rybbit_delete_data_on_uninstall', '1');
-    }
-});

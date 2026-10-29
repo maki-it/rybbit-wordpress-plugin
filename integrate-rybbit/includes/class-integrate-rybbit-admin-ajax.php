@@ -1,60 +1,73 @@
 <?php
-if ( ! defined( 'ABSPATH' ) ) exit;
 /**
- * Admin AJAX handlers for Integrate Rybbit.
+ * Admin AJAX handlers.
+ *
+ * @package Integrate_Rybbit
  */
-class Integrate_Rybbit_Admin_Ajax {
-    public function __construct() {
-        add_action('wp_ajax_rybbit_preview_identify_payload', array($this, 'preview_identify_payload'));
-    }
 
-    /**
-     * Return an example identify payload for the current user using the provided settings.
-     *
-     * Expects POST:
-     * - identify_mode: disabled|pseudonymized|full
-     * - userid_strategy: wp_scoped|wp_user_id|user_login|email|user_meta
-     * - userid_meta_key: string (only when userid_strategy=user_meta)
-     */
-    public function preview_identify_payload() {
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Forbidden'), 403);
-        }
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
-        // Provide a friendly JSON error on nonce failure.
-        if (!check_ajax_referer('rybbit_admin_settings', 'nonce', false)) {
-            wp_send_json_error(array('message' => 'Invalid nonce. Please reload the page.'), 403);
-        }
+/**
+ * Preview of the identify payload on the settings page.
+ */
+final class Integrate_Rybbit_Admin_Ajax {
 
-        $identify_mode = isset($_POST['identify_mode']) ? sanitize_text_field(wp_unslash($_POST['identify_mode'])) : 'disabled';
-        $userid_strategy = isset($_POST['userid_strategy']) ? sanitize_text_field(wp_unslash($_POST['userid_strategy'])) : 'wp_scoped';
-        $userid_meta_key = isset($_POST['userid_meta_key']) ? sanitize_key(wp_unslash($_POST['userid_meta_key'])) : '';
+	/**
+	 * Register hooks.
+	 */
+	public function __construct() {
+		add_action( 'wp_ajax_rybbit_preview_identify_payload', array( $this, 'preview_identify_payload' ) );
+	}
 
-        $allowed_modes = array('disabled', 'pseudonymized', 'full');
-        if (!in_array($identify_mode, $allowed_modes, true)) {
-            $identify_mode = 'disabled';
-        }
+	/**
+	 * Return an example identify payload for the current user with unsaved settings.
+	 *
+	 * Expects POST fields:
+	 * - identify_mode: disabled|pseudonymized|full
+	 * - userid_strategy: one of Integrate_Rybbit_Options::USERID_STRATEGIES
+	 * - userid_meta_key: string, used only with the user_meta strategy
+	 */
+	public function preview_identify_payload() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'You are not allowed to do this.', 'integrate-rybbit' ) ), 403 );
+		}
 
-        $allowed_strategies = array('wp_scoped', 'wp_user_id', 'user_login', 'email', 'user_meta');
-        if (!in_array($userid_strategy, $allowed_strategies, true)) {
-            $userid_strategy = 'wp_scoped';
-        }
+		if ( ! check_ajax_referer( 'rybbit_admin_settings', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid security token. Please reload the page.', 'integrate-rybbit' ) ), 403 );
+		}
 
-        // Temporarily override options so we can preview without saving.
-        add_filter('pre_option_rybbit_identify_userid_strategy', function () use ($userid_strategy) {
-            return $userid_strategy;
-        });
-        add_filter('pre_option_rybbit_identify_userid_meta_key', function () use ($userid_meta_key) {
-            return $userid_meta_key;
-        });
+		$identify_mode   = isset( $_POST['identify_mode'] ) ? sanitize_key( wp_unslash( $_POST['identify_mode'] ) ) : 'disabled';
+		$userid_strategy = isset( $_POST['userid_strategy'] ) ? sanitize_key( wp_unslash( $_POST['userid_strategy'] ) ) : 'wp_scoped';
+		$userid_meta_key = isset( $_POST['userid_meta_key'] ) ? sanitize_key( wp_unslash( $_POST['userid_meta_key'] ) ) : '';
 
-        $payload = function_exists('integrate_rybbit_get_identify_payload')
-            ? integrate_rybbit_get_identify_payload($identify_mode)
-            : null;
+		if ( ! in_array( $identify_mode, Integrate_Rybbit_Options::IDENTIFY_MODES, true ) ) {
+			$identify_mode = 'disabled';
+		}
 
-        // Provide a consistent response shape.
-        wp_send_json_success(array(
-            'payload' => $payload,
-        ));
-    }
+		if ( ! in_array( $userid_strategy, Integrate_Rybbit_Options::USERID_STRATEGIES, true ) ) {
+			$userid_strategy = 'wp_scoped';
+		}
+
+		// Override the options for this request only. Nothing is saved.
+		add_filter(
+			'pre_option_rybbit_identify_userid_strategy',
+			static function () use ( $userid_strategy ) {
+				return $userid_strategy;
+			}
+		);
+		add_filter(
+			'pre_option_rybbit_identify_userid_meta_key',
+			static function () use ( $userid_meta_key ) {
+				return $userid_meta_key;
+			}
+		);
+
+		wp_send_json_success(
+			array(
+				'payload' => integrate_rybbit_get_identify_payload( $identify_mode ),
+			)
+		);
+	}
 }

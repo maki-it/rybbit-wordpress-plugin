@@ -1,148 +1,193 @@
-/* Integrate Rybbit – Settings page styles */
+/* Integrate Rybbit: settings page styles. All rules are scoped to the plugin page. */
 
-/* Scope everything to our page to avoid leaking into other admin screens */
 .settings_page_integrate-rybbit .wrap {
-  max-width: 1080px;
+	max-width: 1080px;
 }
 
 /* Header */
 .settings_page_integrate-rybbit .rybbit-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 12px;
 }
 
-.settings_page_integrate-rybbit .rybbit-header .rybbit-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  /* Use WordPress admin color scheme */
-  background: var(--wp-admin-theme-color, #2271b1);
-  color: #fff;
+.settings_page_integrate-rybbit .rybbit-icon {
+	width: 36px;
+	height: 36px;
+	border-radius: 8px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	background: var(--wp-admin-theme-color, #2271b1);
 }
 
-/* Ensure the inline SVG icon is visible and scales nicely */
-.settings_page_integrate-rybbit .rybbit-header .rybbit-icon svg {
-  width: 22px;
-  height: 22px;
-  display: block;
-  filter: none;
-}
-
-/* Force SVG contents to white for contrast on black background. */
-.settings_page_integrate-rybbit .rybbit-header .rybbit-icon svg,
-.settings_page_integrate-rybbit .rybbit-header .rybbit-icon svg * {
-  fill: #fff !important;
-  stroke: #fff !important;
+/* The SVG is used as a mask, so the icon always uses the foreground color. */
+.settings_page_integrate-rybbit .rybbit-icon-image {
+	display: block;
+	width: 24px;
+	height: 24px;
+	background-color: #fff;
+	-webkit-mask: url(../assets/rybbit-icon.svg) center / contain no-repeat;
+	mask: url(../assets/rybbit-icon.svg) center / contain no-repeat;
 }
 
 .settings_page_integrate-rybbit .rybbit-header h1 {
-  margin: 0;
-  padding: 0;
+	margin: 0;
+	padding: 0;
 }
 
 .settings_page_integrate-rybbit .rybbit-subtitle {
-  margin: 6px 0 0;
-  color: var(--wp-admin-theme-color-darker-20, #50575e);
+	margin: 6px 0 0;
+	color: #50575e;
 }
 
-/* Layout */
-.settings_page_integrate-rybbit .rybbit-settings-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+/* Tabs */
+.settings_page_integrate-rybbit .nav-tab-wrapper {
+	margin: 0 0 12px;
 }
 
-@media (min-width: 980px) {
-  .settings_page_integrate-rybbit .rybbit-settings-grid {
-    grid-template-columns: 3fr 2fr;
-    align-items: start;
-  }
+.settings_page_integrate-rybbit .rybbit-tab-panel {
+	margin: 0;
 }
 
-/* Card uses WP-ish tokens */
+.settings_page_integrate-rybbit .rybbit-tab-panel[hidden] {
+	display: none;
+}
+
+.settings_page_integrate-rybbit .rybbit-tab-panel:focus {
+	outline: none;
+}
+
+.settings_page_integrate-rybbit .rybbit-tab-panel:focus-visible {
+	box-shadow: 0 0 0 2px var(--wp-admin-theme-color, #2271b1);
+	border-radius: 4px;
+}
+
+/* Card */
 .settings_page_integrate-rybbit .rybbit-settings-card {
-  background: var(--wp-admin-theme-color-background, #fff);
-  border: 1px solid var(--wp-admin-border-color, #dcdcde);
-  border-radius: 8px;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
-  padding: 16px;
-
-  /* Keep long content (e.g. debug <pre>) from bleeding past the card edges */
-  overflow-x: auto;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	padding: 16px;
+	overflow-x: auto;
 }
 
-.settings_page_integrate-rybbit .rybbit-settings-help {
-  background: #f6f7f7;
-  border: 1px solid var(--wp-admin-border-color, #dcdcde);
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.settings_page_integrate-rybbit .rybbit-settings-help h2 {
-  margin-top: 0;
-  font-size: 13px;
-}
-
-/* Section headings */
-.settings_page_integrate-rybbit .rybbit-section {
-  margin-top: 8px;
-}
-
-.settings_page_integrate-rybbit .rybbit-section-title {
-  font-size: 13px;
-  font-weight: 600;
-  margin: 18px 0 10px;
-  padding-top: 14px;
-  border-top: 1px solid #dcdcde;
-}
-
-.settings_page_integrate-rybbit .rybbit-section:first-child .rybbit-section-title {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-}
-
-/* Form tweaks */
+/* Form */
 .settings_page_integrate-rybbit .form-table th {
-  width: 240px;
+	width: 240px;
 }
 
 .settings_page_integrate-rybbit input[type="text"],
 .settings_page_integrate-rybbit input[type="url"],
+.settings_page_integrate-rybbit input[type="number"],
 .settings_page_integrate-rybbit textarea,
 .settings_page_integrate-rybbit select {
-  border-radius: 6px;
+	border-radius: 6px;
 }
 
 .settings_page_integrate-rybbit textarea.large-text {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+	width: min(760px, 100%);
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.settings_page_integrate-rybbit .rybbit-input-wide {
+	width: min(760px, 100%);
+}
+
+.settings_page_integrate-rybbit .rybbit-input-url {
+	width: min(820px, 100%);
+}
+
+.settings_page_integrate-rybbit .rybbit-select-wide {
+	width: min(520px, 100%);
 }
 
 .settings_page_integrate-rybbit .required {
-  color: #d63638;
-  font-weight: 700;
+	color: #d63638;
+	font-weight: 700;
 }
 
-.settings_page_integrate-rybbit .rybbit-inline-note {
-  margin: 6px 0 0;
-  color: #50575e;
+.settings_page_integrate-rybbit .rybbit-description-wide {
+	max-width: 720px;
 }
 
-.settings_page_integrate-rybbit .rybbit-code {
-  background: #f0f0f1;
-  padding: 2px 6px;
-  border-radius: 4px;
+.settings_page_integrate-rybbit select + div.description {
+	margin-top: 6px;
+}
+
+.settings_page_integrate-rybbit .rybbit-description-wide p,
+.settings_page_integrate-rybbit div.description p {
+	margin: 0 0 6px;
+}
+
+.settings_page_integrate-rybbit .rybbit-list {
+	margin: 0;
+	padding-left: 18px;
+	list-style: disc;
+}
+
+.settings_page_integrate-rybbit .rybbit-list li {
+	margin-bottom: 4px;
+}
+
+.settings_page_integrate-rybbit .rybbit-button-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 6px;
+}
+
+.settings_page_integrate-rybbit .rybbit-meta-key-wrap {
+	margin-top: 10px;
+	padding-left: 2px;
+}
+
+.settings_page_integrate-rybbit .rybbit-meta-key-wrap[hidden] {
+	display: none;
+}
+
+/* Payload and debug output */
+.settings_page_integrate-rybbit .rybbit-identify-payload {
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	padding: 10px 12px;
+	max-width: 100%;
+	max-height: 280px;
+	box-sizing: border-box;
+	margin: 0;
+	overflow: auto;
+	font-size: 12px;
+	line-height: 1.4;
+	white-space: pre;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+
+.settings_page_integrate-rybbit .rybbit-tab-panel[data-tab="debug"] .rybbit-identify-payload {
+	max-height: 480px;
+	white-space: pre-wrap;
+}
+
+.settings_page_integrate-rybbit .rybbit-refresh-payload {
+	text-decoration: none;
 }
 
 /* JSON validation */
-.rybbit-json-invalid {
-  border-color: #b32d2e !important;
-  box-shadow: 0 0 0 1px #b32d2e !important;
-  background: #fcf0f1;
+.settings_page_integrate-rybbit .rybbit-json-invalid {
+	border-color: #b32d2e;
+	box-shadow: 0 0 0 1px #b32d2e;
+	background: #fcf0f1;
+}
+
+.settings_page_integrate-rybbit .rybbit-json-error {
+	color: #b32d2e;
+	margin-top: 6px;
+}
+
+.settings_page_integrate-rybbit .rybbit-json-error[hidden] {
+	display: none;
 }
