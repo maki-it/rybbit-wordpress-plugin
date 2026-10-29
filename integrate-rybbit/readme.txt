@@ -38,6 +38,7 @@ You can also see your analytics inside WordPress. For this, add an API key in th
   * Full mode: Rybbit also receives the cleartext email.
   * User ID strategies: WordPress scoped ID, keyed hash (HMAC), user ID, login, email or a user meta field.
 * Session replay privacy settings: block, ignore and mask elements, mask inputs, sampling and DOM slimming.
+* Custom events: send an event to Rybbit when a visitor clicks an element. You set a CSS selector, an event name and optional properties on the Custom Events tab. You do not need to write JavaScript.
 * Debug tab with the effective settings and the generated script attributes.
 * Accessible settings page with keyboard support for the tabs.
 * Developer filters to change the behavior from code.
@@ -48,6 +49,7 @@ You can also see your analytics inside WordPress. For this, add an API key in th
 * `integrate_rybbit_script_attributes` (array): Change the `data-*` attributes of the script tag. Use it for Rybbit options without a setting, for example `data-namespace`.
 * `integrate_rybbit_identify_user_id` (string): Change the user ID that is sent to Rybbit.
 * `integrate_rybbit_identify_traits` (array): Change the user traits that are sent to Rybbit.
+* `integrate_rybbit_custom_events` (array): Change the custom event rules. Each rule is an array with `selector` (string), `event` (string) and `props` (array of text values). The filter result is not saved. It does not appear in the settings.
 * `integrate_rybbit_dashboard_capability` (string): Change the capability that is needed to see the analytics dashboard. The default is `manage_options`.
 * `integrate_rybbit_api_http_args` (array): Change the HTTP arguments of the requests to the Rybbit API, for example the timeout.
 
@@ -108,6 +110,10 @@ Yes. The script tag is the same for all visitors. User identification runs only 
 = Is user identification compliant with the GDPR? =
 
 User identification is off by default. If you turn it on, Rybbit receives a user ID for logged-in users. It also receives the roles, username and display name of the user. Full mode also sends the cleartext email. Make sure that you have a legal basis for this and update your privacy policy. The pseudonymized mode does not send the cleartext email, but username and display name are still personal data. To send less data, remove traits with the `integrate_rybbit_identify_traits` filter. The HMAC strategy gives a user ID that does not show the WordPress user ID. It uses the security keys of the site. If you change these keys, all users get a new ID in Rybbit.
+
+= How do I send a custom event? =
+
+Go to the Custom Events tab and click "Add event rule". Enter a CSS selector, for example `.buy-button`, and an event name, for example `buy_click`. Optionally add properties, one `key=value` pair per line. When a visitor clicks the element, or an element inside it, the plugin sends the event to Rybbit. Properties are sent as text. You can add up to 50 rules. Visitors with an excluded role do not send events. You can also use the `data-rybbit-event` and `data-rybbit-prop-*` attributes in your HTML. Rybbit reads them without this plugin.
 
 = What happens to my settings when I delete the plugin? =
 

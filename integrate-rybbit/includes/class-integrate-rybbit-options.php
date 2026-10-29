@@ -43,6 +43,15 @@ final class Integrate_Rybbit_Options {
 	const TAG_MAX_LENGTH = 256;
 
 	/**
+	 * Limits of the custom event rules. The name and property limits come from Rybbit.
+	 */
+	const CUSTOM_EVENTS_MAX         = 50;
+	const EVENT_NAME_MAX_LENGTH     = 256;
+	const EVENT_SELECTOR_MAX_LENGTH = 500;
+	const EVENT_PROP_KEY_MAX_LENGTH = 128;
+	const EVENT_PROPS_MAX_BYTES     = 2048;
+
+	/**
 	 * Allowed values for the identify mode.
 	 */
 	const IDENTIFY_MODES = array( 'disabled', 'pseudonymized', 'full' );
@@ -139,6 +148,7 @@ final class Integrate_Rybbit_Options {
 			'rybbit_mask_patterns'              => '',
 			'rybbit_debounce'                   => '500',
 			'rybbit_tag'                        => '',
+			'rybbit_custom_events'              => array(),
 			'rybbit_identify_mode'              => 'disabled',
 			'rybbit_identify_userid_strategy'   => 'wp_scoped',
 			'rybbit_identify_userid_meta_key'   => '',
@@ -386,6 +396,196 @@ final class Integrate_Rybbit_Options {
 		}
 
 		return self::encode_json( $decoded );
+	}
+
+	/**
+	 * Normalize a list of custom event rules.
+	 *
+	 * A rule has a CSS selector, an event name and optional properties.
+	 * Rows without any content are ignored. Invalid rows and rows over the
+	 * limit are dropped and counted.
+	 *
+	 * @param mixed    $value    Raw list of rules.
+	 * @param int|null $rejected Receives the number of dropped rows.
+	 * @return array<int, array{selector: string, event: string, props: array<string, string>}>
+	 */
+	public static function normalize_custom_events( $value, &$rejected = null ) {
+		$rejected = 0;
+
+		if ( ! is_array( $value ) ) {
+			return array();
+		}
+
+		$rules = array();
+		foreach ( $value as $rule ) {
+			if ( ! is_array( $rule ) || self::is_blank_event_rule( $rule ) ) {
+				continue;
+			}
+
+			$clean = self::normalize_custom_event( $rule );
+			if ( null === $clean || count( $rules ) >= self::CUSTOM_EVENTS_MAX ) {
+				++$rejected;
+				continue;
+			}
+
+			$rules[] = $clean;
+		}
+
+		return $rules;
+	}
+
+	/**
+	 * Check if a rule row has no content at all.
+	 *
+	 * @param array<string, mixed> $rule Raw rule.
+	 * @return bool
+	 */
+	private static function is_blank_event_rule( array $rule ) {
+		$props = isset( $rule['props'] ) ? $rule['props'] : '';
+
+		return '' === self::event_field( $rule, 'selector' )
+			&& '' === self::event_field( $rule, 'event' )
+			&& ( is_array( $props ) ? empty( $props ) : '' === trim( (string) $props ) );
+	}
+
+	/**
+	 * Trimmed string value of a rule field.
+	 *
+	 * @param array<string, mixed> $rule Raw rule.
+	 * @param string               $key  Field name.
+	 * @return string
+	 */
+	private static function event_field( array $rule, $key ) {
+		return isset( $rule[ $key ] ) && is_scalar( $rule[ $key ] ) ? trim( (string) $rule[ $key ] ) : '';
+	}
+
+	/**
+	 * Normalize one custom event rule.
+	 *
+	 * @param array<string, mixed> $rule Raw rule.
+	 * @return array{selector: string, event: string, props: array<string, string>}|null Null if the rule is invalid.
+	 */
+	private static function normalize_custom_event( array $rule ) {
+		$selector = self::sanitize_css_selector( self::event_field( $rule, 'selector' ) );
+		$selector = trim( (string) preg_replace( '/[\x00-\x1F\x7F]/', '', wp_check_invalid_utf8( $selector ) ) );
+		$event    = sanitize_text_field( self::event_field( $rule, 'event' ) );
+
+		if ( '' === $selector || '' === $event || self::string_length( $selector ) > self::EVENT_SELECTOR_MAX_LENGTH ) {
+			return null;
+		}
+
+		if ( self::string_length( $event ) > self::EVENT_NAME_MAX_LENGTH ) {
+			return null;
+		}
+
+		$props = self::parse_event_props( isset( $rule['props'] ) ? $rule['props'] : '' );
+		if ( null === $props || strlen( self::encode_json( (object) $props ) ) > self::EVENT_PROPS_MAX_BYTES ) {
+			return null;
+		}
+
+		return array(
+			'selector' => $selector,
+			'event'    => $event,
+			'props'    => $props,
+		);
+	}
+
+	/**
+	 * Parse event properties.
+	 *
+	 * Text format: one "key=value" pair per line. The first "=" splits key and
+	 * value. An array of key => value pairs is accepted too.
+	 *
+	 * @param mixed $value Raw properties.
+	 * @return array<string, string>|null Null if a pair is invalid.
+	 */
+	public static function parse_event_props( $value ) {
+		$pairs = array();
+
+		if ( is_array( $value ) ) {
+			foreach ( $value as $key => $item ) {
+				$pairs[] = array( (string) $key, $item );
+			}
+		} else {
+			foreach ( preg_split( '/\r\n|\r|\n/', (string) $value ) as $line ) {
+				$line = trim( $line );
+				if ( '' === $line ) {
+					continue;
+				}
+
+				$pos = strpos( $line, '=' );
+				if ( false === $pos ) {
+					return null;
+				}
+
+				$pairs[] = array( substr( $line, 0, $pos ), substr( $line, $pos + 1 ) );
+			}
+		}
+
+		$props = array();
+		foreach ( $pairs as $pair ) {
+			list( $key, $item ) = $pair;
+
+			if ( ! is_scalar( $item ) ) {
+				return null;
+			}
+
+			$key = sanitize_text_field( $key );
+			if ( '' === $key || self::string_length( $key ) > self::EVENT_PROP_KEY_MAX_LENGTH ) {
+				return null;
+			}
+
+			$props[ $key ] = sanitize_text_field( (string) $item );
+		}
+
+		return $props;
+	}
+
+	/**
+	 * Convert event properties to the "key=value" text format.
+	 *
+	 * @param mixed $props Property map.
+	 * @return string
+	 */
+	public static function format_event_props( $props ) {
+		$lines = array();
+		foreach ( (array) $props as $key => $item ) {
+			$lines[] = $key . '=' . ( is_scalar( $item ) ? $item : '' );
+		}
+
+		return implode( "\n", $lines );
+	}
+
+	/**
+	 * Custom event rules for the frontend.
+	 *
+	 * @return array<int, array{selector: string, event: string, props: array<string, string>}>
+	 */
+	public static function get_custom_events() {
+		$rules = self::normalize_custom_events( self::get( 'rybbit_custom_events' ) );
+
+		/**
+		 * Filter the custom event rules that the plugin sends to the browser.
+		 *
+		 * Each rule is an array with "selector" (CSS selector), "event" (event
+		 * name) and "props" (map of string keys and values). Invalid rules are
+		 * removed after the filter ran.
+		 *
+		 * @param array $rules Event rules from the settings.
+		 */
+		$filtered = apply_filters( 'integrate_rybbit_custom_events', $rules );
+
+		return is_array( $filtered ) ? self::normalize_custom_events( $filtered ) : $rules;
+	}
+
+	/**
+	 * Length of a string in characters.
+	 *
+	 * @param string $value String.
+	 * @return int
+	 */
+	private static function string_length( $value ) {
+		return function_exists( 'mb_strlen' ) ? mb_strlen( $value ) : strlen( $value );
 	}
 
 	/**

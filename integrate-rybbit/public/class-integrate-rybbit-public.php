@@ -106,7 +106,8 @@ final class Integrate_Rybbit_Public {
 		);
 
 		$identify = $this->get_identify_config();
-		if ( ! $this->clear_user && null === $identify ) {
+		$events   = $this->get_events_config();
+		if ( ! $this->clear_user && null === $identify && empty( $events ) ) {
 			return;
 		}
 
@@ -124,6 +125,7 @@ final class Integrate_Rybbit_Public {
 		$config = array(
 			'clearUser' => $this->clear_user,
 			'identify'  => $identify,
+			'events'    => $events,
 		);
 
 		wp_add_inline_script(
@@ -131,6 +133,26 @@ final class Integrate_Rybbit_Public {
 			'window.integrateRybbitConfig = ' . wp_json_encode( $config, JSON_HEX_TAG | JSON_HEX_AMP ) . ';',
 			'before'
 		);
+	}
+
+	/**
+	 * Custom event rules for the helper script.
+	 *
+	 * @return array<int, array{selector: string, event: string, props: object}>
+	 */
+	private function get_events_config() {
+		$events = array();
+
+		foreach ( Integrate_Rybbit_Options::get_custom_events() as $rule ) {
+			$events[] = array(
+				'selector' => $rule['selector'],
+				'event'    => $rule['event'],
+				// An object keeps numeric keys and an empty list as a JSON object.
+				'props'    => (object) $rule['props'],
+			);
+		}
+
+		return $events;
 	}
 
 	/**

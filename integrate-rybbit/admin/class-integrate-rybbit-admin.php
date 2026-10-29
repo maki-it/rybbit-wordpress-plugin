@@ -81,6 +81,7 @@ final class Integrate_Rybbit_Admin {
 			'rybbit_mask_patterns'              => array( 'Integrate_Rybbit_Options', 'sanitize_lines' ),
 			'rybbit_debounce'                   => array( 'Integrate_Rybbit_Options', 'sanitize_debounce' ),
 			'rybbit_tag'                        => array( 'Integrate_Rybbit_Options', 'sanitize_tag' ),
+			'rybbit_custom_events'              => array( $this, 'sanitize_custom_events' ),
 			'rybbit_identify_mode'              => array( $this, 'sanitize_identify_mode' ),
 			'rybbit_identify_userid_strategy'   => array( $this, 'sanitize_userid_strategy' ),
 			'rybbit_identify_userid_meta_key'   => 'sanitize_key',
@@ -295,6 +296,39 @@ final class Integrate_Rybbit_Admin {
 	}
 
 	/**
+	 * Sanitize the custom event rules.
+	 *
+	 * WordPress passes null when the form has no rule rows. That clears the list.
+	 *
+	 * @param mixed $value Raw rules from the form.
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function sanitize_custom_events( $value ) {
+		$rejected = 0;
+		$rules    = Integrate_Rybbit_Options::normalize_custom_events( $value, $rejected );
+
+		if ( $rejected > 0 ) {
+			$this->add_error(
+				'rybbit_custom_events',
+				'rybbit_custom_events_rejected',
+				sprintf(
+					/* translators: 1: number of dropped rules, 2: maximum number of rules */
+					_n(
+						'%1$d custom event rule was not saved. A rule needs a valid selector, an event name and properties as "key=value" lines. You can save at most %2$d rules.',
+						'%1$d custom event rules were not saved. A rule needs a valid selector, an event name and properties as "key=value" lines. You can save at most %2$d rules.',
+						$rejected,
+						'integrate-rybbit'
+					),
+					$rejected,
+					Integrate_Rybbit_Options::CUSTOM_EVENTS_MAX
+				)
+			);
+		}
+
+		return $rules;
+	}
+
+	/**
 	 * Sanitize the user ID strategy.
 	 *
 	 * @param mixed $value Raw value.
@@ -435,6 +469,7 @@ final class Integrate_Rybbit_Admin {
 			'tracking'    => __( 'Tracking', 'integrate-rybbit' ),
 			'privacy'     => __( 'Privacy', 'integrate-rybbit' ),
 			'script'      => __( 'Script Attributes', 'integrate-rybbit' ),
+			'events'      => __( 'Custom Events', 'integrate-rybbit' ),
 			'replay'      => __( 'Session Replay', 'integrate-rybbit' ),
 			'dashboard'   => __( 'Dashboard', 'integrate-rybbit' ),
 			'maintenance' => __( 'Maintenance', 'integrate-rybbit' ),
@@ -941,6 +976,103 @@ final class Integrate_Rybbit_Admin {
 		<p class="description rybbit-description-wide">
 			<?php esc_html_e( 'Outbound link tracking, error tracking, Web Vitals, session replay and hash routing are turned on or off per site in the Rybbit dashboard.', 'integrate-rybbit' ); ?>
 		</p>
+		<?php
+	}
+
+	/**
+	 * Print the "Custom Events" tab.
+	 */
+	private function render_tab_events() {
+		$rules = Integrate_Rybbit_Options::normalize_custom_events( Integrate_Rybbit_Options::get( 'rybbit_custom_events' ) );
+		?>
+		<p class="description rybbit-description-wide">
+			<?php
+			printf(
+				/* translators: %s: Rybbit function name. */
+				esc_html__( 'Send a custom event to Rybbit when a visitor clicks an element. The plugin calls %s for you. You do not need to write JavaScript.', 'integrate-rybbit' ),
+				'<code>rybbit.event()</code>'
+			);
+			?>
+		</p>
+		<div class="rybbit-event-rules" data-rybbit-event-rules data-next-index="<?php echo esc_attr( (string) count( $rules ) ); ?>" data-max="<?php echo esc_attr( (string) Integrate_Rybbit_Options::CUSTOM_EVENTS_MAX ); ?>">
+			<p class="description" data-rybbit-event-empty<?php echo empty( $rules ) ? '' : ' hidden'; ?>><?php esc_html_e( 'No event rules yet.', 'integrate-rybbit' ); ?></p>
+			<div class="rybbit-event-rule-list" data-rybbit-event-list>
+				<?php
+				foreach ( $rules as $index => $rule ) {
+					$this->render_event_rule( (string) $index, $rule );
+				}
+				?>
+			</div>
+			<p>
+				<button type="button" class="button" data-rybbit-event-add><?php esc_html_e( 'Add event rule', 'integrate-rybbit' ); ?></button>
+			</p>
+			<template data-rybbit-event-template>
+				<?php $this->render_event_rule( '__INDEX__', array() ); ?>
+			</template>
+		</div>
+		<div class="description rybbit-description-wide">
+			<p>
+				<?php
+				printf(
+					/* translators: %d: Maximum number of rules. */
+					esc_html__( 'You can add up to %d rules. A rule also matches when the visitor clicks inside a matching element, for example on an icon in a button. Visitors with an excluded role do not send events.', 'integrate-rybbit' ),
+					(int) Integrate_Rybbit_Options::CUSTOM_EVENTS_MAX
+				);
+				?>
+			</p>
+			<p>
+				<?php
+				printf(
+					/* translators: 1: HTML attribute name, 2: HTML attribute name. */
+					esc_html__( 'You can also mark elements in your HTML with the %1$s and %2$s attributes. Rybbit reads them without this plugin.', 'integrate-rybbit' ),
+					'<code>data-rybbit-event</code>',
+					'<code>data-rybbit-prop-*</code>'
+				);
+				?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Print one custom event rule.
+	 *
+	 * The template for new rules uses the same markup with the placeholder index.
+	 *
+	 * @param string               $index Row index. "__INDEX__" for the template.
+	 * @param array<string, mixed> $rule  Stored rule.
+	 */
+	private function render_event_rule( $index, array $rule ) {
+		$rule = wp_parse_args(
+			$rule,
+			array(
+				'selector' => '',
+				'event'    => '',
+				'props'    => array(),
+			)
+		);
+
+		$base = 'rybbit_custom_events[' . $index . ']';
+		$id   = 'rybbit_custom_events_' . $index;
+		?>
+		<div class="rybbit-event-rule" data-rybbit-event-rule>
+			<div class="rybbit-event-rule-fields">
+				<p>
+					<label for="<?php echo esc_attr( $id . '_selector' ); ?>"><strong><?php esc_html_e( 'CSS selector', 'integrate-rybbit' ); ?></strong></label><br />
+					<input type="text" class="regular-text code rybbit-input-wide" id="<?php echo esc_attr( $id . '_selector' ); ?>" name="<?php echo esc_attr( $base . '[selector]' ); ?>" value="<?php echo esc_attr( (string) $rule['selector'] ); ?>" maxlength="<?php echo esc_attr( (string) Integrate_Rybbit_Options::EVENT_SELECTOR_MAX_LENGTH ); ?>" placeholder="<?php echo esc_attr( '.buy-button, #signup-form button' ); ?>" data-rybbit-event-selector />
+				</p>
+				<p>
+					<label for="<?php echo esc_attr( $id . '_event' ); ?>"><strong><?php esc_html_e( 'Event name', 'integrate-rybbit' ); ?></strong></label><br />
+					<input type="text" class="regular-text rybbit-input-wide" id="<?php echo esc_attr( $id . '_event' ); ?>" name="<?php echo esc_attr( $base . '[event]' ); ?>" value="<?php echo esc_attr( (string) $rule['event'] ); ?>" maxlength="<?php echo esc_attr( (string) Integrate_Rybbit_Options::EVENT_NAME_MAX_LENGTH ); ?>" placeholder="<?php echo esc_attr( 'buy_click' ); ?>" data-rybbit-event-name />
+				</p>
+				<p>
+					<label for="<?php echo esc_attr( $id . '_props' ); ?>"><strong><?php esc_html_e( 'Properties (optional)', 'integrate-rybbit' ); ?></strong></label><br />
+					<textarea class="large-text code" rows="3" id="<?php echo esc_attr( $id . '_props' ); ?>" name="<?php echo esc_attr( $base . '[props]' ); ?>" placeholder="<?php echo esc_attr( "plan=pro\nsource=header" ); ?>" aria-describedby="<?php echo esc_attr( $id . '_props_description' ); ?>" data-rybbit-event-props><?php echo esc_textarea( Integrate_Rybbit_Options::format_event_props( $rule['props'] ) ); ?></textarea>
+					<span class="description" id="<?php echo esc_attr( $id . '_props_description' ); ?>"><?php esc_html_e( 'One key=value pair per line. Values are sent as text. Maximum 2 KB in total.', 'integrate-rybbit' ); ?></span>
+				</p>
+			</div>
+			<button type="button" class="button-link button-link-delete rybbit-event-remove" data-rybbit-event-remove><?php esc_html_e( 'Remove rule', 'integrate-rybbit' ); ?></button>
+		</div>
 		<?php
 	}
 

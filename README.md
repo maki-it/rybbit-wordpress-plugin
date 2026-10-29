@@ -25,9 +25,11 @@ Get the plugin from the [WordPress.org plugin directory](https://wordpress.org/p
 - Optional user identification for logged-in users, in pseudonymized or full mode.
   User ID strategies: WordPress scoped ID, keyed hash (HMAC), user ID, login, email or a user meta field.
 - Session replay privacy settings: block, ignore and mask elements, mask inputs, sampling and DOM slimming.
+- Custom events: send an event to Rybbit when a visitor clicks an element. You set a CSS selector, an event name and
+  optional properties on the `Custom Events` tab. You do not need to write JavaScript.
 - Debug tab with the effective settings and the generated script attributes.
 - Developer filters: `integrate_rybbit_should_track`, `integrate_rybbit_script_attributes`,
-  `integrate_rybbit_identify_user_id`, `integrate_rybbit_identify_traits`,
+  `integrate_rybbit_identify_user_id`, `integrate_rybbit_identify_traits`, `integrate_rybbit_custom_events`,
   `integrate_rybbit_dashboard_capability` and `integrate_rybbit_api_http_args`.
   See [readme.txt](integrate-rybbit/readme.txt) for details and an example.
 

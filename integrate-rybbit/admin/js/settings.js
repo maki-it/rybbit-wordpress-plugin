@@ -433,6 +433,233 @@
 		});
 	}
 
+	/*
+	 * Custom event rules. The limits match the PHP limits in Integrate_Rybbit_Options.
+	 * The server checks them again when it saves the form.
+	 */
+	function initEventRules() {
+		var wrap = document.querySelector('[data-rybbit-event-rules]');
+		var form = document.querySelector('.rybbit-settings-card form');
+		if (!wrap || !form) {
+			return;
+		}
+
+		var list = wrap.querySelector('[data-rybbit-event-list]');
+		var template = wrap.querySelector('[data-rybbit-event-template]');
+		var addButton = wrap.querySelector('[data-rybbit-event-add]');
+		var emptyHint = wrap.querySelector('[data-rybbit-event-empty]');
+		if (!list || !template || !addButton) {
+			return;
+		}
+
+		var MAX_PROP_KEY_LENGTH = 128;
+		var MAX_PROPS_BYTES = 2048;
+		var maxRules = parseInt(wrap.getAttribute('data-max'), 10) || 50;
+		var nextIndex = parseInt(wrap.getAttribute('data-next-index'), 10) || 0;
+
+		function rules() {
+			return list.querySelectorAll('[data-rybbit-event-rule]');
+		}
+
+		function fieldOf(rule, name) {
+			return rule.querySelector('[data-rybbit-event-' + name + ']');
+		}
+
+		function byteLength(text) {
+			return window.TextEncoder ? new window.TextEncoder().encode(text).length : text.length;
+		}
+
+		function errorElement(field) {
+			var id = field.id + '-error';
+			var el = document.getElementById(id);
+			if (el) {
+				return el;
+			}
+
+			el = document.createElement('p');
+			el.id = id;
+			el.className = 'description rybbit-json-error';
+			el.hidden = true;
+			field.parentNode.insertAdjacentElement('afterend', el);
+
+			var describedBy = field.getAttribute('aria-describedby');
+			field.setAttribute('aria-describedby', describedBy ? describedBy + ' ' + id : id);
+			return el;
+		}
+
+		function setError(field, message) {
+			var el = errorElement(field);
+			el.textContent = message;
+			el.hidden = !message;
+			field.classList.toggle('rybbit-json-invalid', !!message);
+			if (message) {
+				field.setAttribute('aria-invalid', 'true');
+			} else {
+				field.removeAttribute('aria-invalid');
+			}
+			return !message;
+		}
+
+		function propsError(text) {
+			var props = {};
+			var lines = text.split(/\r\n|\r|\n/);
+			var message = __('Use one key=value pair per line. A key can have up to 128 characters.');
+
+			for (var i = 0; i < lines.length; i++) {
+				var line = lines[i].trim();
+				if (!line) {
+					continue;
+				}
+
+				var pos = line.indexOf('=');
+				var key = pos > 0 ? line.slice(0, pos).trim() : '';
+				if (!key || key.length > MAX_PROP_KEY_LENGTH) {
+					return message;
+				}
+				props[key] = line.slice(pos + 1).trim();
+			}
+
+			if (byteLength(JSON.stringify(props)) > MAX_PROPS_BYTES) {
+				return __('The properties are larger than 2 KB.');
+			}
+
+			return '';
+		}
+
+		function isBlank(rule) {
+			return ['selector', 'name', 'props'].every(function (name) {
+				var field = fieldOf(rule, name);
+				return !field || !field.value.trim();
+			});
+		}
+
+		// strict also reports empty required fields. Without it, only wrong values are reported.
+		function validateField(field, strict) {
+			var rule = field.closest('[data-rybbit-event-rule]');
+			var value = field.value.trim();
+
+			if (!rule || isBlank(rule)) {
+				return setError(field, '');
+			}
+
+			if (field.hasAttribute('data-rybbit-event-selector')) {
+				if (!value) {
+					return setError(field, strict ? __('Enter a CSS selector.') : '');
+				}
+				try {
+					document.querySelector(value);
+				} catch (e) {
+					return setError(field, __('This CSS selector is not valid.'));
+				}
+				return setError(field, '');
+			}
+
+			if (field.hasAttribute('data-rybbit-event-name')) {
+				return setError(field, !value && strict ? __('Enter an event name.') : '');
+			}
+
+			return setError(field, propsError(value));
+		}
+
+		function validateRule(rule, strict) {
+			var firstInvalid = null;
+			['selector', 'name', 'props'].forEach(function (name) {
+				var field = fieldOf(rule, name);
+				if (field && !validateField(field, strict) && !firstInvalid) {
+					firstInvalid = field;
+				}
+			});
+			return firstInvalid;
+		}
+
+		function update() {
+			var count = rules().length;
+			if (emptyHint) {
+				emptyHint.hidden = count > 0;
+			}
+			addButton.disabled = count >= maxRules;
+		}
+
+		addButton.addEventListener('click', function () {
+			if (rules().length >= maxRules) {
+				return;
+			}
+
+			var holder = document.createElement('div');
+			holder.innerHTML = template.innerHTML.replace(/__INDEX__/g, String(nextIndex));
+			nextIndex++;
+
+			var rule = holder.querySelector('[data-rybbit-event-rule]');
+			if (!rule) {
+				return;
+			}
+
+			list.appendChild(rule);
+			update();
+
+			var selector = fieldOf(rule, 'selector');
+			if (selector) {
+				selector.focus();
+			}
+		});
+
+		list.addEventListener('click', function (e) {
+			var button = e.target.closest ? e.target.closest('[data-rybbit-event-remove]') : null;
+			var rule = button ? button.closest('[data-rybbit-event-rule]') : null;
+			if (!rule) {
+				return;
+			}
+
+			// Keep the focus inside the editor after the row is gone.
+			var neighbour = rule.nextElementSibling || rule.previousElementSibling;
+			var focusTarget = neighbour ? fieldOf(neighbour, 'selector') : null;
+
+			rule.parentNode.removeChild(rule);
+			update();
+			(focusTarget || addButton).focus();
+		});
+
+		list.addEventListener('input', function (e) {
+			var rule = e.target.closest ? e.target.closest('[data-rybbit-event-rule]') : null;
+			if (!rule) {
+				return;
+			}
+
+			// Clear old errors while the user types. New errors appear when the field loses focus.
+			forEach(rule.querySelectorAll('[aria-invalid]'), function (field) {
+				validateField(field, true);
+			});
+		});
+
+		list.addEventListener('focusout', function (e) {
+			if (e.target.matches && e.target.matches('input, textarea')) {
+				validateField(e.target, false);
+			}
+		});
+
+		form.addEventListener('submit', function (e) {
+			var firstInvalid = null;
+			forEach(rules(), function (rule) {
+				var invalid = validateRule(rule, true);
+				if (invalid && !firstInvalid) {
+					firstInvalid = invalid;
+				}
+			});
+
+			if (firstInvalid) {
+				e.preventDefault();
+				var panel = firstInvalid.closest('.rybbit-tab-panel');
+				var tab = panel ? document.getElementById(panel.getAttribute('aria-labelledby')) : null;
+				if (tab && panel.hidden) {
+					tab.click();
+				}
+				firstInvalid.focus();
+			}
+		});
+
+		update();
+	}
+
 	ready(function () {
 		initTabs();
 		initUserMetaKeyToggle();
@@ -440,5 +667,6 @@
 		initApiTools();
 		initResetButtons();
 		initJsonValidation();
+		initEventRules();
 	});
 })();
