@@ -42,6 +42,7 @@ You can also see your analytics inside WordPress. For this, add an API key in th
 * Opt-out for visitors: add the shortcode `[rybbit_optout]` or the block "Rybbit Opt-out" to a page, for example your privacy policy. Visitors can turn the analytics off and on again.
 * Debug tab with the effective settings and the generated script attributes.
 * Accessible settings page with keyboard support for the tabs.
+* Translation: German (`de_DE` and `de_DE_formal`) is included.
 * Developer filters to change the behavior from code.
 
 = Opt-out shortcode and block =

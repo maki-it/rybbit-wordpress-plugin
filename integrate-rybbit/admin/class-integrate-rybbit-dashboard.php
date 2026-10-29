@@ -110,7 +110,7 @@ final class Integrate_Rybbit_Dashboard {
 				'strategy'  => 'defer',
 			)
 		);
-		wp_set_script_translations( self::HANDLE, 'integrate-rybbit' );
+		wp_set_script_translations( self::HANDLE, 'integrate-rybbit', INTEGRATE_RYBBIT_DIR . 'languages' );
 		wp_localize_script(
 			self::HANDLE,
 			'rybbitDashboard',

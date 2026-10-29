@@ -1,0 +1,1401 @@
+# German translation for Integrate Rybbit.
+# This file is distributed under the GPLv3 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Integrate Rybbit\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/integrate-rybbit\n"
+"POT-Creation-Date: 2026-10-29T11:05:02+00:00\n"
+"Language-Team: German\n"
+"Language: de_DE_formal\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: integrate-rybbit\n"
+
+#. Plugin Name of the plugin
+#: integrate-rybbit.php admin/class-integrate-rybbit-admin.php:47
+#: admin/class-integrate-rybbit-admin.php:48
+#: admin/class-integrate-rybbit-admin.php:610
+msgid "Integrate Rybbit"
+msgstr "Integrate Rybbit"
+
+#. Plugin URI of the plugin
+#: integrate-rybbit.php
+msgid "https://wordpress.org/plugins/integrate-rybbit/"
+msgstr "https://wordpress.org/plugins/integrate-rybbit/"
+
+#. Description of the plugin
+#: integrate-rybbit.php
+msgid "Add and manage the Rybbit Analytics tracking script."
+msgstr "Das Rybbit-Analytics-Tracking-Skript hinzufügen und verwalten."
+
+#. Author of the plugin
+#: integrate-rybbit.php
+msgid "Maki IT"
+msgstr "Maki IT"
+
+#. Author URI of the plugin
+#: integrate-rybbit.php
+msgid "https://maki-it.de"
+msgstr "https://maki-it.de"
+
+#: admin/class-integrate-rybbit-admin.php:65
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: admin/class-integrate-rybbit-admin.php:163
+msgid "Site ID is required."
+msgstr "Die Site-ID ist erforderlich."
+
+#: admin/class-integrate-rybbit-admin.php:186
+msgid "Script URL is required."
+msgstr "Die Skript-URL ist erforderlich."
+
+#: admin/class-integrate-rybbit-admin.php:199
+msgid "Script URL is not a valid URL."
+msgstr "Die Skript-URL ist keine gültige URL."
+
+#: admin/class-integrate-rybbit-admin.php:209
+msgid "Script URL must use HTTPS."
+msgstr "Die Skript-URL muss HTTPS verwenden."
+
+#: admin/class-integrate-rybbit-admin.php:245
+msgid "The API key has invalid characters or a wrong length. It was not saved."
+msgstr ""
+"Der API-Schlüssel enthält ungültige Zeichen oder hat eine falsche Länge. Er "
+"wurde nicht gespeichert."
+
+#: admin/class-integrate-rybbit-admin.php:270
+msgid ""
+"The API URL must be a valid HTTPS URL. HTTP works only for local hosts. It "
+"was not saved."
+msgstr ""
+"Die API-URL muss eine gültige HTTPS-URL sein. HTTP funktioniert nur für "
+"lokale Hosts. Sie wurde nicht gespeichert."
+
+#. translators: 1: number of dropped rules, 2: maximum number of rules
+#: admin/class-integrate-rybbit-admin.php:316
+#, php-format
+msgid ""
+"%1$d custom event rule was not saved. A rule needs a valid selector, an "
+"event name and properties as \"key=value\" lines. You can save at most %2$d "
+"rules."
+msgid_plural ""
+"%1$d custom event rules were not saved. A rule needs a valid selector, an "
+"event name and properties as \"key=value\" lines. You can save at most %2$d "
+"rules."
+msgstr[0] ""
+"%1$d Event-Regel wurde nicht gespeichert. Eine Regel braucht einen gültigen "
+"Selektor, einen Eventnamen und Eigenschaften als Zeilen im Format "
+"„key=value“. Es können höchstens %2$d Regeln gespeichert werden."
+msgstr[1] ""
+"%1$d Event-Regeln wurden nicht gespeichert. Eine Regel braucht einen "
+"gültigen Selektor, einen Eventnamen und Eigenschaften als Zeilen im Format "
+"„key=value“. Es können höchstens %2$d Regeln gespeichert werden."
+
+#: admin/class-integrate-rybbit-admin.php:416
+msgid "Invalid slimDOM options. Use true, false or a JSON object."
+msgstr ""
+"Ungültige slimDOM-Optionen. Zulässig sind true, false oder ein JSON-Objekt."
+
+#: admin/class-integrate-rybbit-admin.php:417
+msgid ""
+"Invalid JSON. Please provide a JSON object (example: {\"password\":true,"
+"\"email\":true})."
+msgstr ""
+"Ungültiges JSON. Bitte ein JSON-Objekt angeben (Beispiel: {\"password\":true,"
+"\"email\":true})."
+
+#: admin/class-integrate-rybbit-admin.php:469
+msgid "Tracking"
+msgstr "Tracking"
+
+#: admin/class-integrate-rybbit-admin.php:470
+msgid "Privacy"
+msgstr "Datenschutz"
+
+#: admin/class-integrate-rybbit-admin.php:471
+msgid "Script Attributes"
+msgstr "Skript-Attribute"
+
+#: admin/class-integrate-rybbit-admin.php:472
+msgid "Custom Events"
+msgstr "Eigene Events"
+
+#: admin/class-integrate-rybbit-admin.php:473
+msgid "Session Replay"
+msgstr "Session Replay"
+
+#: admin/class-integrate-rybbit-admin.php:474
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: admin/class-integrate-rybbit-admin.php:475
+msgid "Maintenance"
+msgstr "Wartung"
+
+#: admin/class-integrate-rybbit-admin.php:476
+msgid "Debug"
+msgstr "Debug"
+
+#: admin/class-integrate-rybbit-admin.php:477
+msgid "About"
+msgstr "Über"
+
+#: admin/class-integrate-rybbit-admin.php:509
+msgid "Reset to defaults"
+msgstr "Auf Standardwerte zurücksetzen"
+
+#: admin/class-integrate-rybbit-admin.php:611
+msgid "Configure tracking and privacy settings for the Rybbit tracking script."
+msgstr ""
+"Tracking- und Datenschutzeinstellungen für das Rybbit-Tracking-Skript "
+"konfigurieren."
+
+#: admin/class-integrate-rybbit-admin.php:615
+msgid "Integrate Rybbit settings"
+msgstr "Integrate-Rybbit-Einstellungen"
+
+#: admin/class-integrate-rybbit-admin.php:662
+msgid "Site ID"
+msgstr "Site-ID"
+
+#: admin/class-integrate-rybbit-admin.php:675
+msgid "Find this in your Rybbit dashboard under your site's tracking settings."
+msgstr ""
+"Zu finden im Rybbit-Dashboard unter den Tracking-Einstellungen der Website."
+
+#: admin/class-integrate-rybbit-admin.php:680
+msgid "Script URL"
+msgstr "Skript-URL"
+
+#. translators: %s: Example script URL.
+#: admin/class-integrate-rybbit-admin.php:698
+#, php-format
+msgid "Example: %s"
+msgstr "Beispiel: %s"
+
+#: admin/class-integrate-rybbit-admin.php:706
+msgid "Do not track these roles"
+msgstr "Diese Rollen nicht tracken"
+
+#: admin/class-integrate-rybbit-admin.php:713
+msgid ""
+"Selected roles will not receive the tracking script (frontend and wp-admin)."
+msgstr ""
+"Ausgewählte Rollen erhalten das Tracking-Skript nicht (Frontend und wp-"
+"admin)."
+
+#: admin/class-integrate-rybbit-admin.php:717
+msgid "Script loading"
+msgstr "Laden des Skripts"
+
+#: admin/class-integrate-rybbit-admin.php:720
+msgid "Defer (recommended)"
+msgstr "Defer (empfohlen)"
+
+#: admin/class-integrate-rybbit-admin.php:721
+msgid "Async"
+msgstr "Async"
+
+#. translators: 1: Code word defer. 2: Code word async.
+#: admin/class-integrate-rybbit-admin.php:727
+#, php-format
+msgid "Controls whether the tracking script tag uses %1$s (default) or %2$s."
+msgstr ""
+"Legt fest, ob das Tracking-Skript-Tag %1$s (Standard) oder %2$s verwendet."
+
+#: admin/class-integrate-rybbit-admin.php:736
+msgid "wp-admin"
+msgstr "wp-admin"
+
+#: admin/class-integrate-rybbit-admin.php:738
+msgid "Also load the tracking script in wp-admin"
+msgstr "Tracking-Skript auch in wp-admin laden"
+
+#: admin/class-integrate-rybbit-admin.php:739
+msgid ""
+"Off by default. Most sites only need frontend tracking. Excluded roles are "
+"never tracked."
+msgstr ""
+"Standardmäßig aus. Die meisten Websites brauchen nur Tracking im Frontend. "
+"Ausgeschlossene Rollen werden nie getrackt."
+
+#: admin/class-integrate-rybbit-admin.php:754
+msgid "WordPress scoped (default)"
+msgstr "WordPress mit Site-Präfix (Standard)"
+
+#: admin/class-integrate-rybbit-admin.php:755
+msgid "Keyed hash (HMAC, hides the WordPress user ID)"
+msgstr "Schlüsselbasierter Hash (HMAC, verbirgt die WordPress-Benutzer-ID)"
+
+#: admin/class-integrate-rybbit-admin.php:756
+msgid "WordPress user ID (numeric)"
+msgstr "WordPress-Benutzer-ID (numerisch)"
+
+#: admin/class-integrate-rybbit-admin.php:757
+msgid "Username (user_login)"
+msgstr "Benutzername (user_login)"
+
+#: admin/class-integrate-rybbit-admin.php:758
+msgid "Email address"
+msgstr "E-Mail-Adresse"
+
+#: admin/class-integrate-rybbit-admin.php:759
+msgid "Custom user meta value"
+msgstr "Benutzerdefinierter User-Meta-Wert"
+
+#: admin/class-integrate-rybbit-admin.php:764
+msgid "Identify logged-in users"
+msgstr "Angemeldete Benutzer identifizieren"
+
+#: admin/class-integrate-rybbit-admin.php:767
+msgid "Disabled"
+msgstr "Deaktiviert"
+
+#: admin/class-integrate-rybbit-admin.php:768
+msgid "Pseudonymized (hashed)"
+msgstr "Pseudonymisiert (gehasht)"
+
+#: admin/class-integrate-rybbit-admin.php:769
+msgid "Full (cleartext email)"
+msgstr "Vollständig (E-Mail im Klartext)"
+
+#: admin/class-integrate-rybbit-admin.php:772
+msgid "GDPR/Privacy:"
+msgstr "DSGVO/Datenschutz:"
+
+#: admin/class-integrate-rybbit-admin.php:773
+msgid ""
+"Identifying users is personal data processing. Only enable this if you have "
+"a lawful basis (e.g. consent) and have updated your privacy policy and "
+"consent banner accordingly."
+msgstr ""
+"Das Identifizieren von Benutzern ist eine Verarbeitung personenbezogener "
+"Daten. Dies sollte nur aktiviert werden, wenn eine Rechtsgrundlage (z. B. "
+"Einwilligung) vorliegt und die Datenschutzerklärung sowie das "
+"Einwilligungsbanner entsprechend angepasst sind."
+
+#: admin/class-integrate-rybbit-admin.php:778
+msgid "User ID used for identification"
+msgstr "Für die Identifikation verwendete Benutzer-ID"
+
+#. translators: %s: "userId".
+#: admin/class-integrate-rybbit-admin.php:790
+#, php-format
+msgid ""
+"Controls what is sent as the Rybbit %s when identifying logged-in users."
+msgstr ""
+"Legt fest, was beim Identifizieren angemeldeter Benutzer als Rybbit-%s "
+"gesendet wird."
+
+#. translators: 1: strategy name, 2: example userId.
+#: admin/class-integrate-rybbit-admin.php:799
+#, php-format
+msgid ""
+"%1$s sends the site ID and the user ID, for example %2$s. The value stays "
+"the same for each user. It shows the WordPress user ID."
+msgstr ""
+"%1$s sendet die Site-ID und die Benutzer-ID, zum Beispiel %2$s. Der Wert "
+"bleibt für jeden Benutzer gleich. Er zeigt die WordPress-Benutzer-ID."
+
+#: admin/class-integrate-rybbit-admin.php:800
+msgid "WordPress scoped"
+msgstr "WordPress mit Site-Präfix"
+
+#. translators: 1: strategy name, 2: example userId.
+#: admin/class-integrate-rybbit-admin.php:809
+#, php-format
+msgid ""
+"%1$s sends a hash of the user ID, for example %2$s. It does not show the "
+"WordPress user ID. The hash uses the security keys of this site. If you "
+"change these keys, all users get a new ID in Rybbit."
+msgstr ""
+"%1$s sendet einen Hash der Benutzer-ID, zum Beispiel %2$s. Er zeigt nicht "
+"die WordPress-Benutzer-ID. Der Hash verwendet die Sicherheitsschlüssel "
+"dieser Website. Werden diese Schlüssel geändert, erhalten alle Benutzer eine "
+"neue ID in Rybbit."
+
+#: admin/class-integrate-rybbit-admin.php:810
+msgid "Keyed hash"
+msgstr "Schlüsselbasierter Hash"
+
+#: admin/class-integrate-rybbit-admin.php:815
+msgid ""
+"Note: \"Username\" and \"Custom user meta value\" send the value in "
+"cleartext, also in pseudonymized mode."
+msgstr ""
+"Hinweis: „Benutzername“ und „Benutzerdefinierter User-Meta-Wert“ senden den "
+"Wert im Klartext, auch im pseudonymisierten Modus."
+
+#: admin/class-integrate-rybbit-admin.php:819
+msgid "User meta key"
+msgstr "User-Meta-Schlüssel"
+
+#: admin/class-integrate-rybbit-admin.php:825
+msgid "e.g. customer_id"
+msgstr "z. B. customer_id"
+
+#: admin/class-integrate-rybbit-admin.php:830
+msgid "The value of this user meta field will be used as the Rybbit userId."
+msgstr "Der Wert dieses User-Meta-Felds wird als Rybbit-userId verwendet."
+
+#: admin/class-integrate-rybbit-admin.php:835
+msgid "Identify payload preview"
+msgstr "Vorschau der Identify-Payload"
+
+#: admin/class-integrate-rybbit-admin.php:839
+msgid ""
+"Preview of the identify payload that would be sent for the current logged-in "
+"user."
+msgstr ""
+"Vorschau der Identify-Payload, die für den aktuell angemeldeten Benutzer "
+"gesendet würde."
+
+#: admin/class-integrate-rybbit-admin.php:840
+msgid "Refresh preview"
+msgstr "Vorschau aktualisieren"
+
+#: admin/class-integrate-rybbit-admin.php:845
+msgid "Visitor opt-out"
+msgstr "Opt-out für Besucher"
+
+#. translators: 1: Shortcode, 2: Block name.
+#: admin/class-integrate-rybbit-admin.php:851
+#, php-format
+msgid ""
+"Let visitors turn the tracking off. Add the shortcode %1$s or the block %2$s "
+"to a page, for example your privacy policy."
+msgstr ""
+"Besucher können das Tracking ausschalten. Dafür den Shortcode %1$s oder den "
+"Block %2$s auf einer Seite einfügen, zum Beispiel in der "
+"Datenschutzerklärung."
+
+#: admin/class-integrate-rybbit-admin.php:853
+msgid "Rybbit Opt-out"
+msgstr "Rybbit Opt-out"
+
+#. translators: %s: Name of the storage entry, for example "disable-rybbit".
+#: admin/class-integrate-rybbit-admin.php:861
+#, php-format
+msgid ""
+"The choice is saved in the browser of the visitor under %s. It applies to "
+"this website and this browser only."
+msgstr ""
+"Die Auswahl wird im Browser des Besuchers unter %s gespeichert. Sie gilt nur "
+"für diese Website und diesen Browser."
+
+#: admin/class-integrate-rybbit-admin.php:889
+msgid "Skip patterns"
+msgstr "Ausschlussmuster"
+
+#: admin/class-integrate-rybbit-admin.php:893
+msgid "One pattern per line. Matching URL paths will not be tracked."
+msgstr "Ein Muster pro Zeile. Passende URL-Pfade werden nicht getrackt."
+
+#: admin/class-integrate-rybbit-admin.php:895
+msgid "Wildcards:"
+msgstr "Platzhalter:"
+
+#. translators: 1: Single asterisk wildcard. 2: Slash character. 3: Double asterisk wildcard.
+#: admin/class-integrate-rybbit-admin.php:899
+#, php-format
+msgid ""
+"%1$s matches within one path segment (does not cross %2$s). %3$s matches "
+"across multiple segments (can include %2$s)."
+msgstr ""
+"%1$s passt innerhalb eines Pfadsegments (überschreitet kein %2$s). %3$s "
+"passt über mehrere Segmente hinweg (kann %2$s enthalten)."
+
+#: admin/class-integrate-rybbit-admin.php:907
+msgid "Regular expressions:"
+msgstr "Reguläre Ausdrücke:"
+
+#. translators: 1: "re:", 2: Example pattern.
+#: admin/class-integrate-rybbit-admin.php:911
+#, php-format
+msgid "Start a line with %1$s to use a regular expression, for example %2$s."
+msgstr ""
+"Mit %1$s am Zeilenanfang wird ein regulärer Ausdruck verwendet, zum Beispiel "
+"%2$s."
+
+#: admin/class-integrate-rybbit-admin.php:917
+msgid "Examples:"
+msgstr "Beispiele:"
+
+#. translators: 1: Pattern, 2: Matching path, 3: Path that does not match.
+#: admin/class-integrate-rybbit-admin.php:922
+#: admin/class-integrate-rybbit-admin.php:926
+#, php-format
+msgid "%1$s matches %2$s but not %3$s"
+msgstr "%1$s passt auf %2$s, aber nicht auf %3$s"
+
+#. translators: 1: Pattern, 2: First matching path, 3: Second matching path.
+#: admin/class-integrate-rybbit-admin.php:924
+#, php-format
+msgid "%1$s matches %2$s and %3$s"
+msgstr "%1$s passt auf %2$s und %3$s"
+
+#: admin/class-integrate-rybbit-admin.php:945
+msgid "Mask patterns"
+msgstr "Maskierungsmuster"
+
+#: admin/class-integrate-rybbit-admin.php:949
+msgid ""
+"One pattern per line. Matching URL paths are tracked, but the recorded path "
+"is replaced with the pattern (privacy masking)."
+msgstr ""
+"Ein Muster pro Zeile. Passende URL-Pfade werden getrackt, aber der "
+"aufgezeichnete Pfad wird durch das Muster ersetzt (Datenschutz-Maskierung)."
+
+#: admin/class-integrate-rybbit-admin.php:951
+msgid "Example:"
+msgstr "Beispiel:"
+
+#. translators: 1: Pattern, 2: Visited path.
+#: admin/class-integrate-rybbit-admin.php:955
+#, php-format
+msgid ""
+"If you set %1$s and a user visits %2$s, analytics stores %1$s instead of the "
+"real URL."
+msgstr ""
+"Bei der Einstellung %1$s und einem Besuch von %2$s speichert die Webanalyse "
+"%1$s statt der echten URL."
+
+#: admin/class-integrate-rybbit-admin.php:961
+msgid "Wildcards and regular expressions work the same as in skip patterns."
+msgstr ""
+"Platzhalter und reguläre Ausdrücke funktionieren wie bei den "
+"Ausschlussmustern."
+
+#: admin/class-integrate-rybbit-admin.php:966
+msgid "Debounce (ms)"
+msgstr "Entprellung (ms)"
+
+#: admin/class-integrate-rybbit-admin.php:979
+msgid ""
+"Delay before tracking a pageview after History API URL changes. Set to 0 to "
+"disable."
+msgstr ""
+"Verzögerung, bevor ein Seitenaufruf nach URL-Änderungen über die History API "
+"getrackt wird. Mit 0 deaktivieren."
+
+#: admin/class-integrate-rybbit-admin.php:983
+msgid "Tag"
+msgstr "Tag"
+
+#: admin/class-integrate-rybbit-admin.php:991
+msgid "e.g. production"
+msgstr "z. B. production"
+
+#: admin/class-integrate-rybbit-admin.php:996
+msgid ""
+"Optional. Rybbit adds this tag to every event of this site. Use it to "
+"separate environments or site versions. Maximum 256 characters."
+msgstr ""
+"Optional. Rybbit fügt dieses Tag jedem Event dieser Website hinzu. Damit "
+"lassen sich Umgebungen oder Website-Versionen trennen. Maximal 256 Zeichen."
+
+#: admin/class-integrate-rybbit-admin.php:1001
+msgid ""
+"Outbound link tracking, error tracking, Web Vitals, session replay and hash "
+"routing are turned on or off per site in the Rybbit dashboard."
+msgstr ""
+"Tracking ausgehender Links, Fehler-Tracking, Web Vitals, Session Replay und "
+"Hash-Routing werden pro Website im Rybbit-Dashboard ein- oder ausgeschaltet."
+
+#. translators: %s: Rybbit function name.
+#: admin/class-integrate-rybbit-admin.php:1016
+#, php-format
+msgid ""
+"Send a custom event to Rybbit when a visitor clicks an element. The plugin "
+"calls %s for you. You do not need to write JavaScript."
+msgstr ""
+"Sendet ein eigenes Event an Rybbit, wenn ein Besucher auf ein Element "
+"klickt. Das Plugin ruft dafür %s auf. JavaScript muss nicht geschrieben "
+"werden."
+
+#: admin/class-integrate-rybbit-admin.php:1022
+msgid "No event rules yet."
+msgstr "Noch keine Event-Regeln."
+
+#: admin/class-integrate-rybbit-admin.php:1031
+msgid "Add event rule"
+msgstr "Event-Regel hinzufügen"
+
+#. translators: %d: Maximum number of rules.
+#: admin/class-integrate-rybbit-admin.php:1042
+#, php-format
+msgid ""
+"You can add up to %d rules. A rule also matches when the visitor clicks "
+"inside a matching element, for example on an icon in a button. Visitors with "
+"an excluded role do not send events."
+msgstr ""
+"Es sind bis zu %d Regeln möglich. Eine Regel greift auch, wenn der Besucher "
+"in ein passendes Element klickt, zum Beispiel auf ein Icon in einer "
+"Schaltfläche. Besucher mit einer ausgeschlossenen Rolle senden keine Events."
+
+#. translators: 1: HTML attribute name, 2: HTML attribute name.
+#: admin/class-integrate-rybbit-admin.php:1051
+#, php-format
+msgid ""
+"You can also mark elements in your HTML with the %1$s and %2$s attributes. "
+"Rybbit reads them without this plugin."
+msgstr ""
+"Elemente im HTML lassen sich auch mit den Attributen %1$s und %2$s "
+"markieren. Rybbit liest sie auch ohne dieses Plugin."
+
+#: admin/class-integrate-rybbit-admin.php:1085
+msgid "CSS selector"
+msgstr "CSS-Selektor"
+
+#: admin/class-integrate-rybbit-admin.php:1089
+msgid "Event name"
+msgstr "Eventname"
+
+#: admin/class-integrate-rybbit-admin.php:1093
+msgid "Properties (optional)"
+msgstr "Eigenschaften (optional)"
+
+#: admin/class-integrate-rybbit-admin.php:1095
+msgid ""
+"One key=value pair per line. Values are sent as text. Maximum 2 KB in total."
+msgstr ""
+"Ein key=value-Paar pro Zeile. Werte werden als Text gesendet. Insgesamt "
+"maximal 2 KB."
+
+#: admin/class-integrate-rybbit-admin.php:1098
+msgid "Remove rule"
+msgstr "Regel entfernen"
+
+#: admin/class-integrate-rybbit-admin.php:1108
+msgid ""
+"These options only apply when session replay is turned on for this site in "
+"the Rybbit dashboard."
+msgstr ""
+"Diese Optionen gelten nur, wenn Session Replay für diese Website im Rybbit-"
+"Dashboard eingeschaltet ist."
+
+#: admin/class-integrate-rybbit-admin.php:1111
+msgid "Mask text selectors"
+msgstr "Selektoren für Textmaskierung"
+
+#. translators: 1: Example selector, 2: Example selector.
+#: admin/class-integrate-rybbit-admin.php:1118
+#, php-format
+msgid ""
+"One CSS selector per line. Text content of matching elements is masked in "
+"session replays. Example: %1$s or %2$s."
+msgstr ""
+"Ein CSS-Selektor pro Zeile. Der Textinhalt passender Elemente wird in "
+"Session Replays maskiert. Beispiel: %1$s oder %2$s."
+
+#. translators: %s: Default CSS class.
+#: admin/class-integrate-rybbit-admin.php:1128
+msgid "Block class"
+msgstr "Block-Klasse"
+
+#. translators: %s: Default CSS class.
+#: admin/class-integrate-rybbit-admin.php:1128
+#, php-format
+msgid "Elements with this CSS class are not recorded at all. Default: %s"
+msgstr ""
+"Elemente mit dieser CSS-Klasse werden überhaupt nicht aufgezeichnet. "
+"Standard: %s"
+
+#: admin/class-integrate-rybbit-admin.php:1129
+msgid "Block selector"
+msgstr "Block-Selektor"
+
+#: admin/class-integrate-rybbit-admin.php:1129
+msgid "CSS selector for elements to exclude entirely from recording."
+msgstr ""
+"CSS-Selektor für Elemente, die vollständig von der Aufzeichnung "
+"ausgeschlossen werden."
+
+#. translators: %s: Default CSS class.
+#: admin/class-integrate-rybbit-admin.php:1131
+msgid "Ignore class"
+msgstr "Ignorieren-Klasse"
+
+#. translators: %s: Default CSS class.
+#: admin/class-integrate-rybbit-admin.php:1131
+#, php-format
+msgid ""
+"Elements with this CSS class appear in the replay, but their interactions "
+"are not recorded. Default: %s"
+msgstr ""
+"Elemente mit dieser CSS-Klasse erscheinen im Replay, ihre Interaktionen "
+"werden aber nicht aufgezeichnet. Standard: %s"
+
+#: admin/class-integrate-rybbit-admin.php:1132
+msgid "Ignore selector"
+msgstr "Ignorieren-Selektor"
+
+#: admin/class-integrate-rybbit-admin.php:1132
+msgid "CSS selector for inputs and elements whose events are ignored."
+msgstr ""
+"CSS-Selektor für Eingabefelder und Elemente, deren Events ignoriert werden."
+
+#. translators: %s: Default CSS class.
+#: admin/class-integrate-rybbit-admin.php:1134
+msgid "Mask text class"
+msgstr "Textmaskierungs-Klasse"
+
+#. translators: %s: Default CSS class.
+#: admin/class-integrate-rybbit-admin.php:1134
+#, php-format
+msgid "Elements with this CSS class have their text masked. Default: %s"
+msgstr ""
+"Der Text von Elementen mit dieser CSS-Klasse wird maskiert. Standard: %s"
+
+#: admin/class-integrate-rybbit-admin.php:1137
+msgid "Mask all inputs"
+msgstr "Alle Eingaben maskieren"
+
+#: admin/class-integrate-rybbit-admin.php:1139
+msgid "Mask all input values for privacy"
+msgstr "Alle Eingabewerte aus Datenschutzgründen maskieren"
+
+#: admin/class-integrate-rybbit-admin.php:1140
+msgid "When enabled, session replay shows input values as asterisks."
+msgstr "Wenn aktiviert, zeigt Session Replay Eingabewerte als Sternchen."
+
+#: admin/class-integrate-rybbit-admin.php:1144
+msgid "Mask input options (JSON)"
+msgstr "Optionen für Eingabemaskierung (JSON)"
+
+#. translators: %s: Example JSON.
+#: admin/class-integrate-rybbit-admin.php:1152
+#, php-format
+msgid "JSON object that controls which input types are masked. Example: %s"
+msgstr ""
+"JSON-Objekt, das steuert, welche Eingabetypen maskiert werden. Beispiel: %s"
+
+#: admin/class-integrate-rybbit-admin.php:1160
+msgid "Collect fonts"
+msgstr "Schriftarten erfassen"
+
+#: admin/class-integrate-rybbit-admin.php:1162
+msgid "Collect website fonts for accurate replays"
+msgstr "Website-Schriftarten für genaue Replays erfassen"
+
+#: admin/class-integrate-rybbit-admin.php:1163
+msgid "Disable to reduce replay data size."
+msgstr "Zum Verringern der Replay-Datenmenge deaktivieren."
+
+#: admin/class-integrate-rybbit-admin.php:1167
+msgid "Sampling (JSON)"
+msgstr "Sampling (JSON)"
+
+#: admin/class-integrate-rybbit-admin.php:1172
+msgid "Optional JSON object to reduce replay volume."
+msgstr "Optionales JSON-Objekt, um das Replay-Volumen zu verringern."
+
+#: admin/class-integrate-rybbit-admin.php:1173
+msgid "Sampling configuration docs"
+msgstr "Dokumentation zur Sampling-Konfiguration"
+
+#: admin/class-integrate-rybbit-admin.php:1178
+msgid "SlimDOM options"
+msgstr "SlimDOM-Optionen"
+
+#. translators: 1: Code word true. 2: Code word false.
+#: admin/class-integrate-rybbit-admin.php:1186
+#, php-format
+msgid ""
+"Optional DOM slimming for replays. Set %1$s to enable all slimDOM options, "
+"%2$s to disable them, or use a JSON object for fine-grained control."
+msgstr ""
+"Optionales DOM-Slimming für Replays. %1$s aktiviert alle slimDOM-Optionen, "
+"%2$s deaktiviert sie. Mit einem JSON-Objekt lässt sich die Steuerung feiner "
+"einstellen."
+
+#: admin/class-integrate-rybbit-admin.php:1191
+msgid "SlimDOM options docs"
+msgstr "Dokumentation zu den SlimDOM-Optionen"
+
+#: admin/class-integrate-rybbit-admin.php:1256
+#: admin/class-integrate-rybbit-dashboard.php:155
+msgid "Last 24 hours"
+msgstr "Letzte 24 Stunden"
+
+#: admin/class-integrate-rybbit-admin.php:1257
+#: admin/class-integrate-rybbit-dashboard.php:156
+msgid "Last 7 days"
+msgstr "Letzte 7 Tage"
+
+#: admin/class-integrate-rybbit-admin.php:1258
+#: admin/class-integrate-rybbit-dashboard.php:157
+msgid "Last 30 days"
+msgstr "Letzte 30 Tage"
+
+#: admin/class-integrate-rybbit-admin.php:1259
+#: admin/class-integrate-rybbit-dashboard.php:158
+msgid "Last 90 days"
+msgstr "Letzte 90 Tage"
+
+#: admin/class-integrate-rybbit-admin.php:1264
+msgid ""
+"Show your Rybbit analytics in the WordPress dashboard. The plugin reads the "
+"numbers from the Rybbit API with an API key. The browser of a visitor never "
+"sees the key."
+msgstr ""
+"Zeigt die Rybbit-Statistiken im WordPress-Dashboard an. Das Plugin liest die "
+"Zahlen mit einem API-Schlüssel aus der Rybbit-API. Der Browser eines "
+"Besuchers sieht den Schlüssel nie."
+
+#: admin/class-integrate-rybbit-admin.php:1265
+msgid ""
+"Rybbit Cloud offers API keys on the Standard plan and above. Self-hosted "
+"instances have no such limit."
+msgstr ""
+"Rybbit Cloud bietet API-Schlüssel ab dem Standard-Tarif. Selbst gehostete "
+"Instanzen haben diese Einschränkung nicht."
+
+#: admin/class-integrate-rybbit-admin.php:1269
+msgid "API key"
+msgstr "API-Schlüssel"
+
+#. translators: %s: PHP constant name.
+#: admin/class-integrate-rybbit-admin.php:1276
+#, php-format
+msgid ""
+"The API key is set with the constant %s in wp-config.php. This key is used "
+"instead of the field below."
+msgstr ""
+"Der API-Schlüssel ist mit der Konstante %s in der wp-config.php gesetzt. "
+"Dieser Schlüssel wird anstelle des Felds unten verwendet."
+
+#: admin/class-integrate-rybbit-admin.php:1283
+msgid "A key is saved. Enter a new key to replace it."
+msgstr ""
+"Ein Schlüssel ist gespeichert. Zum Ersetzen einen neuen Schlüssel eingeben."
+
+#: admin/class-integrate-rybbit-admin.php:1284
+msgid ""
+"Create the key in Rybbit under Organization settings, API keys. The plugin "
+"only needs read access. The saved key is never shown again."
+msgstr ""
+"Der Schlüssel wird in Rybbit unter „Organization settings“, „API keys“ "
+"erstellt. Das Plugin braucht nur Lesezugriff. Der gespeicherte Schlüssel "
+"wird nie wieder angezeigt."
+
+#: admin/class-integrate-rybbit-admin.php:1289
+msgid "Remove the saved API key"
+msgstr "Gespeicherten API-Schlüssel entfernen"
+
+#: admin/class-integrate-rybbit-admin.php:1293
+msgid "For more safety, you can define the key in wp-config.php instead."
+msgstr ""
+"Für mehr Sicherheit lässt sich der Schlüssel stattdessen in der wp-"
+"config.php definieren."
+
+#: admin/class-integrate-rybbit-admin.php:1297
+msgid "API URL"
+msgstr "API-URL"
+
+#. translators: %s: URL.
+#: admin/class-integrate-rybbit-admin.php:1315
+#, php-format
+msgid "Leave this empty to use the address of your Script URL. Now used: %s"
+msgstr ""
+"Leer lassen, um die Adresse der Skript-URL zu verwenden. Aktuell verwendet: "
+"%s"
+
+#: admin/class-integrate-rybbit-admin.php:1319
+msgid ""
+"Leave this empty to use the address of your Script URL. Set it only if the "
+"API runs on another address."
+msgstr ""
+"Leer lassen, um die Adresse der Skript-URL zu verwenden. Nur setzen, wenn "
+"die API unter einer anderen Adresse läuft."
+
+#: admin/class-integrate-rybbit-admin.php:1326
+msgid "Default time range"
+msgstr "Standard-Zeitraum"
+
+#: admin/class-integrate-rybbit-admin.php:1336
+msgid "Cache time (minutes)"
+msgstr "Cache-Dauer (Minuten)"
+
+#: admin/class-integrate-rybbit-admin.php:1349
+msgid ""
+"The plugin keeps API answers for this time. A longer time saves API "
+"requests. This matters on plans with request limits."
+msgstr ""
+"Das Plugin speichert API-Antworten für diese Zeit. Eine längere Dauer spart "
+"API-Anfragen. Das ist bei Tarifen mit Anfragelimit wichtig."
+
+#: admin/class-integrate-rybbit-admin.php:1353
+msgid "Connection"
+msgstr "Verbindung"
+
+#: admin/class-integrate-rybbit-admin.php:1356
+msgid "Test connection"
+msgstr "Verbindung testen"
+
+#: admin/class-integrate-rybbit-admin.php:1357
+msgid "Clear cache"
+msgstr "Cache leeren"
+
+#: admin/class-integrate-rybbit-admin.php:1360
+msgid "The test uses the saved settings. Save your changes first."
+msgstr ""
+"Der Test verwendet die gespeicherten Einstellungen. Änderungen zuerst "
+"speichern."
+
+#: admin/class-integrate-rybbit-admin.php:1362
+msgid "Open the analytics page"
+msgstr "Statistikseite öffnen"
+
+#: admin/class-integrate-rybbit-admin.php:1377
+msgid "Delete data on uninstall"
+msgstr "Daten bei Deinstallation löschen"
+
+#: admin/class-integrate-rybbit-admin.php:1379
+msgid "Remove all plugin settings when the plugin is uninstalled (deleted)."
+msgstr ""
+"Alle Plugin-Einstellungen entfernen, wenn das Plugin deinstalliert "
+"(gelöscht) wird."
+
+#: admin/class-integrate-rybbit-admin.php:1380
+msgid ""
+"This does not run when the plugin is only deactivated. On multisite, each "
+"site uses its own setting."
+msgstr ""
+"Das passiert nicht, wenn das Plugin nur deaktiviert wird. In einer Multisite-"
+"Installation hat jede Website ihre eigene Einstellung."
+
+#: admin/class-integrate-rybbit-admin.php:1418
+msgid "Effective settings"
+msgstr "Wirksame Einstellungen"
+
+#: admin/class-integrate-rybbit-admin.php:1421
+msgid "Values shown here reflect what is currently saved in the database."
+msgstr ""
+"Die hier angezeigten Werte entsprechen dem, was aktuell in der Datenbank "
+"gespeichert ist."
+
+#: admin/class-integrate-rybbit-admin.php:1425
+msgid "Current user"
+msgstr "Aktueller Benutzer"
+
+#: admin/class-integrate-rybbit-admin.php:1428
+msgid "Logged in:"
+msgstr "Angemeldet:"
+
+#: admin/class-integrate-rybbit-admin.php:1428
+#: admin/class-integrate-rybbit-admin.php:1431
+msgid "yes"
+msgstr "ja"
+
+#: admin/class-integrate-rybbit-admin.php:1428
+#: admin/class-integrate-rybbit-admin.php:1431
+msgid "no"
+msgstr "nein"
+
+#: admin/class-integrate-rybbit-admin.php:1429
+msgid "User ID:"
+msgstr "Benutzer-ID:"
+
+#: admin/class-integrate-rybbit-admin.php:1430
+msgid "Roles:"
+msgstr "Rollen:"
+
+#: admin/class-integrate-rybbit-admin.php:1431
+msgid "Excluded by role:"
+msgstr "Durch Rolle ausgeschlossen:"
+
+#: admin/class-integrate-rybbit-admin.php:1433
+msgid ""
+"If \"Excluded by role\" is \"yes\", this user does not receive the tracking "
+"script."
+msgstr ""
+"Wenn „Durch Rolle ausgeschlossen“ auf „ja“ steht, erhält dieser Benutzer das "
+"Tracking-Skript nicht."
+
+#: admin/class-integrate-rybbit-admin.php:1437
+msgid "Tracking script data"
+msgstr "Daten des Tracking-Skripts"
+
+#: admin/class-integrate-rybbit-admin.php:1440
+msgid ""
+"Script URL and attributes of the tracking script tag. Attributes with the "
+"default value are left out."
+msgstr ""
+"Skript-URL und Attribute des Tracking-Skript-Tags. Attribute mit dem "
+"Standardwert werden weggelassen."
+
+#: admin/class-integrate-rybbit-admin.php:1444
+msgid "Quick checks"
+msgstr "Schnellprüfung"
+
+#: admin/class-integrate-rybbit-admin.php:1447
+msgid ""
+"Site ID and Script URL must be set. Otherwise the plugin outputs nothing."
+msgstr ""
+"Site-ID und Skript-URL müssen gesetzt sein. Sonst gibt das Plugin nichts aus."
+
+#: admin/class-integrate-rybbit-admin.php:1448
+msgid ""
+"The script loads on the frontend. It loads in wp-admin only if \"Also load "
+"the tracking script in wp-admin\" is on."
+msgstr ""
+"Das Skript wird im Frontend geladen. In wp-admin wird es nur geladen, wenn "
+"„Tracking-Skript auch in wp-admin laden“ aktiv ist."
+
+#: admin/class-integrate-rybbit-admin.php:1449
+msgid "Role exclusion applies to the frontend and to wp-admin."
+msgstr "Der Rollenausschluss gilt für das Frontend und für wp-admin."
+
+#: admin/class-integrate-rybbit-admin.php:1462
+msgid "GitHub repository"
+msgstr "GitHub-Repository"
+
+#: admin/class-integrate-rybbit-admin.php:1463
+msgid "Rybbit website"
+msgstr "Rybbit-Website"
+
+#: admin/class-integrate-rybbit-admin.php:1464
+msgid "Rybbit documentation"
+msgstr "Rybbit-Dokumentation"
+
+#: admin/class-integrate-rybbit-admin.php:1469
+msgid "Installed plugin version"
+msgstr "Installierte Plugin-Version"
+
+#: admin/class-integrate-rybbit-admin.php:1473
+msgid "Links"
+msgstr "Links"
+
+#: admin/class-integrate-rybbit-admin.php:1483
+msgid "Troubleshooting"
+msgstr "Fehlerbehebung"
+
+#: admin/class-integrate-rybbit-admin.php:1486
+msgid "Make sure Site ID and Script URL are set."
+msgstr "Sicherstellen, dass Site-ID und Skript-URL gesetzt sind."
+
+#: admin/class-integrate-rybbit-admin.php:1487
+msgid ""
+"If tracking does not fire for logged-in users, check \"Do not track these "
+"roles\"."
+msgstr ""
+"Wenn das Tracking für angemeldete Benutzer nicht auslöst, die Einstellung "
+"„Diese Rollen nicht tracken“ prüfen."
+
+#: admin/class-integrate-rybbit-admin.php:1488
+msgid ""
+"To identify users, turn it on in the Privacy tab and check the payload "
+"preview."
+msgstr ""
+"Zum Identifizieren von Benutzern die Option im Tab „Datenschutz“ einschalten "
+"und die Payload-Vorschau prüfen."
+
+#: admin/class-integrate-rybbit-admin.php:1489
+msgid ""
+"Ad blockers and some caching or optimization plugins can block or change the "
+"tracking script."
+msgstr ""
+"Werbeblocker sowie einige Caching- oder Optimierungs-Plugins können das "
+"Tracking-Skript blockieren oder verändern."
+
+#: admin/class-integrate-rybbit-dashboard.php:63
+#: admin/class-integrate-rybbit-dashboard.php:64
+#: admin/class-integrate-rybbit-dashboard.php:81
+#: admin/class-integrate-rybbit-dashboard.php:165
+msgid "Rybbit Analytics"
+msgstr "Rybbit Analytics"
+
+#: admin/class-integrate-rybbit-dashboard.php:136
+#: admin/class-integrate-rybbit-dashboard.php:183 admin/js/dashboard.js:541
+msgid "Loading analytics…"
+msgstr "Statistiken werden geladen…"
+
+#: admin/class-integrate-rybbit-dashboard.php:138
+#: admin/class-integrate-rybbit-dashboard.php:185
+msgid "JavaScript is required to show the analytics."
+msgstr "JavaScript ist erforderlich, um die Statistiken anzuzeigen."
+
+#: admin/class-integrate-rybbit-dashboard.php:140
+msgid "Show all analytics"
+msgstr "Alle Statistiken anzeigen"
+
+#: admin/class-integrate-rybbit-dashboard.php:151
+msgid "Sorry, you are not allowed to access this page."
+msgstr "Entschuldigung, der Zugriff auf diese Seite ist nicht erlaubt."
+
+#: admin/class-integrate-rybbit-dashboard.php:167
+msgid "Open Rybbit"
+msgstr "Rybbit öffnen"
+
+#: admin/class-integrate-rybbit-dashboard.php:173
+msgid "Time range"
+msgstr "Zeitraum"
+
+#: admin/class-integrate-rybbit-dashboard.php:179
+msgid "Refresh"
+msgstr "Aktualisieren"
+
+#: includes/class-integrate-rybbit-admin-ajax.php:31
+#: includes/class-integrate-rybbit-admin-ajax.php:49
+msgid "You are not allowed to do this."
+msgstr "Dafür fehlt die Berechtigung."
+
+#: includes/class-integrate-rybbit-admin-ajax.php:35
+#: includes/class-integrate-rybbit-admin-ajax.php:53
+msgid "Invalid security token. Please reload the page."
+msgstr "Ungültiges Sicherheits-Token. Bitte die Seite neu laden."
+
+#: includes/class-integrate-rybbit-admin-ajax.php:103
+msgid "Connection works. The site has data."
+msgstr "Die Verbindung funktioniert. Die Website hat Daten."
+
+#: includes/class-integrate-rybbit-admin-ajax.php:104
+msgid "Connection works. The site has no data yet."
+msgstr "Die Verbindung funktioniert. Die Website hat noch keine Daten."
+
+#: includes/class-integrate-rybbit-admin-ajax.php:117
+msgid "The cache is cleared."
+msgstr "Der Cache wurde geleert."
+
+#: includes/class-integrate-rybbit-api.php:286
+msgid "Unknown metric."
+msgstr "Unbekannte Metrik."
+
+#: includes/class-integrate-rybbit-api.php:378
+msgid "No API key is set."
+msgstr "Es ist kein API-Schlüssel gesetzt."
+
+#: includes/class-integrate-rybbit-api.php:383
+msgid "No Site ID is set."
+msgstr "Es ist keine Site-ID gesetzt."
+
+#: includes/class-integrate-rybbit-api.php:388
+msgid "The API URL is not valid. It must use HTTPS."
+msgstr "Die API-URL ist ungültig. Sie muss HTTPS verwenden."
+
+#. translators: %s: Technical error message.
+#: includes/class-integrate-rybbit-api.php:442
+#, php-format
+msgid "Could not reach the Rybbit server: %s"
+msgstr "Der Rybbit-Server ist nicht erreichbar: %s"
+
+#: includes/class-integrate-rybbit-api.php:457
+msgid "The Rybbit server sent an invalid response."
+msgstr "Der Rybbit-Server hat eine ungültige Antwort gesendet."
+
+#: includes/class-integrate-rybbit-api.php:500
+msgid "The API key was rejected. Check the key."
+msgstr "Der API-Schlüssel wurde abgelehnt. Schlüssel prüfen."
+
+#: includes/class-integrate-rybbit-api.php:505
+msgid ""
+"The API key has no access to this site. Check the key permissions and your "
+"Rybbit plan."
+msgstr ""
+"Der API-Schlüssel hat keinen Zugriff auf diese Website. Die Berechtigungen "
+"des Schlüssels und den Rybbit-Tarif prüfen."
+
+#: includes/class-integrate-rybbit-api.php:510
+msgid "Site not found. Check the Site ID."
+msgstr "Website nicht gefunden. Site-ID prüfen."
+
+#. translators: %s: Error message of the Rybbit API.
+#: includes/class-integrate-rybbit-api.php:528
+#, php-format
+msgid "The Rybbit server rejected the request: %s"
+msgstr "Der Rybbit-Server hat die Anfrage abgelehnt: %s"
+
+#. translators: %d: HTTP status code.
+#: includes/class-integrate-rybbit-api.php:539
+#, php-format
+msgid "The Rybbit server sent an unexpected response (HTTP %d)."
+msgstr "Der Rybbit-Server hat eine unerwartete Antwort gesendet (HTTP %d)."
+
+#: includes/class-integrate-rybbit-api.php:555
+msgid "The Rybbit API rate limit is reached. Try again later."
+msgstr "Das Anfragelimit der Rybbit-API ist erreicht. Später erneut versuchen."
+
+#: includes/class-integrate-rybbit-optout.php:98
+msgid "Turn off analytics"
+msgstr "Webanalyse ausschalten"
+
+#: includes/class-integrate-rybbit-optout.php:99
+msgid "Turn on analytics"
+msgstr "Webanalyse einschalten"
+
+#: includes/class-integrate-rybbit-optout.php:100
+msgid "Website analytics is turned on for this browser."
+msgstr "Die Webanalyse ist für diesen Browser eingeschaltet."
+
+#: includes/class-integrate-rybbit-optout.php:101
+msgid "Website analytics is turned off for this browser."
+msgstr "Die Webanalyse ist für diesen Browser ausgeschaltet."
+
+#: includes/class-integrate-rybbit-optout.php:178
+msgid ""
+"Integrate Rybbit is not set up yet. Visitors do not see the opt-out switch."
+msgstr ""
+"Integrate Rybbit ist noch nicht eingerichtet. Besucher sehen den Opt-out-"
+"Schalter nicht."
+
+#: includes/class-integrate-rybbit-optout.php:203
+msgid "Your browser blocks local storage. This setting cannot be saved."
+msgstr ""
+"Dieser Browser blockiert den lokalen Speicher. Die Einstellung kann nicht "
+"gespeichert werden."
+
+#: includes/class-integrate-rybbit-optout.php:204
+msgid "JavaScript is needed to change this setting."
+msgstr "JavaScript wird benötigt, um diese Einstellung zu ändern."
+
+#: admin/js/dashboard.js:181
+msgid "The request failed (HTTP %s)."
+msgstr "Die Anfrage ist fehlgeschlagen (HTTP %s)."
+
+#: admin/js/dashboard.js:183
+msgid "Your session has expired. Reload the page and try again."
+msgstr "Die Sitzung ist abgelaufen. Die Seite neu laden und erneut versuchen."
+
+#: admin/js/dashboard.js:187
+msgid "The request failed. Check your network connection."
+msgstr "Die Anfrage ist fehlgeschlagen. Netzwerkverbindung prüfen."
+
+#: admin/js/dashboard.js:193 admin/js/dashboard.js:213
+#: admin/js/dashboard.js:242 admin/js/dashboard.js:321
+msgid "Visitors"
+msgstr "Besucher"
+
+#: admin/js/dashboard.js:194 admin/js/dashboard.js:213
+#: admin/js/dashboard.js:242 admin/js/dashboard.js:322
+msgid "Pageviews"
+msgstr "Seitenaufrufe"
+
+#: admin/js/dashboard.js:195
+msgid "Bounce rate"
+msgstr "Absprungrate"
+
+#: admin/js/dashboard.js:196
+msgid "Avg. visit duration"
+msgstr "Ø Besuchsdauer"
+
+#: admin/js/dashboard.js:210
+msgid "Show data as table"
+msgstr "Daten als Tabelle anzeigen"
+
+#: admin/js/dashboard.js:213
+msgid "Time"
+msgstr "Zeit"
+
+#: admin/js/dashboard.js:260
+msgid ""
+"Chart of visitors and pageviews. Use the left and right arrow keys to read "
+"single values."
+msgstr ""
+"Diagramm der Besucher und Seitenaufrufe. Mit den Pfeiltasten nach links und "
+"rechts lassen sich einzelne Werte lesen."
+
+#: admin/js/dashboard.js:359
+msgid "Top pages"
+msgstr "Top-Seiten"
+
+#: admin/js/dashboard.js:360
+msgid "Top referrers"
+msgstr "Top-Referrer"
+
+#: admin/js/dashboard.js:361
+msgid "Countries"
+msgstr "Länder"
+
+#: admin/js/dashboard.js:362
+msgid "Devices"
+msgstr "Geräte"
+
+#: admin/js/dashboard.js:363
+msgid "Browsers"
+msgstr "Browser"
+
+#: admin/js/dashboard.js:368
+msgid "Direct or unknown"
+msgstr "Direkt oder unbekannt"
+
+#: admin/js/dashboard.js:373
+msgid "Unknown"
+msgstr "Unbekannt"
+
+#: admin/js/dashboard.js:381
+msgid "Could not load this list."
+msgstr "Diese Liste konnte nicht geladen werden."
+
+#: admin/js/dashboard.js:385
+msgid "No data yet."
+msgstr "Noch keine Daten."
+
+#: admin/js/dashboard.js:409
+msgid "%s visitor online"
+msgid_plural "%s visitors online"
+msgstr[0] "%s Besucher online"
+msgstr[1] "%s Besucher online"
+
+#: admin/js/dashboard.js:475
+msgid "Try again in about %s minute."
+msgid_plural "Try again in about %s minutes."
+msgstr[0] "In etwa %s Minute erneut versuchen."
+msgstr[1] "In etwa %s Minuten erneut versuchen."
+
+#: admin/js/dashboard.js:478
+msgid "Try again"
+msgstr "Erneut versuchen"
+
+#: admin/js/dashboard.js:482
+msgid "Check API settings"
+msgstr "API-Einstellungen prüfen"
+
+#: admin/js/dashboard.js:511
+msgid "No visits in this period yet."
+msgstr "In diesem Zeitraum gab es noch keine Besuche."
+
+#: admin/js/dashboard.js:515
+msgid "Some data could not be loaded. Try again later."
+msgstr "Einige Daten konnten nicht geladen werden. Später erneut versuchen."
+
+#: admin/js/dashboard.js:529
+msgid "Data is cached for up to %s minute."
+msgid_plural "Data is cached for up to %s minutes."
+msgstr[0] "Daten werden bis zu %s Minute zwischengespeichert."
+msgstr[1] "Daten werden bis zu %s Minuten zwischengespeichert."
+
+#: admin/js/settings.js:183
+msgid "Preview is not available."
+msgstr "Die Vorschau ist nicht verfügbar."
+
+#: admin/js/settings.js:187
+msgid "Loading preview..."
+msgstr "Vorschau wird geladen..."
+
+#: admin/js/settings.js:205 admin/js/settings.js:215 admin/js/settings.js:285
+#: admin/js/settings.js:289
+msgid "Unknown error"
+msgstr "Unbekannter Fehler"
+
+#. translators: %s: Error message.
+#: admin/js/settings.js:207
+msgid "No preview available: %s"
+msgstr "Keine Vorschau verfügbar: %s"
+
+#: admin/js/settings.js:211
+msgid "Nothing is sent with the current settings."
+msgstr "Mit den aktuellen Einstellungen wird nichts gesendet."
+
+#. translators: %s: Error message.
+#: admin/js/settings.js:215
+msgid "Preview error: %s"
+msgstr "Vorschaufehler: %s"
+
+#: admin/js/settings.js:244
+msgid "Testing…"
+msgstr "Wird getestet…"
+
+#: admin/js/settings.js:245
+msgid "Clearing…"
+msgstr "Wird geleert…"
+
+#: admin/js/settings.js:266
+msgid "This action is not available."
+msgstr "Diese Aktion ist nicht verfügbar."
+
+#: admin/js/settings.js:323
+msgid "Replace the current value with the default?"
+msgstr "Den aktuellen Wert durch den Standardwert ersetzen?"
+
+#: admin/js/settings.js:390
+msgid "This value must be valid JSON."
+msgstr "Dieser Wert muss gültiges JSON sein."
+
+#: admin/js/settings.js:394
+msgid "This value must be a JSON object, for example {\"key\": true}."
+msgstr "Dieser Wert muss ein JSON-Objekt sein, zum Beispiel {\"key\": true}."
+
+#: admin/js/settings.js:506
+msgid "Use one key=value pair per line. A key can have up to 128 characters."
+msgstr ""
+"Ein key=value-Paar pro Zeile verwenden. Ein Schlüssel darf bis zu 128 "
+"Zeichen haben."
+
+#: admin/js/settings.js:523
+msgid "The properties are larger than 2 KB."
+msgstr "Die Eigenschaften sind größer als 2 KB."
+
+#: admin/js/settings.js:547
+msgid "Enter a CSS selector."
+msgstr "Einen CSS-Selektor eingeben."
+
+#: admin/js/settings.js:552
+msgid "This CSS selector is not valid."
+msgstr "Dieser CSS-Selektor ist ungültig."
+
+#: admin/js/settings.js:558
+msgid "Enter an event name."
+msgstr "Einen Eventnamen eingeben."
+
+#: blocks/optout/index.js:45
+msgid "Texts"
+msgstr "Texte"
+
+#: blocks/optout/index.js:46
+msgid "Text when analytics is on"
+msgstr "Text bei eingeschalteter Webanalyse"
+
+#: blocks/optout/index.js:47
+msgid "Button to turn analytics off"
+msgstr "Schaltfläche zum Ausschalten der Webanalyse"
+
+#: blocks/optout/index.js:48
+msgid "Text when analytics is off"
+msgstr "Text bei ausgeschalteter Webanalyse"
+
+#: blocks/optout/index.js:49
+msgid "Button to turn analytics on"
+msgstr "Schaltfläche zum Einschalten der Webanalyse"
+
+#: blocks/optout/block.json
+msgctxt "block title"
+msgid "Rybbit Opt-out"
+msgstr "Rybbit Opt-out"
+
+#: blocks/optout/block.json
+msgctxt "block description"
+msgid ""
+"A switch that lets visitors turn the Rybbit tracking off and on in their "
+"browser."
+msgstr ""
+"Ein Schalter, mit dem Besucher das Rybbit-Tracking in ihrem Browser aus- und "
+"einschalten können."
+
+#: blocks/optout/block.json
+msgctxt "block keyword"
+msgid "rybbit"
+msgstr "rybbit"
+
+#: blocks/optout/block.json
+msgctxt "block keyword"
+msgid "analytics"
+msgstr "Analyse"
+
+#: blocks/optout/block.json
+msgctxt "block keyword"
+msgid "opt-out"
+msgstr "Opt-out"
+
+#: blocks/optout/block.json
+msgctxt "block keyword"
+msgid "privacy"
+msgstr "Datenschutz"
+
+#: blocks/optout/block.json
+msgctxt "block keyword"
+msgid "tracking"
+msgstr "Tracking"

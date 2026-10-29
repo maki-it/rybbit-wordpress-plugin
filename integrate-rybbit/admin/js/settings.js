@@ -4,8 +4,8 @@
 
 	var i18n = window.wp && window.wp.i18n ? window.wp.i18n : null;
 
-	function __(text) {
-		return i18n ? i18n.__(text, 'integrate-rybbit') : text;
+	function __(text, domain) {
+		return i18n ? i18n.__(text, domain) : text;
 	}
 
 	function sprintf(format) {
@@ -180,11 +180,11 @@
 			}
 
 			if (!config.ajaxUrl || !config.nonce || !window.fetch || !window.FormData) {
-				setText(__('Preview is not available.'));
+				setText(__('Preview is not available.', 'integrate-rybbit'));
 				return;
 			}
 
-			setText(__('Loading preview...'));
+			setText(__('Loading preview...', 'integrate-rybbit'));
 
 			var body = new FormData();
 			body.append('action', 'rybbit_preview_identify_payload');
@@ -202,17 +202,17 @@
 				})
 				.then(function (json) {
 					if (!json || json.success !== true) {
-						var message = json && json.data && json.data.message ? String(json.data.message) : __('Unknown error');
+						var message = json && json.data && json.data.message ? String(json.data.message) : __('Unknown error', 'integrate-rybbit');
 						/* translators: %s: Error message. */
-						setText(sprintf(__('No preview available: %s'), message));
+						setText(sprintf(__('No preview available: %s', 'integrate-rybbit'), message));
 						return;
 					}
 					var payload = json.data ? json.data.payload : null;
-					setText(payload ? JSON.stringify(payload, null, 2) : __('Nothing is sent with the current settings.'));
+					setText(payload ? JSON.stringify(payload, null, 2) : __('Nothing is sent with the current settings.', 'integrate-rybbit'));
 				})
 				.catch(function (err) {
 					/* translators: %s: Error message. */
-					setText(sprintf(__('Preview error: %s'), err && err.message ? err.message : __('Unknown error')));
+					setText(sprintf(__('Preview error: %s', 'integrate-rybbit'), err && err.message ? err.message : __('Unknown error', 'integrate-rybbit')));
 				});
 		}
 
@@ -241,8 +241,8 @@
 		var result = document.getElementById('rybbit-api-result');
 		var config = window.rybbitAdmin || {};
 		var buttons = [
-			{ id: 'rybbit-test-api', action: 'rybbit_test_api_connection', busy: __('Testing…') },
-			{ id: 'rybbit-clear-api-cache', action: 'rybbit_clear_api_cache', busy: __('Clearing…') }
+			{ id: 'rybbit-test-api', action: 'rybbit_test_api_connection', busy: __('Testing…', 'integrate-rybbit') },
+			{ id: 'rybbit-clear-api-cache', action: 'rybbit_clear_api_cache', busy: __('Clearing…', 'integrate-rybbit') }
 		];
 
 		if (!result) {
@@ -263,7 +263,7 @@
 
 			button.addEventListener('click', function () {
 				if (!config.ajaxUrl || !config.nonce || !window.fetch || !window.FormData) {
-					show(__('This action is not available.'), true);
+					show(__('This action is not available.', 'integrate-rybbit'), true);
 					return;
 				}
 
@@ -282,11 +282,11 @@
 						});
 					})
 					.then(function (json) {
-						var message = json && json.data && json.data.message ? String(json.data.message) : __('Unknown error');
+						var message = json && json.data && json.data.message ? String(json.data.message) : __('Unknown error', 'integrate-rybbit');
 						show(message, !json || json.success !== true);
 					})
 					.catch(function (err) {
-						show(err && err.message ? err.message : __('Unknown error'), true);
+						show(err && err.message ? err.message : __('Unknown error', 'integrate-rybbit'), true);
 					})
 					.then(function () {
 						button.disabled = false;
@@ -320,7 +320,7 @@
 				}
 
 				var value = decodeBase64Utf8(button.getAttribute('data-rybbit-reset-value-b64') || '');
-				if ((target.value || '').trim() && !window.confirm(__('Replace the current value with the default?'))) {
+				if ((target.value || '').trim() && !window.confirm(__('Replace the current value with the default?', 'integrate-rybbit'))) {
 					return;
 				}
 
@@ -387,11 +387,11 @@
 			try {
 				parsed = JSON.parse(raw);
 			} catch (e) {
-				return setError(field, __('This value must be valid JSON.'));
+				return setError(field, __('This value must be valid JSON.', 'integrate-rybbit'));
 			}
 
 			if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-				return setError(field, __('This value must be a JSON object, for example {"key": true}.'));
+				return setError(field, __('This value must be a JSON object, for example {"key": true}.', 'integrate-rybbit'));
 			}
 
 			return setError(field, '');
@@ -503,7 +503,7 @@
 		function propsError(text) {
 			var props = {};
 			var lines = text.split(/\r\n|\r|\n/);
-			var message = __('Use one key=value pair per line. A key can have up to 128 characters.');
+			var message = __('Use one key=value pair per line. A key can have up to 128 characters.', 'integrate-rybbit');
 
 			for (var i = 0; i < lines.length; i++) {
 				var line = lines[i].trim();
@@ -520,7 +520,7 @@
 			}
 
 			if (byteLength(JSON.stringify(props)) > MAX_PROPS_BYTES) {
-				return __('The properties are larger than 2 KB.');
+				return __('The properties are larger than 2 KB.', 'integrate-rybbit');
 			}
 
 			return '';
@@ -544,18 +544,18 @@
 
 			if (field.hasAttribute('data-rybbit-event-selector')) {
 				if (!value) {
-					return setError(field, strict ? __('Enter a CSS selector.') : '');
+					return setError(field, strict ? __('Enter a CSS selector.', 'integrate-rybbit') : '');
 				}
 				try {
 					document.querySelector(value);
 				} catch (e) {
-					return setError(field, __('This CSS selector is not valid.'));
+					return setError(field, __('This CSS selector is not valid.', 'integrate-rybbit'));
 				}
 				return setError(field, '');
 			}
 
 			if (field.hasAttribute('data-rybbit-event-name')) {
-				return setError(field, !value && strict ? __('Enter an event name.') : '');
+				return setError(field, !value && strict ? __('Enter an event name.', 'integrate-rybbit') : '');
 			}
 
 			return setError(field, propsError(value));

@@ -15,7 +15,7 @@ WPCLI   := $(COMPOSE) run --rm --no-deps -T wpcli
 
 .DEFAULT_GOAL := help
 
-.PHONY: help check lint tools phpcs phpcbf dev plugin-check test-dashboard test-optout pot screenshots logs down clean zip
+.PHONY: help check lint tools phpcs phpcbf dev plugin-check test-dashboard test-optout pot translations screenshots logs down clean zip
 
 help: ## Show the available targets.
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -79,6 +79,11 @@ pot: ## Generate build/integrate-rybbit.pot to review the translatable strings.
 	@mkdir -p build
 	docker run --rm -u "$(DOCKER_USER)" -e HOME=/tmp -v "$(CURDIR)":/app -w /app wordpress:cli \
 		wp i18n make-pot $(PLUGIN) build/$(PLUGIN).pot --slug=$(PLUGIN) --domain=$(PLUGIN)
+
+# --no-purge keeps the strings of the JavaScript files in the .po files.
+translations: ## Compile the .po files in integrate-rybbit/languages to .mo and JSON files.
+	docker run --rm -u "$(DOCKER_USER)" -e HOME=/tmp -v "$(CURDIR)":/app -w /app wordpress:cli \
+		sh -c 'wp i18n make-mo $(PLUGIN)/languages && wp i18n make-json $(PLUGIN)/languages --no-purge'
 
 # The script fills the settings with example values and saves them. Use it only with the dev WordPress.
 screenshots: dev ## Retake the screenshots in assets/ with a headless browser.

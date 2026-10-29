@@ -173,3 +173,23 @@ if ( ! function_exists( 'integrate_rybbit_limit_traits' ) ) {
 		return strlen( (string) wp_json_encode( $traits ) ) <= $max_bytes ? $traits : array();
 	}
 }
+
+if ( ! function_exists( 'integrate_rybbit_load_textdomain' ) ) {
+	/**
+	 * Load the translations that ship with the plugin.
+	 *
+	 * WordPress only looks in the global languages directory by default.
+	 * This loads the bundled .mo file for the current locale from the plugin.
+	 * Without a bundled file for the locale, WordPress uses its own language packs.
+	 *
+	 * @return void
+	 */
+	function integrate_rybbit_load_textdomain() {
+		$locale = determine_locale();
+		$mofile = INTEGRATE_RYBBIT_DIR . 'languages/integrate-rybbit-' . $locale . '.mo';
+
+		if ( is_readable( $mofile ) ) {
+			load_textdomain( 'integrate-rybbit', $mofile, $locale );
+		}
+	}
+}
