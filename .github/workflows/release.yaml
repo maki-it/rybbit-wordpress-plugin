@@ -3,200 +3,178 @@ name: Release Plugin
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
+  PLUGIN: integrate-rybbit
   CHANGELOG_LIMIT: 10
+  # Stable releases and pre-releases. A pre-release has a suffix like "-rc.1".
+  TAG_REGEX: '^v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$'
 
 jobs:
-  build-and-release:
+  release:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Set Version in Plugin File
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          # Tag is like v1.2.3 -> version is 1.2.3
-          VERSION="${GITHUB_REF_NAME#v}"
-
-          # Make VERSION available to later steps.
-          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
-
-          # Replace the whole header line, independent of current version.
-          sed -i -E "s/^Version:[[:space:]]*.*/Version: ${VERSION}/" integrate-rybbit/integrate-rybbit.php
-
-          # Assert it worked.
-          grep -n -E "^Version:[[:space:]]*${VERSION}$" integrate-rybbit/integrate-rybbit.php
-
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
-
-      - name: Fetch releases for changelog (fast)
-        id: changelog
+      - name: Set the version
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
-          # WordPress readme.txt changelog expects headings like:
+          if ! [[ "${GITHUB_REF_NAME}" =~ ${TAG_REGEX} ]]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} is not a valid version tag (example: v1.2.3)."
+            exit 1
+          fi
+
+          VERSION="${GITHUB_REF_NAME#v}"
+          # A version suffix or the pre-release flag of the GitHub release marks a pre-release.
+          PRERELEASE=false
+          if [[ "${VERSION}" == *-* ]]; then
+            PRERELEASE=true
+          elif [[ "$(gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --json isPrerelease --jq .isPrerelease 2>/dev/null || true)" == "true" ]]; then
+            PRERELEASE=true
+          fi
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "PRERELEASE=${PRERELEASE}" >> "$GITHUB_ENV"
+
+          MAIN_FILE="${PLUGIN}/${PLUGIN}.php"
+          README="${PLUGIN}/readme.txt"
+
+          # Replace the values. The header line can start with " * ".
+          sed -i -E "s/^([[:space:]*]*Version:[[:space:]]*).*/\1${VERSION}/" "$MAIN_FILE"
+          sed -i -E "s/define\( 'INTEGRATE_RYBBIT_VERSION', '[^']*' \);/define( 'INTEGRATE_RYBBIT_VERSION', '${VERSION}' );/" "$MAIN_FILE"
+          sed -i -E "s/^Stable tag:[[:space:]]*.*/Stable tag: ${VERSION}/" "$README"
+
+          # Make sure that every replacement worked.
+          grep -Eq "^[[:space:]*]*Version:[[:space:]]*${VERSION//./\\.}$" "$MAIN_FILE"
+          grep -Fq "define( 'INTEGRATE_RYBBIT_VERSION', '${VERSION}' );" "$MAIN_FILE"
+          grep -Fxq "Stable tag: ${VERSION}" "$README"
+
+      - name: Write the changelog into readme.txt
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # readme.txt expects one heading per version:
           # = 1.2.3 =
           # - Change
+          CHANGELOG="${RUNNER_TEMP}/changelog.txt"
+          RELEASES_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases"
+          : > "$CHANGELOG"
 
-          CHANGELOG=$(mktemp)
-
-          # Tags we want to include:
-          # - stable:     v1.0.0
-          # - pre-release v1.0.0-rc.1 (and any other SemVer pre-release/build suffix)
-          TAG_REGEX='^v[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?$'
-
-          # `--paginate` follows API pagination automatically.
-          RELEASES_JSON=$(mktemp)
+          RELEASES_JSON="${RUNNER_TEMP}/releases.json"
           gh api --paginate \
             -H "Accept: application/vnd.github+json" \
             "/repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
-            --jq '[.[] | {tag_name, body, published_at}]' \
+            --jq '[.[] | {tag_name, body, draft}]' \
             > "$RELEASES_JSON"
 
-          # Some `gh api --paginate --jq` outputs multiple JSON arrays (one per page).
-          # Slurp them into a single array, filter tags, then take only the latest N.
-          RELEASES_MERGED=$(mktemp)
-          jq -s --arg re "$TAG_REGEX" --argjson n "${CHANGELOG_LIMIT:-20}" 'add | map(select(.tag_name | test($re))) | .[0:$n]' \
+          # --paginate can print one JSON array per page. Merge them and drop drafts and
+          # invalid tags. Older pre-releases are dropped too. Keep the newest releases only.
+          RELEASES_MERGED="${RUNNER_TEMP}/releases-merged.json"
+          jq -s --arg re "$TAG_REGEX" --arg cur "$GITHUB_REF_NAME" --argjson n "$CHANGELOG_LIMIT" \
+            'add // []
+              | map(select((.draft | not) and (.tag_name | test($re))))
+              | map(select(.tag_name == $cur or (.tag_name | contains("-") | not)))
+              | .[0:$n]' \
             "$RELEASES_JSON" > "$RELEASES_MERGED"
 
-          # Build changelog in the API order (GitHub returns newest first).
-          # We use base64 to safely pass multiline bodies and avoid shell/jq escaping issues.
+          # The release of this tag can be missing, for example after "git push --tags".
+          # Then the changelog gets a link to the release page.
+          if ! jq -e --arg cur "$GITHUB_REF_NAME" 'any(.[]; .tag_name == $cur)' "$RELEASES_MERGED" > /dev/null; then
+            printf '= %s =\n- %s\n\n' "$VERSION" "${RELEASES_URL}/tag/${GITHUB_REF_NAME}" >> "$CHANGELOG"
+          fi
+
+          # base64 keeps multiline release bodies safe in the loop.
           jq -r '.[] | @base64' "$RELEASES_MERGED" \
             | while IFS= read -r enc; do
                 obj=$(printf '%s' "$enc" | base64 -d)
                 TAG=$(printf '%s' "$obj" | jq -r '.tag_name')
                 BODY=$(printf '%s' "$obj" | jq -r '.body // ""')
 
-                VERSION=${TAG#v}
+                # Every non-empty line becomes a "- " bullet.
+                # Markdown headings, HTML comments and "Full Changelog" links are dropped.
+                ITEMS=$(printf '%s\n' "$BODY" \
+                  | sed -e 's/\r$//' \
+                  | awk 'NF {
+                      if ($0 ~ /^[[:space:]]*#{1,6}[[:space:]]+/) next
+                      if ($0 ~ /^[[:space:]]*<!--/) next
+                      if ($0 ~ /^[[:space:]]*\*\*Full Changelog\*\*/) next
+                      if ($0 ~ /^[[:space:]]*[-*][[:space:]]+/) {
+                        sub(/^[[:space:]]*[-*][[:space:]]+/, "- ")
+                        print
+                      } else {
+                        print "- " $0
+                      }
+                    }')
+                if [ -z "$ITEMS" ]; then
+                  ITEMS="- ${RELEASES_URL}/tag/${TAG}"
+                fi
 
-                {
-                  echo "= ${VERSION} ="
-
-                  # Turn each non-empty line into a dash bullet.
-                  # - Drop markdown headings like "## What's Changed".
-                  # - If a line is already a bullet (either '-' or '*'), normalize it to '-'.
-                  echo "$BODY" \
-                    | sed -e 's/\r$//' \
-                    | awk 'NF {
-                        # Skip markdown headings (e.g. "## What\x27s Changed")
-                        if ($0 ~ /^[[:space:]]*#{1,6}[[:space:]]+/) next
-
-                        if ($0 ~ /^[[:space:]]*[-*][[:space:]]+/) {
-                          sub(/^[[:space:]]*[-*][[:space:]]+/, "- ");
-                          print
-                        } else {
-                          print "- " $0
-                        }
-                      }'
-
-                  echo
-                } >> "$CHANGELOG"
+                printf '= %s =\n%s\n\n' "${TAG#v}" "$ITEMS" >> "$CHANGELOG"
               done
 
-          # If there are no releases yet, keep changelog non-empty for readme formatting.
-          if ! test -s "$CHANGELOG"; then
-            echo "= ${GITHUB_REF_NAME#v} =" > "$CHANGELOG"
-            echo "- Initial release" >> "$CHANGELOG"
-            echo >> "$CHANGELOG"
-          fi
+          # Replace everything between "== Changelog ==" and the next section.
+          README="${PLUGIN}/readme.txt"
+          awk -v changelog="$CHANGELOG" -v releases="$RELEASES_URL" '
+            /^== Changelog ==[[:space:]]*$/ {
+              print
+              print ""
+              while ((getline line < changelog) > 0) print line
+              print "You can find all releases at: " releases
+              print ""
+              skip = 1
+              next
+            }
+            skip && /^== / { skip = 0 }
+            !skip { print }
+          ' "$README" > "${RUNNER_TEMP}/readme.txt"
+          mv "${RUNNER_TEMP}/readme.txt" "$README"
 
-          # Export as multiline env var.
-          echo "CHANGELOG<<EOF" >> "$GITHUB_ENV"
-          cat "$CHANGELOG" >> "$GITHUB_ENV"
-          echo "EOF" >> "$GITHUB_ENV"
+          grep -Fxq "== Changelog ==" "$README"
+          grep -Fxq "== External services ==" "$README"
+          sed -n '/^== Changelog ==/,/^== External services ==/p' "$README"
 
-      - name: Generate readme.txt
-        shell: bash
-        env:
-          CHANGELOG: ${{ env.CHANGELOG }}
-          VERSION: ${{ env.VERSION }}
-        run: |
-          cat > integrate-rybbit/readme.txt <<EOF
-          === Integrate Rybbit ===
-          Contributors: makiit
-          Tags: rybbit, analytics, tracking, privacy
-          Stable tag: $VERSION
-          Requires at least: 5.8
-          Tested up to: 6.9
-          Requires PHP: 7.4
-          License: GPLv3 or later
-          License URI: https://github.com/maki-it/rybbit-wordpress-plugin/blob/main/LICENSE
-          Add and manage the Rybbit tracking script.
-            
-          == Description ==
-          Add and manage the Rybbit tracking script for WordPress. Configure privacy, role exclusions, and script attributes.
+      - name: Run all checks
+        run: make check
 
-          == Installation ==
-          1. Upload and install the Plugin zip archive via the Admin UI or extract the plugin files to the \`/wp-content/plugins/integrate-rybbit\` directory.
-          2. Activate the plugin through the 'Plugins' screen in WordPress.
-          3. Configure settings under Settings > Integrate Rybbit.
-
-          == Changelog ==
-          EOF
-          echo "$CHANGELOG" >> integrate-rybbit/readme.txt
-          cat >> integrate-rybbit/readme.txt <<'EOF'
-          
-          You can find all releases at: 
-          https://github.com/maki-it/rybbit-wordpress-plugin/releases
-
-          == Frequently Asked Questions ==
-          = How do I get my Site ID? =
-          Find your Site ID in your Rybbit dashboard under tracking settings.
-
-          == External services ==
-          This plugin integrates with the Rybbit analytics service to provide tracking functionality.
-          
-          If you don't host your own Rybbit instance, data collected by this plugin will be sent to the [Rybbit servers](https://app.rybbit.io/) for processing.
-          This includes tracking data such as page views, user interactions, and other analytics information.
-          See the [Rybbit Data Processing Agreement](https://rybbit.com/dpa) to find out more about how Rybbit handles the tracking data.
-          
-          By using this plugin, you agree to Rybbit's [terms of service](https://rybbit.com/terms-and-conditions) and [privacy policy](https://rybbit.com/privacy).
-          
-          == Third-party assets / trademarks ==
-          
-          This is a free and open-source WordPress plugin developed independently for integration with Rybbit.
-          The use of the Rybbit name and logo in this plugin has been explicitly approved by the owner of Rybbit.
-          All Rybbit trademarks, logos, and brand assets remain the property of their respective owner.
-          
-          This plugin is not an official Rybbit product and is not otherwise affiliated with or endorsed by Rybbit.
-          
-          == License ==
-          GPLv3 or later
-          EOF
-
-      - name: Prepare plugin folder
-        run: |
-          cp LICENSE integrate-rybbit/
+      - name: Add the license to the plugin folder
+        run: cp LICENSE "${PLUGIN}/"
 
       - name: Deploy to WordPress.org
+        # Pre-releases are not deployed. WordPress.org would offer them to all sites as an update.
+        if: env.PRERELEASE == 'false'
         uses: 10up/action-wordpress-plugin-deploy@2.3.0
-        id: deploy
         with:
-          generate-zip: true
           dry-run: false
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
-          SLUG: integrate-rybbit
+          SLUG: ${{ env.PLUGIN }}
           VERSION: ${{ env.VERSION }}
-          BUILD_DIR: integrate-rybbit/
+          BUILD_DIR: ${{ env.PLUGIN }}/
           ASSETS_DIR: assets/
+
+      - name: Build the plugin zip
+        run: make zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          files: ${{ github.workspace }}/integrate-rybbit.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ github.workspace }}/${{ env.PLUGIN }}.zip
+          # An empty value keeps the pre-release flag of an existing release.
+          prerelease: ${{ env.PRERELEASE == 'true' && 'true' || '' }}

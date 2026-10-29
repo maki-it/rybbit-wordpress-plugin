@@ -1,0 +1,15 @@
+{
+	"name": "maki-it/integrate-rybbit-tools",
+	"description": "Code quality tools for Integrate Rybbit. Installed only inside the tools Docker image.",
+	"license": "GPL-3.0-or-later",
+	"require": {
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"phpcompatibility/phpcompatibility-wp": "^2.1",
+		"wp-coding-standards/wpcs": "^3.1"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	}
+}

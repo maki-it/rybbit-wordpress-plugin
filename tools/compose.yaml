@@ -1,0 +1,66 @@
+# Local WordPress for manual tests and Plugin Check.
+# Start with "make dev". Stop with "make down".
+name: integrate-rybbit
+
+x-wordpress-env: &wordpress-env
+  WORDPRESS_DB_HOST: db
+  WORDPRESS_DB_USER: wordpress
+  WORDPRESS_DB_PASSWORD: wordpress
+  WORDPRESS_DB_NAME: wordpress
+  WORDPRESS_DEBUG: "1"
+  WORDPRESS_CONFIG_EXTRA: |
+    define( 'WP_DEBUG_LOG', true );
+    define( 'WP_DEBUG_DISPLAY', false );
+    define( 'SCRIPT_DEBUG', true );
+
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: wordpress
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    volumes:
+      - db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  wordpress:
+    image: wordpress:${WP_IMAGE_TAG:-latest}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WP_PORT:-8080}:80"
+    environment: *wordpress-env
+    volumes:
+      - wordpress:/var/www/html
+      - ../integrate-rybbit:/var/www/html/wp-content/plugins/integrate-rybbit:ro
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /var/www/html/wp-config.php"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  wpcli:
+    image: wordpress:cli
+    profiles: ["cli"]
+    # The CLI image is based on Alpine (www-data is 82). The web image uses 33.
+    user: "33:33"
+    depends_on:
+      wordpress:
+        condition: service_healthy
+    environment:
+      <<: *wordpress-env
+      HOME: /tmp
+    volumes:
+      - wordpress:/var/www/html
+      - ../integrate-rybbit:/var/www/html/wp-content/plugins/integrate-rybbit:ro
+
+volumes:
+  db:
+  wordpress:
